@@ -34,6 +34,10 @@ public class Config {
             .comment("A list of items to log on common setup.")
             .defineListAllowEmpty("items", List.of("minecraft:iron_ingot"), () -> "", Config::validateItemName);
 
+    public static final ModConfigSpec.IntValue FIREBALL_COOLDOWN_TICKS = BUILDER
+            .comment("How many ticks a player must wait between throwing fire charges as fireballs (20 ticks = 1 second)")
+            .defineInRange("fireballCooldownTicks", 20, 0, 1200);
+
     static final ModConfigSpec SPEC = BUILDER.build();
 
     private static boolean validateItemName(final Object obj) {
