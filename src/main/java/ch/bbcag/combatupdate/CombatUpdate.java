@@ -113,6 +113,9 @@ public class CombatUpdate {
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
 
+        // Retune the reach of vanilla melee weapons
+        modEventBus.addListener(WeaponReach::modifyDefaultComponents);
+
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
