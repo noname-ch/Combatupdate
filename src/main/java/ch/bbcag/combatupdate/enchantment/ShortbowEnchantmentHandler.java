@@ -7,8 +7,8 @@ import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.ArrowLooseEvent;
 
-// Handles the Shortbow enchantment: releasing a bow always fires as if it had been
-// fully drawn, gated by a short cooldown so it can't be spammed for full-power shots every tick.
+// Handles the Shortbow enchantment: releasing a bow fires as if it had been fully drawn,
+// then goes on a short cooldown during which it draws normally instead of instantly.
 public class ShortbowEnchantmentHandler {
     // A charge of 20 ticks (BowItem.MAX_DRAW_DURATION) already yields full power, see BowItem#getPowerForTime.
     private static final int FULL_CHARGE_TICKS = 20;
@@ -25,8 +25,7 @@ public class ShortbowEnchantmentHandler {
 
         Player player = event.getEntity();
         if (player.getCooldowns().isOnCooldown(bow)) {
-            // Block the shot entirely instead of letting it fire at whatever charge was reached.
-            event.setCharge(0);
+            // Still on cooldown: let the shot fire at whatever charge was actually reached.
             return;
         }
 

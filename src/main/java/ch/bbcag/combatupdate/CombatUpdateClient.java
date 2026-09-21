@@ -1,14 +1,18 @@
 package ch.bbcag.combatupdate;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.RegisterRangeSelectItemModelPropertyEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+
+import ch.bbcag.combatupdate.client.ShortbowPullProperty;
 
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
 @Mod(value = CombatUpdate.MODID, dist = Dist.CLIENT)
@@ -27,5 +31,10 @@ public class CombatUpdateClient {
         // Some client setup code
         CombatUpdate.LOGGER.info("HELLO FROM CLIENT SETUP");
         CombatUpdate.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
+    }
+
+    @SubscribeEvent
+    static void onRegisterRangeSelectItemModelProperty(RegisterRangeSelectItemModelPropertyEvent event) {
+        event.register(Identifier.fromNamespaceAndPath(CombatUpdate.MODID, "shortbow_pull"), ShortbowPullProperty.MAP_CODEC);
     }
 }
