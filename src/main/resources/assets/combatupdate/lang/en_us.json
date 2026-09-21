@@ -9,5 +9,6 @@
   "combatupdate.configuration.items": "Item List",
   "combatupdate.configuration.logDirtBlock": "Log Dirt Block",
   "combatupdate.configuration.magicNumberIntroduction": "Magic Number Text",
-  "combatupdate.configuration.magicNumber": "Magic Number"
+  "combatupdate.configuration.magicNumber": "Magic Number",
+  "combatupdate.configuration.fireballCooldownTicks": "Fireball Cooldown (ticks)"
 }
