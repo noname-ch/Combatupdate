@@ -37,7 +37,15 @@ public class Config {
 
     public static final ModConfigSpec.IntValue ROLL_SPEED = BUILDER
             .comment("How many degrees per second holding A/D rolls the player while gliding with an elytra")
-            .defineInRange("rollSpeed", 90, 10, 720);
+            .defineInRange("rollSpeed", 200, 10, 720);
+
+    public static final ModConfigSpec.DoubleValue ELYTRA_SPEED_MULTIPLIER = BUILDER
+            .comment("Multiplies the top speed of elytra gliding (1.0 is vanilla)")
+            .defineInRange("elytraSpeedMultiplier", 1.0, 0.5, 5.0);
+
+    public static final ModConfigSpec.IntValue BOOST_ROCKET_INTERVAL_TICKS = BUILDER
+            .comment("How many ticks of shift-boosting a single firework rocket pays for (20 ticks = 1 second)")
+            .defineInRange("boostRocketIntervalTicks", 20, 1, 200);
 
     static final ModConfigSpec SPEC = BUILDER.build();
 }

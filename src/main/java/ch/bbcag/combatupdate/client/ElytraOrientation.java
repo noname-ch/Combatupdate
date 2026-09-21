@@ -1,7 +1,10 @@
 package ch.bbcag.combatupdate.client;
 
+import ch.bbcag.combatupdate.CombatUpdate;
 import ch.bbcag.combatupdate.Config;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.util.context.ContextKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
@@ -18,6 +21,11 @@ import net.minecraft.world.phys.Vec3;
 // Yaw and pitch are then derived back out of the nose direction for the game (movement and aim still
 // run off them), and the leftover rotation about the nose is the roll handed to the camera.
 public final class ElytraOrientation {
+    // Carries the bank angle into rendering: the render events only receive a snapshot of the entity,
+    // not the entity itself, so there's no other way to tell which avatar being drawn is ours.
+    public static final ContextKey<Float> RENDER_ROLL =
+            new ContextKey<>(Identifier.fromNamespaceAndPath(CombatUpdate.MODID, "elytra_roll"));
+
     private static final Vec3 WORLD_UP = new Vec3(0.0, 1.0, 0.0);
 
     private static boolean active;

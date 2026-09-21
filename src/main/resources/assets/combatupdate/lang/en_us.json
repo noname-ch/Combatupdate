@@ -12,5 +12,7 @@
   "combatupdate.configuration.fireballExplosionPower": "Fireball Explosion Power",
   "combatupdate.configuration.shortbowCooldownTicks": "Shortbow Cooldown (ticks)",
   "combatupdate.configuration.tntBlastRadius": "TNT Blast Radius",
-  "combatupdate.configuration.rollSpeed": "Elytra Roll Speed (degrees/second)"
+  "combatupdate.configuration.rollSpeed": "Elytra Roll Speed (degrees/second)",
+  "combatupdate.configuration.elytraSpeedMultiplier": "Elytra Speed Multiplier",
+  "combatupdate.configuration.boostRocketIntervalTicks": "Boost Rocket Interval (ticks)"
 }

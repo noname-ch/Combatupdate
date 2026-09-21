@@ -4,7 +4,8 @@
   "package": "ch.bbcag.combatupdate.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "PrimedTntAccessor"
+    "PrimedTntAccessor",
+    "ElytraSpeedMixin"
   ],
   "client": [
     "ElytraFreeLookMixin"

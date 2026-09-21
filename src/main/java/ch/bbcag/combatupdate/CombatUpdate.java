@@ -39,6 +39,7 @@ import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -179,5 +180,10 @@ public class CombatUpdate {
         if (!event.getLevel().isClientSide() && event.getEntity() instanceof PrimedTnt tnt) {
             ((PrimedTntAccessor) tnt).setExplosionPower((float) Config.TNT_BLAST_RADIUS.getAsDouble());
         }
+    }
+
+    @SubscribeEvent
+    public void onPlayerTick(PlayerTickEvent.Pre event) {
+        ElytraBoost.tick(event.getEntity());
     }
 }
