@@ -7,9 +7,9 @@
   "combatupdate.configuration.title": "CombatUpdate Configs",
   "combatupdate.configuration.section.combatupdate.common.toml": "CombatUpdate Configs",
   "combatupdate.configuration.section.combatupdate.common.toml.title": "CombatUpdate Configs",
-  "combatupdate.configuration.items": "Item List",
-  "combatupdate.configuration.logDirtBlock": "Log Dirt Block",
-  "combatupdate.configuration.magicNumberIntroduction": "Magic Number Text",
-  "combatupdate.configuration.magicNumber": "Magic Number",
-  "combatupdate.configuration.fireballCooldownTicks": "Fireball Cooldown (ticks)"
+  "combatupdate.configuration.fireballCooldownTicks": "Fireball Cooldown (ticks)",
+  "combatupdate.configuration.fireballSpeed": "Fireball Speed",
+  "combatupdate.configuration.fireballExplosionPower": "Fireball Explosion Power",
+  "combatupdate.configuration.shortbowCooldownTicks": "Shortbow Cooldown (ticks)",
+  "combatupdate.configuration.tntBlastRadius": "TNT Blast Radius"
 }
