@@ -35,8 +35,16 @@ public class Config {
             .defineListAllowEmpty("items", List.of("minecraft:iron_ingot"), () -> "", Config::validateItemName);
 
     public static final ModConfigSpec.IntValue FIREBALL_COOLDOWN_TICKS = BUILDER
-            .comment("How many ticks a player must wait between throwing fire charges as fireballs (20 ticks = 1 second)")
-            .defineInRange("fireballCooldownTicks", 20, 0, 1200);
+            .comment("How many ticks a player must wait between throwing fire charges as fireballs (10 ticks = 0.5 seconds)")
+            .defineInRange("fireballCooldownTicks", 10, 0, 1200);
+
+    public static final ModConfigSpec.DoubleValue FIREBALL_SPEED = BUILDER
+            .comment("How fast a thrown fireball travels, in blocks per tick, at a constant speed (no acceleration)")
+            .defineInRange("fireballSpeed", 3.0, 0.1, 10.0);
+
+    public static final ModConfigSpec.DoubleValue FIREBALL_EXPLOSION_POWER = BUILDER
+            .comment("The explosion power of a thrown fireball on impact (TNT is 4.0)")
+            .defineInRange("fireballExplosionPower", 2.0, 0.0, 10.0);
 
     static final ModConfigSpec SPEC = BUILDER.build();
 

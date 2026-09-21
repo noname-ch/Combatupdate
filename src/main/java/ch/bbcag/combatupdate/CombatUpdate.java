@@ -7,12 +7,15 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
@@ -43,6 +46,7 @@ import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 import ch.bbcag.combatupdate.enchantment.ShortbowEnchantmentHandler;
+import ch.bbcag.combatupdate.entity.CombatFireball;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(CombatUpdate.MODID)
@@ -57,6 +61,17 @@ public class CombatUpdate {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
     // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "combatupdate" namespace
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
+    // Create a Deferred Register to hold Entity Types which will all be registered under the "combatupdate" namespace
+    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
+
+    // The projectile entity thrown fire charges turn into; see CombatFireball for its constant-speed, explosive behavior
+    public static final DeferredHolder<EntityType<?>, EntityType<CombatFireball>> COMBAT_FIREBALL = ENTITY_TYPES.register("combat_fireball",
+            () -> EntityType.Builder.<CombatFireball>of(CombatFireball::new, MobCategory.MISC)
+                    .noLootTable()
+                    .sized(1.0F, 1.0F)
+                    .clientTrackingRange(4)
+                    .updateInterval(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "combat_fireball"))));
 
     // Creates a new Block with the id "combatupdate:example_block", combining the namespace and path
     public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", p -> p.mapColor(MapColor.STONE));
@@ -88,6 +103,8 @@ public class CombatUpdate {
         ITEMS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so tabs get registered
         CREATIVE_MODE_TABS.register(modEventBus);
+        // Register the Deferred Register to the mod event bus so entity types get registered
+        ENTITY_TYPES.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (CombatUpdate) to respond directly to events.
@@ -158,7 +175,7 @@ public class CombatUpdate {
         if (level instanceof ServerLevel serverLevel) {
             Vec3 eyePosition = player.getEyePosition();
             Vec3 lookAngle = player.getLookAngle();
-            SmallFireball fireball = new SmallFireball(serverLevel, player, lookAngle);
+            CombatFireball fireball = new CombatFireball(serverLevel, player, lookAngle);
             fireball.setPos(eyePosition.x + lookAngle.x, eyePosition.y + lookAngle.y, eyePosition.z + lookAngle.z);
             serverLevel.addFreshEntity(fireball);
         }
