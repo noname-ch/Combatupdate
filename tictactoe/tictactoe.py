@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tic-Tac-Toe fuer zwei Spieler mit tkinter."""
 
 import tkinter as tk
