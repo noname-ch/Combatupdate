@@ -1,0 +1,6 @@
+{
+  "parent": "combatupdate:item/shortbow",
+  "textures": {
+    "layer0": "combatupdate:item/shortbow_pulling_2"
+  }
+}
