@@ -33,5 +33,11 @@ public class Config {
             .comment("Explosion power of primed TNT, vanilla and modded alike (this is what vanilla calls explosion power; default 4.0)")
             .defineInRange("tntBlastRadius", 4.0, 0.0, 128.0);
 
+    // --- Elytra ---
+
+    public static final ModConfigSpec.IntValue ROLL_SPEED = BUILDER
+            .comment("How many degrees per second holding A/D rolls the player while gliding with an elytra")
+            .defineInRange("rollSpeed", 90, 10, 720);
+
     static final ModConfigSpec SPEC = BUILDER.build();
 }
