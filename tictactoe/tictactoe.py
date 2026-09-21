@@ -1,4 +1,7 @@
-"""Tic-Tac-Toe fuer zwei Spieler in der Konsole."""
+"""Tic-Tac-Toe fuer zwei Spieler mit tkinter."""
+
+import tkinter as tk
+from tkinter import font
 
 WIN_LINES = [
     (0, 1, 2), (3, 4, 5), (6, 7, 8),  # Reihen
@@ -7,50 +10,80 @@ WIN_LINES = [
 ]
 
 
-def print_board(board):
-    rows = [" | ".join(board[i:i + 3]) for i in (0, 3, 6)]
-    print("\n---------\n".join(rows))
+class TicTacToe:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Tic-Tac-Toe")
+        self.root.resizable(False, False)
 
+        self.board = [" "] * 9
+        self.player = "X"
+        self.game_over = False
 
-def winner(board):
-    for a, b, c in WIN_LINES:
-        if board[a] != " " and board[a] == board[b] == board[c]:
-            return board[a]
-    return None
+        self.big_font = font.Font(size=32, weight="bold")
+        self.status_font = font.Font(size=14)
 
+        self.status = tk.Label(root, text=f"Spieler {self.player} ist dran", font=self.status_font)
+        self.status.grid(row=0, column=0, columnspan=3, pady=10)
 
-def get_move(board, player):
-    while True:
-        raw = input(f"Spieler {player}, waehle ein Feld (1-9): ")
-        if not raw.isdigit() or not 1 <= int(raw) <= 9:
-            print("Bitte eine Zahl von 1 bis 9 eingeben.")
-            continue
-        pos = int(raw) - 1
-        if board[pos] != " ":
-            print("Feld ist bereits belegt.")
-            continue
-        return pos
+        self.buttons = []
+        for i in range(9):
+            btn = tk.Button(
+                root,
+                text=" ",
+                font=self.big_font,
+                width=4,
+                height=2,
+                command=lambda i=i: self.make_move(i),
+            )
+            btn.grid(row=1 + i // 3, column=i % 3)
+            self.buttons.append(btn)
+
+        restart = tk.Button(root, text="Neustart", command=self.restart)
+        restart.grid(row=4, column=0, columnspan=3, pady=10, sticky="we")
+
+    def make_move(self, i):
+        if self.game_over or self.board[i] != " ":
+            return
+
+        self.board[i] = self.player
+        self.buttons[i].config(text=self.player)
+
+        win_line = self.winning_line()
+        if win_line:
+            for i in win_line:
+                self.buttons[i].config(fg="red")
+            self.status.config(text=f"Spieler {self.player} gewinnt!")
+            self.game_over = True
+            return
+
+        if " " not in self.board:
+            self.status.config(text="Unentschieden!")
+            self.game_over = True
+            return
+
+        self.player = "O" if self.player == "X" else "X"
+        self.status.config(text=f"Spieler {self.player} ist dran")
+
+    def winning_line(self):
+        for a, b, c in WIN_LINES:
+            if self.board[a] != " " and self.board[a] == self.board[b] == self.board[c]:
+                return (a, b, c)
+        return None
+
+    def restart(self):
+        self.board = [" "] * 9
+        self.player = "X"
+        self.game_over = False
+        for btn in self.buttons:
+            btn.config(text=" ", fg="black")
+        self.status.config(text=f"Spieler {self.player} ist dran")
 
 
 def main():
-    board = [" "] * 9
-    player = "X"
-
-    while True:
-        print_board(board)
-        board[get_move(board, player)] = player
-
-        win = winner(board)
-        if win:
-            print_board(board)
-            print(f"Spieler {win} gewinnt!")
-            break
-        if " " not in board:
-            print_board(board)
-            print("Unentschieden!")
-            break
-
-        player = "O" if player == "X" else "X"
+    root = tk.Tk()
+    TicTacToe(root)
+    root.mainloop()
 
 
 if __name__ == "__main__":
