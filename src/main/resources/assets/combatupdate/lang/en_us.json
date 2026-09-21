@@ -1,0 +1,13 @@
+{
+  "itemGroup.combatupdate": "Example Mod Tab",
+  "block.combatupdate.example_block": "Example Block",
+  "item.combatupdate.example_item": "Example Item",
+
+  "combatupdate.configuration.title": "CombatUpdate Configs",
+  "combatupdate.configuration.section.combatupdate.common.toml": "CombatUpdate Configs",
+  "combatupdate.configuration.section.combatupdate.common.toml.title": "CombatUpdate Configs",
+  "combatupdate.configuration.items": "Item List",
+  "combatupdate.configuration.logDirtBlock": "Log Dirt Block",
+  "combatupdate.configuration.magicNumberIntroduction": "Magic Number Text",
+  "combatupdate.configuration.magicNumber": "Magic Number"
+}
