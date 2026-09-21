@@ -2,6 +2,7 @@
   "itemGroup.combatupdate": "Example Mod Tab",
   "block.combatupdate.example_block": "Example Block",
   "item.combatupdate.example_item": "Example Item",
+  "enchantment.combatupdate.shortbow": "Shortbow",
 
   "combatupdate.configuration.title": "CombatUpdate Configs",
   "combatupdate.configuration.section.combatupdate.common.toml": "CombatUpdate Configs",

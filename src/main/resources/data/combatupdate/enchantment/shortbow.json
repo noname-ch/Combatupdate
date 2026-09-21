@@ -1,0 +1,21 @@
+{
+  "description": {
+    "translate": "enchantment.combatupdate.shortbow"
+  },
+  "supported_items": "#minecraft:enchantable/bow",
+  "slots": [
+    "mainhand",
+    "offhand"
+  ],
+  "weight": 2,
+  "max_level": 1,
+  "min_cost": {
+    "base": 15,
+    "per_level_above_first": 0
+  },
+  "max_cost": {
+    "base": 65,
+    "per_level_above_first": 0
+  },
+  "anvil_cost": 4
+}
