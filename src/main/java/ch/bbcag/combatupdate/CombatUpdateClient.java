@@ -102,6 +102,24 @@ public final class CombatUpdateClient {
             public <T extends Avatar & ClientAvatarEntity> void accept(T avatar, AvatarRenderState renderState) {
                 boolean banking = avatar == Minecraft.getInstance().player && avatar.isFallFlying();
                 renderState.setRenderData(ElytraOrientation.RENDER_ROLL, banking ? ElytraOrientation.roll() : null);
+                if (!banking) {
+                    return;
+                }
+
+                // Draw the body along the nose. Vanilla draws it at yBodyRot instead, which only ever
+                // eases 30% of the way towards the head each tick and is then pinned to within 50
+                // degrees of it (LivingEntity#tickHeadTurn), so under free look the body swims along
+                // behind the camera through every turn - and every time a loop over the top flips the
+                // yaw by 180 degrees, it spends half a second spiralling round to catch up.
+                renderState.bodyRot = renderState.yRot;
+
+                // Vanilla also yaws the model by the angle between where it is looking and where it is
+                // actually travelling, so it crabs into a turn. That angle is folded into 0-90 degrees
+                // (acos of an absolute dot, in AvatarRenderer#extractFlightData), which holds only
+                // while pitch cannot pass vertical and you cannot fly backwards. Free look makes both
+                // routine, and past 90 degrees apart the angle starts reading backwards and the model
+                // snaps about. Nothing here needs it: the body is already on the nose.
+                renderState.shouldApplyFlyingYRot = false;
             }
         });
     }
@@ -112,7 +130,15 @@ public final class CombatUpdateClient {
     static void onRenderPlayerPre(RenderPlayerEvent.Pre<?> event) {
         AvatarRenderState state = event.getRenderState();
         Float roll = state.getRenderData(ElytraOrientation.RENDER_ROLL);
-        if (roll == null || roll == 0.0F) {
+        if (roll == null) {
+            return;
+        }
+
+        // Eased in by the same factor vanilla eases the body's own pitch in with over the first few
+        // ticks of a glide. Until that pitch has arrived the body is not on the nose yet, and rolling
+        // it about the nose early would screw the model round its own waist.
+        float rollDegrees = roll * state.fallFlyingScale();
+        if (rollDegrees == 0.0F) {
             return;
         }
 
@@ -125,7 +151,7 @@ public final class CombatUpdateClient {
         poseStack.pushPose();
         poseStack.translate(0.0F, pivot, 0.0F);
         poseStack.mulPose(new Matrix4f().rotation(
-                (float) Math.toRadians(roll), (float) nose.x, (float) nose.y, (float) nose.z));
+                (float) Math.toRadians(rollDegrees), (float) nose.x, (float) nose.y, (float) nose.z));
         poseStack.translate(0.0F, -pivot, 0.0F);
         banked = true;
     }
