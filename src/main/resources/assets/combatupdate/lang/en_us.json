@@ -14,6 +14,11 @@
   "enchantment.combatupdate.mirror": "Mirror",
 
   "combatupdate.configuration.title": "CombatUpdate Configs",
+  "combatupdate.configuration.elytra": "Elytra",
+  "combatupdate.configuration.batteringRam": "Battering Ram",
+  "combatupdate.configuration.enchantments": "Enchantments",
+  "combatupdate.configuration.explosives": "Explosives",
+  "combatupdate.configuration.damageNumbers": "Damage Numbers",
   "combatupdate.configuration.section.combatupdate.common.toml": "CombatUpdate Configs",
   "combatupdate.configuration.section.combatupdate.common.toml.title": "CombatUpdate Configs",
   "combatupdate.configuration.fireballCooldownTicks": "Fireball Cooldown (ticks)",
