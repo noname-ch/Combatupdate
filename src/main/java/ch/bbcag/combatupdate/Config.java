@@ -163,6 +163,32 @@ public final class Config {
             .comment("Dye color (0xRRGGBB) leather boots turn while enchanted with Armageddon")
             .defineInRange("armageddonBootsColor", 0x8B0000, 0, 0xFFFFFF);
 
+    // --- Floating damage numbers ---
+
+    public static final ModConfigSpec.BooleanValue DAMAGE_NUMBERS = BUILDER
+            .comment("Whether damage a player deals is shown as a number floating beside whatever they hit")
+            .define("damageNumbers", true);
+
+    public static final ModConfigSpec.DoubleValue DAMAGE_NUMBER_MINIMUM = BUILDER
+            .comment("Hits costing less health than this are not worth a number")
+            .defineInRange("damageNumberMinimum", 0.5, 0.0, 100.0);
+
+    public static final ModConfigSpec.IntValue DAMAGE_NUMBER_LIFETIME_TICKS = BUILDER
+            .comment("How many ticks a damage number stays up before it clears away (20 ticks = 1 second)")
+            .defineInRange("damageNumberLifetimeTicks", 20, 1, 200);
+
+    public static final ModConfigSpec.DoubleValue DAMAGE_NUMBER_RISE = BUILDER
+            .comment("How far, in blocks, a damage number drifts upwards each tick")
+            .defineInRange("damageNumberRise", 0.03, 0.0, 1.0);
+
+    public static final ModConfigSpec.DoubleValue DAMAGE_NUMBER_SPREAD = BUILDER
+            .comment("How widely damage numbers are scattered around the entity they belong to, so a flurry of hits doesn't stack them all on the one spot")
+            .defineInRange("damageNumberSpread", 0.6, 0.0, 4.0);
+
+    public static final ModConfigSpec.DoubleValue DAMAGE_NUMBER_SCALE = BUILDER
+            .comment("How large a damage number is drawn (1.0 is the size of a name tag)")
+            .defineInRange("damageNumberScale", 0.5, 0.1, 4.0);
+
     static final ModConfigSpec SPEC = BUILDER.build();
 
     private Config() {

@@ -35,8 +35,10 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -183,5 +185,19 @@ public final class CombatUpdate {
         ElytraBoost.tick(event.getEntity());
         BatteringRam.tick(event.getEntity());
         LeatherEnchantColor.tick(event.getEntity());
+    }
+
+    // Post rather than Pre: by then the hit has been through armour, resistance and absorption, so
+    // getHealthDamage is the health the target actually lost rather than what was aimed at it.
+    @SubscribeEvent
+    public void onLivingDamage(LivingDamageEvent.Post event) {
+        if (event.getSource().getEntity() instanceof Player) {
+            DamageNumbers.spawn(event.getEntity(), event.getHealthDamage());
+        }
+    }
+
+    @SubscribeEvent
+    public void onServerTick(ServerTickEvent.Post event) {
+        DamageNumbers.tick();
     }
 }

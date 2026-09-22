@@ -28,6 +28,16 @@ import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.renderstate.AvatarRenderStateModifier;
 import net.neoforged.neoforge.client.renderstate.RegisterRenderStateModifiersEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.locale.Language;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 import ch.bbcag.combatupdate.client.BatteringRamHelmetModel;
 import ch.bbcag.combatupdate.client.ElytraOrientation;
@@ -51,6 +61,34 @@ public final class CombatUpdateClient {
     @SubscribeEvent
     static void onRegisterRangeSelectItemModelProperty(RegisterRangeSelectItemModelPropertyEvent event) {
         event.register(Identifier.fromNamespaceAndPath(CombatUpdate.MODID, "shortbow_pull"), ShortbowPullProperty.MAP_CODEC);
+    }
+
+    // Vanilla lists an enchantment by name and level and stops there, which is fine for Sharpness
+    // and no use at all for one whose whole behaviour is this mod's invention. Every enchantment of
+    // ours gets a line under the name saying what it actually does.
+    //
+    // Driven off the namespace rather than a list of keys, so a new enchantment only has to add its
+    // .desc line to the language file to be described here; and off whether that line exists, so one
+    // that hasn't got round to it shows nothing rather than a raw translation key.
+    @SubscribeEvent
+    static void onItemTooltip(ItemTooltipEvent event) {
+        ItemStack stack = event.getItemStack();
+        describeAll(event, stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY));
+        // An enchanted book keeps what it teaches in a different component from what it is enchanted
+        // with, and a book is exactly where someone reads up on an enchantment.
+        describeAll(event, stack.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY));
+    }
+
+    private static void describeAll(ItemTooltipEvent event, ItemEnchantments enchantments) {
+        for (Holder<Enchantment> enchantment : enchantments.keySet()) {
+            enchantment.unwrapKey()
+                    .map(key -> key.identifier())
+                    .filter(id -> id.getNamespace().equals(CombatUpdate.MODID))
+                    .map(id -> "enchantment." + CombatUpdate.MODID + "." + id.getPath() + ".desc")
+                    .filter(Language.getInstance()::has)
+                    .ifPresent(line -> event.getToolTip()
+                            .add(Component.translatable(line).withStyle(ChatFormatting.DARK_GRAY)));
+        }
     }
 
     @SubscribeEvent

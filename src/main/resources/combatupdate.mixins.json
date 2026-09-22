@@ -6,7 +6,9 @@
   "mixins": [
     "PrimedTntAccessor",
     "ElytraSpeedMixin",
-    "BatteringRamWallMixin"
+    "BatteringRamWallMixin",
+    "DisplayAccessor",
+    "TextDisplayAccessor"
   ],
   "client": [
     "ElytraFreeLookMixin"

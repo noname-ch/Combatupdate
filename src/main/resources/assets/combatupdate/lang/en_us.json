@@ -48,5 +48,22 @@
   "combatupdate.configuration.gambleChance": "Gamble Chance (%)",
   "combatupdate.configuration.ragePantsColor": "Regularity Leggings Color",
   "combatupdate.configuration.singularityPantsColor": "Singularity Leggings Color",
-  "combatupdate.configuration.armageddonBootsColor": "Armageddon Boots Color"
+  "combatupdate.configuration.armageddonBootsColor": "Armageddon Boots Color",
+  "combatupdate.configuration.damageNumbers": "Show Floating Damage Numbers",
+  "combatupdate.configuration.damageNumberMinimum": "Damage Number Minimum",
+  "combatupdate.configuration.damageNumberLifetimeTicks": "Damage Number Lifetime (ticks)",
+  "combatupdate.configuration.damageNumberRise": "Damage Number Rise (blocks/tick)",
+  "combatupdate.configuration.damageNumberSpread": "Damage Number Spread",
+  "combatupdate.configuration.damageNumberScale": "Damage Number Scale",
+
+  "enchantment.combatupdate.shortbow.desc": "Releases at full draw the instant you let go, then needs a moment before it will do it again.",
+  "enchantment.combatupdate.battering_ram.desc": "Glide into something fast enough and you are the hammer: damage scaled by your speed, a wind burst and a blast on impact, and walls stop hurting you.",
+  "enchantment.combatupdate.regularity.desc": "A light hit is followed a moment later by a second one, for a share of what the first dealt.",
+  "enchantment.combatupdate.singularity.desc": "Caps how much health any single hit can take off you, however hard it lands.",
+  "enchantment.combatupdate.armageddon.desc": "Land enough hits in a row and the next one comes down harder.",
+  "enchantment.combatupdate.gotta_go_fast.desc": "You simply move faster.",
+  "enchantment.combatupdate.lifesteal.desc": "Heals you for a share of the damage you deal, up to a limit per hit.",
+  "enchantment.combatupdate.combo_perun.desc": "Every third strike calls down lightning and deals true damage, which armour cannot soften.",
+  "enchantment.combatupdate.gamble.desc": "Every hit is a small chance of a true-damage coin flip - landing on your target, or on you.",
+  "enchantment.combatupdate.mirror.desc": "Blanks out true damage aimed at you: the one thing that stops Combo: Perun and Gamble."
 }
