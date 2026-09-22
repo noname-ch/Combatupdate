@@ -16,10 +16,13 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.SimpleExplosionDamageCalculator;
 import net.minecraft.world.phys.Vec3;
@@ -162,10 +165,15 @@ public final class BatteringRam {
                 .orElse(0);
     }
 
-    // What every impact has in common: the burst, the dent in the helmet, and the wait before the
-    // next one.
+    // What every impact has in common: the blast, the burst, the dent in the helmet, and the wait
+    // before the next one.
     private static void finishImpact(ServerLevel level, Player player, int enchantmentLevel) {
-        windBurst(level, player, enchantmentLevel);
+        // A block out in front of the eyes, so both go off in whatever was just hit rather than at
+        // the player's own feet.
+        Vec3 at = player.getEyePosition().add(player.getLookAngle());
+
+        windBurst(level, player, enchantmentLevel, at);
+        blast(level, player, at);
 
         player.getItemBySlot(EquipmentSlot.HEAD)
                 .hurtAndBreak(Config.RAM_HELMET_DAMAGE.getAsInt(), player, EquipmentSlot.HEAD);
@@ -173,10 +181,9 @@ public final class BatteringRam {
         COOLDOWNS.put(player.getUUID(), Config.RAM_COOLDOWN_TICKS.getAsInt());
     }
 
-    // The same explosion a wind charge makes, thrown a block out in front of the player so it goes
-    // off in whatever they just hit: no damage of its own and no terrain broken, just the shove and
-    // the gust. TRIGGER still lets it flip a lever or set off TNT, the way a wind charge would.
-    private static void windBurst(ServerLevel level, Player player, int enchantmentLevel) {
+    // The same explosion a wind charge makes: no damage of its own and no terrain broken, just the
+    // shove and the gust. TRIGGER still lets it flip a lever or set off TNT, as a wind charge would.
+    private static void windBurst(ServerLevel level, Player player, int enchantmentLevel, Vec3 at) {
         float radius = (float) Config.RAM_WIND_BURST_RADIUS.getAsDouble();
         if (radius <= 0.0F) {
             return;
@@ -188,11 +195,41 @@ public final class BatteringRam {
                 true, false, Optional.of(knockback),
                 BuiltInRegistries.BLOCK.get(BlockTags.BLOCKS_WIND_CHARGE_EXPLOSIONS).map(Function.identity()));
 
-        Vec3 at = player.getEyePosition().add(player.getLookAngle());
         level.explode(player, null, calculator, at.x, at.y, at.z, radius, false,
                 Level.ExplosionInteraction.TRIGGER,
                 ParticleTypes.GUST_EMITTER_SMALL, ParticleTypes.GUST_EMITTER_LARGE,
                 WeightedList.of(), SoundEvents.WIND_CHARGE_BURST);
+    }
+
+    // A real blast on top of the gust, small enough to read as the impact rather than as ordnance.
+    // The rammer is the one exception to it: taking the hit from their own charge would undo the
+    // whole point of the helmet having just eaten the wall for them.
+    private static void blast(ServerLevel level, Player player, Vec3 at) {
+        float power = (float) Config.RAM_EXPLOSION_POWER.getAsDouble();
+        if (power <= 0.0F) {
+            return;
+        }
+
+        level.explode(player, null, new SparesRammer(player), at, power, false,
+                Config.RAM_EXPLOSION_BREAKS_BLOCKS.get()
+                        ? Level.ExplosionInteraction.TNT
+                        : Level.ExplosionInteraction.NONE);
+    }
+
+    // Everything in range takes the blast as normal; the player who set it off is skipped. They are
+    // still shoved by it, because knockback is worked out separately from damage - which is the half
+    // of an explosion worth keeping here anyway.
+    private static final class SparesRammer extends ExplosionDamageCalculator {
+        private final Player rammer;
+
+        private SparesRammer(Player rammer) {
+            this.rammer = rammer;
+        }
+
+        @Override
+        public boolean shouldDamageEntity(Explosion explosion, Entity entity) {
+            return entity != this.rammer && super.shouldDamageEntity(explosion, entity);
+        }
     }
 
     private static boolean stillCoolingDown(Player player) {

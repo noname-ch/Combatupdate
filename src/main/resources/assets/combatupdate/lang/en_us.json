@@ -28,5 +28,7 @@
   "combatupdate.configuration.ramCooldownTicks": "Battering Ram Cooldown (ticks)",
   "combatupdate.configuration.ramHelmetDamage": "Battering Ram Helmet Durability Cost",
   "combatupdate.configuration.ramWindBurstRadius": "Battering Ram Wind Burst Radius",
-  "combatupdate.configuration.ramWindBurstKnockback": "Battering Ram Wind Burst Knockback"
+  "combatupdate.configuration.ramWindBurstKnockback": "Battering Ram Wind Burst Knockback",
+  "combatupdate.configuration.ramExplosionPower": "Battering Ram Explosion Power",
+  "combatupdate.configuration.ramExplosionBreaksBlocks": "Battering Ram Explosion Breaks Blocks"
 }
