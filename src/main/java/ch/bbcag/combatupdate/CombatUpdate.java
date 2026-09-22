@@ -118,6 +118,9 @@ public final class CombatUpdate {
         // Retune the reach of vanilla melee weapons
         modEventBus.addListener(WeaponReach::modifyDefaultComponents);
 
+        // Let swords block again, weaker than a shield
+        modEventBus.addListener(SwordBlocking::modifyDefaultComponents);
+
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }

@@ -206,6 +206,20 @@ public final class Config {
     public static final ModConfigSpec.DoubleValue TNT_BLAST_RADIUS = BUILDER
             .comment("Explosion power of primed TNT, vanilla and modded alike (this is what vanilla calls explosion power; default 4.0)")
             .defineInRange("tntBlastRadius", 4.0, 0.0, 128.0);
+
+    // --- TNT dropped as a bomb while gliding ---
+
+    public static final ModConfigSpec.DoubleValue BOMB_MOMENTUM_TRANSFER = BUILDER
+            .comment("How much of the player's own velocity a bomb dropped from an elytra keeps (1.0 is all of it, 0.0 drops it straight down). Vanilla air drag bleeds this off at 2% a tick from there, so a fast run throws the bomb a long way forward")
+            .defineInRange("bombMomentumTransfer", 1.0, 0.0, 2.0);
+
+    public static final ModConfigSpec.IntValue BOMB_FUSE_TICKS = BUILDER
+            .comment("How long the fuse is on a bomb dropped from an elytra, in ticks - how long it has to fall before it goes off (a lit block of TNT is 80; 20 ticks = 1 second)")
+            .defineInRange("bombFuseTicks", 60, 1, 400);
+
+    public static final ModConfigSpec.IntValue BOMB_COOLDOWN_TICKS = BUILDER
+            .comment("How many ticks must pass between dropping one bomb and the next")
+            .defineInRange("bombCooldownTicks", 10, 0, 200);
     static {
         BUILDER.pop();
     }
