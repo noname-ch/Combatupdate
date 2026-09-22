@@ -49,7 +49,7 @@ import ch.bbcag.combatupdate.enchantment.ShortbowEnchantmentHandler;
 import ch.bbcag.combatupdate.entity.CombatFireball;
 import ch.bbcag.combatupdate.mixin.PrimedTntAccessor;
 
-//i want to push this shit
+//i want to push this shit h
 // The value here should match =an entry in the META-INF/neoforge.mods.toml file
 @Mod(CombatUpdate.MODID)
 public final class CombatUpdate {
