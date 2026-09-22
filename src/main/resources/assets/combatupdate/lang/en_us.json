@@ -4,14 +4,6 @@
   "item.combatupdate.example_item": "Example Item",
   "enchantment.combatupdate.shortbow": "Shortbow",
   "enchantment.combatupdate.battering_ram": "Battering Ram",
-  "enchantment.combatupdate.regularity": "Regularity",
-  "enchantment.combatupdate.singularity": "Singularity",
-  "enchantment.combatupdate.armageddon": "Armageddon",
-  "enchantment.combatupdate.gotta_go_fast": "Gotta Go Fast",
-  "enchantment.combatupdate.lifesteal": "Lifesteal",
-  "enchantment.combatupdate.combo_perun": "Combo: Perun",
-  "enchantment.combatupdate.gamble": "Gamble",
-  "enchantment.combatupdate.mirror": "Mirror",
 
   "combatupdate.configuration.title": "CombatUpdate Configs",
   "combatupdate.configuration.section.combatupdate.common.toml": "CombatUpdate Configs",
@@ -36,15 +28,5 @@
   "combatupdate.configuration.ramCooldownTicks": "Battering Ram Cooldown (ticks)",
   "combatupdate.configuration.ramHelmetDamage": "Battering Ram Helmet Durability Cost",
   "combatupdate.configuration.ramWindBurstRadius": "Battering Ram Wind Burst Radius",
-  "combatupdate.configuration.ramWindBurstKnockback": "Battering Ram Wind Burst Knockback",
-  "combatupdate.configuration.regularityThresholdHearts": "Regularity Trigger Threshold (hearts)",
-  "combatupdate.configuration.regularitySecondHitPercent": "Regularity Second Hit Damage (fraction)",
-  "combatupdate.configuration.singularityDamageCapHearts": "Singularity Damage Cap (hearts)",
-  "combatupdate.configuration.armageddonStreakRequired": "Armageddon Streak Required (hits)",
-  "combatupdate.configuration.armageddonDamageBonusPercent": "Armageddon Damage Bonus (fraction)",
-  "combatupdate.configuration.lifestealMaxHealHearts": "Lifesteal Max Heal (hearts)",
-  "combatupdate.configuration.gambleChance": "Gamble Trigger Chance",
-  "combatupdate.configuration.ragePantsColor": "Regularity Pants Color (RGB)",
-  "combatupdate.configuration.singularityPantsColor": "Singularity Pants Color (RGB)",
-  "combatupdate.configuration.armageddonBootsColor": "Armageddon Boots Color (RGB)"
+  "combatupdate.configuration.ramWindBurstKnockback": "Battering Ram Wind Burst Knockback"
 }
