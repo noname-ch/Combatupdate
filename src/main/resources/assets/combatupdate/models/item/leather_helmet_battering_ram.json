@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "combatupdate:item/leather_helmet_battering_ram",
+    "layer1": "combatupdate:item/leather_helmet_overlay_battering_ram"
+  }
+}

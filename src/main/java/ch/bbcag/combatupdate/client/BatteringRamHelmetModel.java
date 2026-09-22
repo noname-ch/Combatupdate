@@ -37,9 +37,22 @@ public final class BatteringRamHelmetModel implements IClientItemExtensions {
     public static final ModelLayerLocation LAYER =
             new ModelLayerLocation(Identifier.fromNamespaceAndPath(CombatUpdate.MODID, "battering_ram_helmet"), "main");
 
-    // How tall the flattened head box is, against vanilla's 8-pixel head: 2 pixels come off the top,
-    // and the bottom stays put at the neck so the helmet still sits where it should.
-    private static final float FLATTENED_HEIGHT = 6.0F;
+    // The player's actual (unarmored) head is an 8-pixel cube with no inflation at all, while this
+    // armor layer is inflated outward by OUTER_ARMOR_DEFORMATION on every face so it sits just outside
+    // the head with a little clearance to spare. That clearance is the only room there is to shave off
+    // the top before the flattened helmet would dip below the real head and let it poke through, so the
+    // shave has to stay smaller than the inflation, with a little margin left over so the two surfaces
+    // never end up exactly touching (which can flicker).
+    private static final float HEAD_HEIGHT = 8.0F;
+    private static final float TOP_CLEARANCE = 0.25F;
+
+    // CubeDeformation keeps its grow values package-private, so this mirrors OUTER_ARMOR_DEFORMATION's
+    // own 1.0F by hand rather than reading it off the constant directly.
+    private static final float ARMOR_INFLATION = 1.0F;
+
+    // Same box as vanilla's head, just shorter: the bottom stays at the neck and the top comes down to
+    // meet it, rather than scaling in from the centre.
+    private static final float FLATTENED_HEIGHT = HEAD_HEIGHT + TOP_CLEARANCE - ARMOR_INFLATION;
 
     public static final BatteringRamHelmetModel INSTANCE = new BatteringRamHelmetModel();
 
@@ -54,8 +67,6 @@ public final class BatteringRamHelmetModel implements IClientItemExtensions {
         MeshDefinition mesh = HumanoidModel.createMesh(LayerDefinitions.OUTER_ARMOR_DEFORMATION, 0.0F);
         PartDefinition root = mesh.getRoot();
 
-        // Same box as vanilla's head, just shorter: the bottom stays at the neck and the top comes
-        // down to meet it, rather than scaling in from the centre.
         root.addOrReplaceChild("head",
                 CubeListBuilder.create().texOffs(0, 0)
                         .addBox(-4.0F, -FLATTENED_HEIGHT, -4.0F, 8.0F, FLATTENED_HEIGHT, 8.0F, LayerDefinitions.OUTER_ARMOR_DEFORMATION),

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "combatupdate:item/golden_helmet_battering_ram"
+  }
+}
