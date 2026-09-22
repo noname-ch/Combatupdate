@@ -49,7 +49,7 @@ import ch.bbcag.combatupdate.enchantment.ShortbowEnchantmentHandler;
 import ch.bbcag.combatupdate.entity.CombatFireball;
 import ch.bbcag.combatupdate.mixin.PrimedTntAccessor;
 
-// The value here should match an entry in the META-INF/neoforge.mods.toml file
+// The value here should match =an entry in the META-INF/neoforge.mods.toml file
 @Mod(CombatUpdate.MODID)
 public final class CombatUpdate {
     // Define mod id in a common place for everything to reference
