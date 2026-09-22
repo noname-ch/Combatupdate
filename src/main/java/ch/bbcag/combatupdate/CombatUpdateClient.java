@@ -18,7 +18,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterRangeSelectItemModelPropertyEvent;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
@@ -35,19 +34,15 @@ import ch.bbcag.combatupdate.client.ShortbowPullProperty;
 @Mod(value = CombatUpdate.MODID, dist = Dist.CLIENT)
 // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
 @EventBusSubscriber(modid = CombatUpdate.MODID, value = Dist.CLIENT)
-public class CombatUpdateClient {
+public final class CombatUpdateClient {
+    // Whether onRenderPlayerPre pushed a pose that onRenderPlayerPost still has to pop.
+    private static boolean banked;
+
     public CombatUpdateClient(ModContainer container) {
         // Allows NeoForge to create a config screen for this mod's configs.
         // The config screen is accessed by going to the Mods screen > clicking on your mod > clicking on config.
         // Do not forget to add translations for your config options to the en_us.json file.
         container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
-    }
-
-    @SubscribeEvent
-    static void onClientSetup(FMLClientSetupEvent event) {
-        // Some client setup code
-        CombatUpdate.LOGGER.info("HELLO FROM CLIENT SETUP");
-        CombatUpdate.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
     }
 
     @SubscribeEvent
@@ -142,6 +137,4 @@ public class CombatUpdateClient {
             banked = false;
         }
     }
-
-    private static boolean banked;
 }

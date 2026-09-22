@@ -11,9 +11,12 @@ import ch.bbcag.combatupdate.Config;
 
 // Handles the Shortbow enchantment: releasing a bow fires as if it had been fully drawn,
 // then goes on a short cooldown during which it draws normally instead of instantly.
-public class ShortbowEnchantmentHandler {
+public final class ShortbowEnchantmentHandler {
     // A charge of 20 ticks (BowItem.MAX_DRAW_DURATION) already yields full power, see BowItem#getPowerForTime.
     private static final int FULL_CHARGE_TICKS = 20;
+
+    private ShortbowEnchantmentHandler() {
+    }
 
     @SubscribeEvent
     public static void onArrowLoose(ArrowLooseEvent event) {

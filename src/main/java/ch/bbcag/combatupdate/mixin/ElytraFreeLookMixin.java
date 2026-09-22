@@ -1,11 +1,12 @@
 package ch.bbcag.combatupdate.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import ch.bbcag.combatupdate.client.ElytraOrientation;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -13,32 +14,29 @@ import net.minecraft.world.entity.LivingEntity;
 // vanilla's yaw/pitch arithmetic, so the controls stay aligned with the view at any attitude, and the
 // nose can go over the top and round without hitting vanilla's +-90 degree pitch limit.
 //
-// Entity#turn has no event or overridable hook, so it is replaced outright; everything that is not the
-// local player gliding falls through to the vanilla behaviour below, unchanged.
+// Entity#turn has no event or overridable hook, so it is intercepted at the head and cancelled for the
+// one case we care about. Everything that is not the local player gliding falls straight through to
+// the vanilla method, which also leaves the method intact for other mods to work with.
 @Mixin(Entity.class)
 public abstract class ElytraFreeLookMixin {
 
-    @Overwrite
-    public void turn(double xo, double yo) {
+    @Inject(method = "turn(DD)V", at = @At("HEAD"), cancellable = true)
+    private void combatupdate$freeLookWhileGliding(double xo, double yo, CallbackInfo ci) {
         Entity self = (Entity) (Object) this;
 
-        if (self == Minecraft.getInstance().player && self instanceof LivingEntity living && living.isFallFlying()) {
-            ElytraOrientation.ensureActive(living);
-            ElytraOrientation.applyMouse(xo, yo);
-            ElytraOrientation.writeRotation(self);
-        } else {
-            float xDelta = (float) yo * 0.15F;
-            float yDelta = (float) xo * 0.15F;
-            self.setXRot(self.getXRot() + xDelta);
-            self.setYRot(self.getYRot() + yDelta);
-            self.setXRot(Mth.clamp(self.getXRot(), -90.0F, 90.0F));
-            self.xRotO += xDelta;
-            self.yRotO += yDelta;
-            self.xRotO = Mth.clamp(self.xRotO, -90.0F, 90.0F);
+        if (self != Minecraft.getInstance().player || !(self instanceof LivingEntity living) || !living.isFallFlying()) {
+            return;
         }
 
+        ElytraOrientation.ensureActive(living);
+        ElytraOrientation.applyMouse(xo, yo);
+        ElytraOrientation.writeRotation(self);
+
+        // Vanilla's tail end, which the cancellation would otherwise skip.
         if (self.getVehicle() != null) {
             self.getVehicle().onPassengerTurned(self);
         }
+
+        ci.cancel();
     }
 }

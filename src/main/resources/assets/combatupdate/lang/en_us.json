@@ -3,6 +3,7 @@
   "block.combatupdate.example_block": "Example Block",
   "item.combatupdate.example_item": "Example Item",
   "enchantment.combatupdate.shortbow": "Shortbow",
+  "enchantment.combatupdate.battering_ram": "Battering Ram",
 
   "combatupdate.configuration.title": "CombatUpdate Configs",
   "combatupdate.configuration.section.combatupdate.common.toml": "CombatUpdate Configs",
@@ -16,5 +17,14 @@
   "combatupdate.configuration.pitchSpeed": "Elytra Pitch Speed (degrees/second)",
   "combatupdate.configuration.controlRampSeconds": "Elytra Control Ramp (seconds)",
   "combatupdate.configuration.elytraSpeedMultiplier": "Elytra Speed Multiplier",
-  "combatupdate.configuration.boostRocketIntervalTicks": "Boost Rocket Interval (ticks)"
+  "combatupdate.configuration.boostRocketIntervalTicks": "Boost Rocket Interval (ticks)",
+  "combatupdate.configuration.fusedElytraPenaltyLight": "Fused Elytra Penalty - Light Chestplate (%)",
+  "combatupdate.configuration.fusedElytraPenaltyNormal": "Fused Elytra Penalty - Normal Chestplate (%)",
+  "combatupdate.configuration.fusedElytraPenaltyHeavy": "Fused Elytra Penalty - Heavy Chestplate (%)",
+  "combatupdate.configuration.ramMinSpeed": "Battering Ram Minimum Speed (blocks/tick)",
+  "combatupdate.configuration.ramDamagePerSpeed": "Battering Ram Damage per Speed",
+  "combatupdate.configuration.ramKnockback": "Battering Ram Knockback",
+  "combatupdate.configuration.ramSpeedLoss": "Battering Ram Self Speed Loss (%)",
+  "combatupdate.configuration.ramCooldownTicks": "Battering Ram Cooldown (ticks)",
+  "combatupdate.configuration.ramHelmetDamage": "Battering Ram Helmet Durability Cost"
 }

@@ -9,7 +9,13 @@ import ch.bbcag.combatupdate.CombatUpdate;
 
 // Enchantments are data-driven; their definitions live in data/combatupdate/enchantment/*.json.
 // These keys just let code reference them (e.g. to check an item's enchantment level).
-public class ModEnchantments {
+public final class ModEnchantments {
     public static final ResourceKey<Enchantment> SHORTBOW = ResourceKey.create(
             Registries.ENCHANTMENT, Identifier.fromNamespaceAndPath(CombatUpdate.MODID, "shortbow"));
+
+    public static final ResourceKey<Enchantment> BATTERING_RAM = ResourceKey.create(
+            Registries.ENCHANTMENT, Identifier.fromNamespaceAndPath(CombatUpdate.MODID, "battering_ram"));
+
+    private ModEnchantments() {
+    }
 }

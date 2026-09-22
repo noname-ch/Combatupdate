@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_transmute",
+  "category": "equipment",
+  "group": "elytra_chestplate",
+  "input": "#minecraft:chest_armor",
+  "material": "minecraft:elytra",
+  "result": {
+    "components": {
+      "minecraft:glider": {}
+    }
+  }
+}

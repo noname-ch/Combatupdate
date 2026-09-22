@@ -4,7 +4,7 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 
 // Server-side balance knobs for the mod's combat additions. Grouped by feature so the
 // generated config screen (see CombatUpdateClient) reads as sections rather than a flat list.
-public class Config {
+public final class Config {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     // --- Fireball (thrown fire charge) ---
@@ -55,5 +55,48 @@ public class Config {
             .comment("How many ticks of shift-boosting a single firework rocket pays for (20 ticks = 1 second)")
             .defineInRange("boostRocketIntervalTicks", 20, 1, 200);
 
+    // --- Elytra fused into a chestplate ---
+
+    public static final ModConfigSpec.IntValue FUSED_ELYTRA_PENALTY_LIGHT = BUILDER
+            .comment("Percentage of glide speed lost when the elytra is fused into a light chestplate (gold, by default; see the combatupdate:fused_elytra/light item tag)")
+            .defineInRange("fusedElytraPenaltyLight", 5, 0, 90);
+
+    public static final ModConfigSpec.IntValue FUSED_ELYTRA_PENALTY_NORMAL = BUILDER
+            .comment("Percentage of glide speed lost when the elytra is fused into any chestplate that is neither light nor heavy (leather, chainmail, iron, and modded armour)")
+            .defineInRange("fusedElytraPenaltyNormal", 10, 0, 90);
+
+    public static final ModConfigSpec.IntValue FUSED_ELYTRA_PENALTY_HEAVY = BUILDER
+            .comment("Percentage of glide speed lost when the elytra is fused into a heavy chestplate (diamond and netherite, by default; see the combatupdate:fused_elytra/heavy item tag)")
+            .defineInRange("fusedElytraPenaltyHeavy", 20, 0, 90);
+
+    // --- Battering Ram enchantment ---
+
+    public static final ModConfigSpec.DoubleValue RAM_MIN_SPEED = BUILDER
+            .comment("How fast the player has to be gliding, in blocks per tick, before Battering Ram triggers at all (a rocket-boosted dive runs at roughly 1.5)")
+            .defineInRange("ramMinSpeed", 0.8, 0.1, 10.0);
+
+    public static final ModConfigSpec.DoubleValue RAM_DAMAGE_PER_SPEED = BUILDER
+            .comment("Damage a Battering Ram impact deals per level, for every block per tick of impact speed")
+            .defineInRange("ramDamagePerSpeed", 4.0, 0.1, 50.0);
+
+    public static final ModConfigSpec.DoubleValue RAM_KNOCKBACK = BUILDER
+            .comment("How hard a Battering Ram impact throws its target on along the flight path, per level")
+            .defineInRange("ramKnockback", 1.0, 0.0, 10.0);
+
+    public static final ModConfigSpec.IntValue RAM_SPEED_LOSS = BUILDER
+            .comment("What percentage of their own speed a Battering Ram impact costs the player")
+            .defineInRange("ramSpeedLoss", 60, 0, 100);
+
+    public static final ModConfigSpec.IntValue RAM_COOLDOWN_TICKS = BUILDER
+            .comment("How many ticks have to pass between Battering Ram impacts (20 ticks = 1 second)")
+            .defineInRange("ramCooldownTicks", 20, 1, 200);
+
+    public static final ModConfigSpec.IntValue RAM_HELMET_DAMAGE = BUILDER
+            .comment("How much durability a Battering Ram impact costs the helmet")
+            .defineInRange("ramHelmetDamage", 3, 0, 100);
+
     static final ModConfigSpec SPEC = BUILDER.build();
+
+    private Config() {
+    }
 }

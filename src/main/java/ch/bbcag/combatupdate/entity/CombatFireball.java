@@ -13,10 +13,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.event.EventHooks;
 
 // A thrown fireball that flies at a constant speed (no acceleration or drag, unlike vanilla Blaze/Ghast
 // fireballs) and explodes on impact, similar to a Ghast's fireball.
-public class CombatFireball extends Fireball {
+public final class CombatFireball extends Fireball {
     public CombatFireball(EntityType<? extends CombatFireball> type, Level level) {
         super(type, level);
     }
@@ -40,8 +41,8 @@ public class CombatFireball extends Fireball {
     protected void onHit(HitResult hitResult) {
         super.onHit(hitResult);
         if (this.level() instanceof ServerLevel serverLevel) {
-            boolean grief = net.neoforged.neoforge.event.EventHooks.canEntityGrief(serverLevel, this.getOwner());
-            this.level().explode(this, this.getX(), this.getY(), this.getZ(),
+            boolean grief = EventHooks.canEntityGrief(serverLevel, this.getOwner());
+            serverLevel.explode(this, this.getX(), this.getY(), this.getZ(),
                     (float) Config.FIREBALL_EXPLOSION_POWER.getAsDouble(), grief, Level.ExplosionInteraction.MOB);
             this.discard();
         }
