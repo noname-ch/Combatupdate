@@ -103,6 +103,66 @@ public final class Config {
             .comment("How hard the wind burst shoves at Battering Ram I; every level above that adds 0.5, matching the vanilla Wind Burst enchantment")
             .defineInRange("ramWindBurstKnockback", 1.2, 0.0, 10.0);
 
+    public static final ModConfigSpec.DoubleValue RAM_EXPLOSION_POWER = BUILDER
+            .comment("Explosion power of the real blast a Battering Ram impact sets off on top of the wind burst (TNT is 4.0); 0 turns the blast off entirely")
+            .defineInRange("ramExplosionPower", 1.0, 0.0, 10.0);
+
+    public static final ModConfigSpec.BooleanValue RAM_EXPLOSION_BREAKS_BLOCKS = BUILDER
+            .comment("Whether the Battering Ram blast breaks terrain like TNT does, rather than only dealing damage and knockback")
+            .define("ramExplosionBreaksBlocks", false);
+
+    // --- Singularity enchantment ---
+
+    public static final ModConfigSpec.DoubleValue SINGULARITY_DAMAGE_CAP_HEARTS = BUILDER
+            .comment("The most damage, in hearts, that a single hit can deal to a player wearing Singularity leggings")
+            .defineInRange("singularityDamageCapHearts", 4.0, 0.5, 20.0);
+
+    // --- Armageddon enchantment ---
+
+    public static final ModConfigSpec.IntValue ARMAGEDDON_STREAK_REQUIRED = BUILDER
+            .comment("How many hits an Armageddon boots wearer has to land (or take, if the target is wearing them) before the next hit is empowered")
+            .defineInRange("armageddonStreakRequired", 3, 1, 10);
+
+    public static final ModConfigSpec.DoubleValue ARMAGEDDON_DAMAGE_BONUS_PERCENT = BUILDER
+            .comment("Bonus damage on an Armageddon-empowered hit, as a fraction of the hit's normal damage (0.5 = +50%)")
+            .defineInRange("armageddonDamageBonusPercent", 0.5, 0.0, 5.0);
+
+    // --- Regularity enchantment ---
+
+    public static final ModConfigSpec.DoubleValue REGULARITY_THRESHOLD_HEARTS = BUILDER
+            .comment("Regularity only follows up on hits smaller than this, in hearts - a heavy blow doesn't get a delayed second hit")
+            .defineInRange("regularityThresholdHearts", 4.0, 0.5, 20.0);
+
+    public static final ModConfigSpec.DoubleValue REGULARITY_SECOND_HIT_PERCENT = BUILDER
+            .comment("Regularity's delayed second hit, as a fraction of the damage the first hit dealt (0.5 = 50%)")
+            .defineInRange("regularitySecondHitPercent", 0.5, 0.0, 1.0);
+
+    // --- Lifesteal enchantment ---
+
+    public static final ModConfigSpec.DoubleValue LIFESTEAL_MAX_HEAL_HEARTS = BUILDER
+            .comment("The most a single Lifesteal hit can heal its wielder, in hearts")
+            .defineInRange("lifestealMaxHealHearts", 3.0, 0.0, 20.0);
+
+    // --- Gamble enchantment ---
+
+    public static final ModConfigSpec.DoubleValue GAMBLE_CHANCE = BUILDER
+            .comment("Chance, per hit, that Gamble triggers its true-damage coin flip (0.15 = 15%)")
+            .defineInRange("gambleChance", 0.15, 0.0, 1.0);
+
+    // --- Leather enchant colors (Hypixel Pit style) ---
+
+    public static final ModConfigSpec.IntValue RAGE_PANTS_COLOR = BUILDER
+            .comment("Dye color (0xRRGGBB) leather leggings turn while enchanted with Regularity")
+            .defineInRange("ragePantsColor", 0xE60026, 0, 0xFFFFFF);
+
+    public static final ModConfigSpec.IntValue SINGULARITY_PANTS_COLOR = BUILDER
+            .comment("Dye color (0xRRGGBB) leather leggings turn while enchanted with Singularity")
+            .defineInRange("singularityPantsColor", 0x1F4FFF, 0, 0xFFFFFF);
+
+    public static final ModConfigSpec.IntValue ARMAGEDDON_BOOTS_COLOR = BUILDER
+            .comment("Dye color (0xRRGGBB) leather boots turn while enchanted with Armageddon")
+            .defineInRange("armageddonBootsColor", 0x8B0000, 0, 0xFFFFFF);
+
     static final ModConfigSpec SPEC = BUILDER.build();
 
     private Config() {
