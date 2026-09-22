@@ -145,12 +145,17 @@ public final class BatteringRam {
     // Read on both sides: the wall mixin runs wherever the collision does, and has to reach the same
     // answer on each so the client doesn't flinch from damage the server never dealt.
     public static int ramLevel(Player player) {
-        ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
+        return ramLevel(player.getItemBySlot(EquipmentSlot.HEAD), player.level());
+    }
+
+    // Split out so the client can also ask a bare helmet stack whether it should render flattened,
+    // without needing a player to read it off of (see BatteringRamHelmetModel).
+    public static int ramLevel(ItemStack helmet, Level level) {
         if (helmet.isEmpty()) {
             return 0;
         }
 
-        return player.level().registryAccess()
+        return level.registryAccess()
                 .lookupOrThrow(Registries.ENCHANTMENT)
                 .get(ModEnchantments.BATTERING_RAM)
                 .map(helmet::getEnchantmentLevel)
