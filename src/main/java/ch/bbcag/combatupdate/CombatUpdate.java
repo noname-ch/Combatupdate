@@ -23,6 +23,7 @@ import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.MapColor;
@@ -86,6 +87,12 @@ public final class CombatUpdate {
     public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", p -> p.food(new FoodProperties.Builder()
             .alwaysEdible().nutrition(1).saturationModifier(2f).build()));
 
+    // Swords with no swing timer and less damage behind each hit; see Shortsword for the trade
+    public static final DeferredItem<Item> IRON_SHORTSWORD = ITEMS.registerSimpleItem("iron_shortsword",
+            p -> Shortsword.properties(p, ToolMaterial.IRON));
+    public static final DeferredItem<Item> DIAMOND_SHORTSWORD = ITEMS.registerSimpleItem("diamond_shortsword",
+            p -> Shortsword.properties(p, ToolMaterial.DIAMOND));
+
     // Creates a creative tab with the id "combatupdate:example_tab" for the example item, that is placed after the combat tab
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.combatupdate")) //The language key for the title of your CreativeModeTab
@@ -130,24 +137,31 @@ public final class CombatUpdate {
         if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
             event.accept(EXAMPLE_BLOCK_ITEM);
         }
+        if (event.getTabKey() == CreativeModeTabs.COMBAT) {
+            event.accept(IRON_SHORTSWORD);
+            event.accept(DIAMOND_SHORTSWORD);
+        }
     }
 
     @SubscribeEvent
     public void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
         Player player = event.getEntity();
         ItemStack stack = event.getItemStack();
-        if (throwFireballIfHeld(player, stack, event.getLevel())) {
+        if (throwFireballIfHeld(player, stack, event.getLevel())
+                || ElytraBomb.release(player, stack, event.getLevel())) {
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.SUCCESS);
         }
     }
 
-    // Holding a vanilla fire charge and right-clicking throws it as a fireball instead of placing fire on a block.
+    // Holding a vanilla fire charge and right-clicking throws it as a fireball instead of placing fire
+    // on a block; holding TNT while gliding drops it as a bomb instead of placing it.
     @SubscribeEvent
     public void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         Player player = event.getEntity();
         ItemStack stack = event.getItemStack();
-        if (throwFireballIfHeld(player, stack, event.getLevel())) {
+        if (throwFireballIfHeld(player, stack, event.getLevel())
+                || ElytraBomb.release(player, stack, event.getLevel())) {
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.SUCCESS);
         }
