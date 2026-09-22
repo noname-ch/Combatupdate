@@ -61,8 +61,9 @@ public class CombatUpdateClient {
         event.registerEntityRenderer(CombatUpdate.COMBAT_FIREBALL.get(), context -> new ThrownItemRenderer<>(context, 3.0F, true));
     }
 
-    // Holding A or D while gliding rolls the player instead of strafing (vanilla's glide physics ignore
-    // strafe input entirely, so this doesn't take anything away), and the camera banks to match.
+    // Holding A or D while gliding rolls the player and W or S pitches it, instead of steering on foot
+    // (vanilla's glide physics ignore movement input entirely, so this doesn't take anything away), and
+    // the camera banks to match.
     @SubscribeEvent
     static void onComputeCameraAngles(ViewportEvent.ComputeCameraAngles event) {
         Minecraft minecraft = Minecraft.getInstance();
@@ -80,7 +81,19 @@ public class CombatUpdateClient {
 
         boolean left = minecraft.options.keyLeft.isDown();
         boolean right = minecraft.options.keyRight.isDown();
-        ElytraOrientation.advanceRoll(left == right ? 0 : (left ? -1 : 1));
+        boolean noseDown = minecraft.options.keyUp.isDown();
+        boolean noseUp = minecraft.options.keyDown.isDown();
+
+        // S pulls the nose up and W pushes it down, the way a flight stick works rather than the way
+        // walking does: pulling back climbs.
+        int rollDirection = left == right ? 0 : (left ? -1 : 1);
+        int pitchDirection = noseUp == noseDown ? 0 : (noseUp ? 1 : -1);
+
+        // Unlike a bank, a pitch swings the nose somewhere new, and the game still runs movement and
+        // aim off the entity's own yaw and pitch, so those have to follow it.
+        if (ElytraOrientation.advanceKeys(rollDirection, pitchDirection)) {
+            ElytraOrientation.writeRotation(player);
+        }
 
         event.setRoll(ElytraOrientation.roll());
     }

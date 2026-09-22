@@ -39,6 +39,14 @@ public class Config {
             .comment("How many degrees per second holding A/D rolls the player while gliding with an elytra")
             .defineInRange("rollSpeed", 200, 10, 720);
 
+    public static final ModConfigSpec.IntValue PITCH_SPEED = BUILDER
+            .comment("How many degrees per second holding W/S pitches the player while gliding with an elytra (S pulls the nose up, W pushes it down)")
+            .defineInRange("pitchSpeed", 120, 10, 720);
+
+    public static final ModConfigSpec.DoubleValue CONTROL_RAMP_SECONDS = BUILDER
+            .comment("How long, in seconds, the A/D and W/S keys take to wind the glide's rotation up to full speed and back down again (0 is an instant, unsmoothed response)")
+            .defineInRange("controlRampSeconds", 0.15, 0.0, 2.0);
+
     public static final ModConfigSpec.DoubleValue ELYTRA_SPEED_MULTIPLIER = BUILDER
             .comment("Multiplies the top speed of elytra gliding (1.0 is vanilla)")
             .defineInRange("elytraSpeedMultiplier", 1.0, 0.5, 5.0);

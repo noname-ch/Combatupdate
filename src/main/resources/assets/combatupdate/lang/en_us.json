@@ -13,6 +13,8 @@
   "combatupdate.configuration.shortbowCooldownTicks": "Shortbow Cooldown (ticks)",
   "combatupdate.configuration.tntBlastRadius": "TNT Blast Radius",
   "combatupdate.configuration.rollSpeed": "Elytra Roll Speed (degrees/second)",
+  "combatupdate.configuration.pitchSpeed": "Elytra Pitch Speed (degrees/second)",
+  "combatupdate.configuration.controlRampSeconds": "Elytra Control Ramp (seconds)",
   "combatupdate.configuration.elytraSpeedMultiplier": "Elytra Speed Multiplier",
   "combatupdate.configuration.boostRocketIntervalTicks": "Boost Rocket Interval (ticks)"
 }

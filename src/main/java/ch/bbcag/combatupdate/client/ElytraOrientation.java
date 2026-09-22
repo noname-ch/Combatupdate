@@ -15,8 +15,9 @@ import net.minecraft.world.phys.Vec3;
 // Minecraft steers by nudging two numbers, yaw and pitch. That only behaves like the screen near level
 // flight: yaw stops meaning "horizontal" as the nose approaches vertical, and once past vertical the
 // whole horizontal axis flips, so the controls silently stop matching the view. Rotating an actual
-// orientation instead - mouse around the aircraft's own up and right axes, A/D around its nose - keeps
-// input aligned with what is on screen at every attitude, which is how a flight sim handles it.
+// orientation instead - mouse and W/S around the aircraft's own up and right axes, A/D around its
+// nose - keeps input aligned with what is on screen at every attitude, which is how a flight sim
+// handles it.
 //
 // Yaw and pitch are then derived back out of the nose direction for the game (movement and aim still
 // run off them), and the leftover rotation about the nose is the roll handed to the camera.
@@ -28,9 +29,15 @@ public final class ElytraOrientation {
 
     private static final Vec3 WORLD_UP = new Vec3(0.0, 1.0, 0.0);
 
+    // Below this, an eased rate counts as having come to rest, so a released key settles instead of
+    // trailing an ever-smaller rotation behind it forever.
+    private static final float RESTING_DEGREES_PER_SECOND = 0.05F;
+
     private static boolean active;
     private static Vec3 forward = new Vec3(0.0, 0.0, 1.0);
     private static Vec3 up = WORLD_UP;
+    private static float rollRate;
+    private static float pitchRate;
     private static long lastFrameNanos;
 
     private ElytraOrientation() {
@@ -43,6 +50,8 @@ public final class ElytraOrientation {
 
         forward = player.getLookAngle().normalize();
         up = horizonUp(forward);
+        rollRate = 0.0F;
+        pitchRate = 0.0F;
         active = true;
         lastFrameNanos = 0L;
     }
@@ -51,21 +60,61 @@ public final class ElytraOrientation {
         active = false;
     }
 
-    // Driven per frame off wall-clock time rather than per tick: a tick-sized step is 1/20th of a
-    // second of bank applied at once, which reads as the view ratcheting round instead of sweeping.
-    public static void advanceRoll(int direction) {
+    // The keyboard axes: A/D bank about the nose, W/S swing it down and up about the wings. Both are
+    // driven per frame off wall-clock time rather than per tick, because a tick-sized step is 1/20th of
+    // a second of rotation applied at once, which reads as the view ratcheting round instead of
+    // sweeping.
+    //
+    // Each axis eases its rate towards the rate the key is asking for instead of jumping to it, so a
+    // press winds the rotation up and a release lets it run down, rather than the view snapping into
+    // motion and then dead-stopping. The mouse deliberately stays direct: smoothing a mouse reads as
+    // lag, while smoothing a key reads as weight.
+    //
+    // Positive pitch is nose-up. Returns whether the nose actually moved, which is the caller's cue
+    // that the entity's own yaw and pitch need bringing back in line with it - banking alone leaves
+    // the nose where it was, so it needs no such fixup.
+    public static boolean advanceKeys(int rollDirection, int pitchDirection) {
         long now = System.nanoTime();
         float seconds = lastFrameNanos == 0L ? 0.0F : (now - lastFrameNanos) / 1.0E9F;
         lastFrameNanos = now;
 
-        if (direction == 0 || seconds <= 0.0F) {
-            return;
+        if (seconds <= 0.0F) {
+            return false;
         }
 
         // Clamped so a stutter or a paused game can't dump a huge rotation in on the next frame.
-        float degrees = direction * Config.ROLL_SPEED.getAsInt() * Math.min(seconds, 0.1F);
-        up = rotateAbout(up, forward, (float) Math.toRadians(degrees));
-        orthonormalize();
+        seconds = Math.min(seconds, 0.1F);
+
+        // Framerate-independent ease: over one ramp's worth of time the rate closes the same fraction
+        // of the remaining gap no matter how the frames happen to fall.
+        float ramp = (float) Config.CONTROL_RAMP_SECONDS.getAsDouble();
+        float blend = ramp <= 0.0F ? 1.0F : 1.0F - (float) Math.exp(-seconds / ramp);
+
+        rollRate = ease(rollRate, rollDirection * Config.ROLL_SPEED.getAsInt(), blend);
+        pitchRate = ease(pitchRate, pitchDirection * Config.PITCH_SPEED.getAsInt(), blend);
+
+        if (rollRate != 0.0F) {
+            up = rotateAbout(up, forward, (float) Math.toRadians(rollRate * seconds));
+        }
+
+        boolean noseMoved = pitchRate != 0.0F;
+        if (noseMoved) {
+            float radians = (float) Math.toRadians(pitchRate * seconds);
+            Vec3 right = forward.cross(up).normalize();
+            forward = rotateAbout(forward, right, radians);
+            up = rotateAbout(up, right, radians);
+        }
+
+        if (rollRate != 0.0F || noseMoved) {
+            orthonormalize();
+        }
+
+        return noseMoved;
+    }
+
+    private static float ease(float rate, float target, float blend) {
+        float eased = rate + (target - rate) * blend;
+        return target == 0.0F && Math.abs(eased) < RESTING_DEGREES_PER_SECOND ? 0.0F : eased;
     }
 
     public static void applyMouse(double xo, double yo) {
