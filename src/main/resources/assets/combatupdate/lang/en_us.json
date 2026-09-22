@@ -2,6 +2,8 @@
   "itemGroup.combatupdate": "Example Mod Tab",
   "block.combatupdate.example_block": "Example Block",
   "item.combatupdate.example_item": "Example Item",
+  "item.combatupdate.iron_shortsword": "Iron Shortsword",
+  "item.combatupdate.diamond_shortsword": "Diamond Shortsword",
   "enchantment.combatupdate.shortbow": "Shortbow",
   "enchantment.combatupdate.battering_ram": "Battering Ram",
   "enchantment.combatupdate.regularity": "Regularity",
