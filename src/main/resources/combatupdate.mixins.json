@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "PrimedTntAccessor",
-    "ElytraSpeedMixin"
+    "ElytraSpeedMixin",
+    "BatteringRamWallMixin"
   ],
   "client": [
     "ElytraFreeLookMixin"

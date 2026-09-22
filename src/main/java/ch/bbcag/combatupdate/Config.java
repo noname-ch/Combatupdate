@@ -95,6 +95,14 @@ public final class Config {
             .comment("How much durability a Battering Ram impact costs the helmet")
             .defineInRange("ramHelmetDamage", 3, 0, 100);
 
+    public static final ModConfigSpec.DoubleValue RAM_WIND_BURST_RADIUS = BUILDER
+            .comment("Radius of the wind burst a Battering Ram impact sets off, against walls as well as mobs (a thrown wind charge is 1.2, the vanilla Wind Burst enchantment is 3.5); 0 turns the burst off entirely")
+            .defineInRange("ramWindBurstRadius", 3.0, 0.0, 10.0);
+
+    public static final ModConfigSpec.DoubleValue RAM_WIND_BURST_KNOCKBACK = BUILDER
+            .comment("How hard the wind burst shoves at Battering Ram I; every level above that adds 0.5, matching the vanilla Wind Burst enchantment")
+            .defineInRange("ramWindBurstKnockback", 1.2, 0.0, 10.0);
+
     static final ModConfigSpec SPEC = BUILDER.build();
 
     private Config() {

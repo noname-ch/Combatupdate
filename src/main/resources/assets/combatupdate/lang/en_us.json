@@ -26,5 +26,7 @@
   "combatupdate.configuration.ramKnockback": "Battering Ram Knockback",
   "combatupdate.configuration.ramSpeedLoss": "Battering Ram Self Speed Loss (%)",
   "combatupdate.configuration.ramCooldownTicks": "Battering Ram Cooldown (ticks)",
-  "combatupdate.configuration.ramHelmetDamage": "Battering Ram Helmet Durability Cost"
+  "combatupdate.configuration.ramHelmetDamage": "Battering Ram Helmet Durability Cost",
+  "combatupdate.configuration.ramWindBurstRadius": "Battering Ram Wind Burst Radius",
+  "combatupdate.configuration.ramWindBurstKnockback": "Battering Ram Wind Burst Knockback"
 }
