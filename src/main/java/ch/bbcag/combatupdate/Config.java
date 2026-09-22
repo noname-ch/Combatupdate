@@ -103,6 +103,56 @@ public final class Config {
             .comment("How hard the wind burst shoves at Battering Ram I; every level above that adds 0.5, matching the vanilla Wind Burst enchantment")
             .defineInRange("ramWindBurstKnockback", 1.2, 0.0, 10.0);
 
+    // --- Regularity / Singularity (leather leggings) ---
+
+    public static final ModConfigSpec.DoubleValue REGULARITY_THRESHOLD_HEARTS = BUILDER
+            .comment("Regularity procs its extra hit when the original hit dealt less than this many hearts of damage")
+            .defineInRange("regularityThresholdHearts", 2.0, 0.0, 20.0);
+
+    public static final ModConfigSpec.DoubleValue REGULARITY_SECOND_HIT_PERCENT = BUILDER
+            .comment("Regularity's extra hit deals this fraction of the original hit's damage (0.5 = 50%)")
+            .defineInRange("regularitySecondHitPercent", 0.5, 0.0, 2.0);
+
+    public static final ModConfigSpec.DoubleValue SINGULARITY_DAMAGE_CAP_HEARTS = BUILDER
+            .comment("Singularity caps any single non-true-damage hit taken by the wearer at this many hearts")
+            .defineInRange("singularityDamageCapHearts", 2.0, 0.0, 20.0);
+
+    // --- Armageddon (leather boots) ---
+
+    public static final ModConfigSpec.IntValue ARMAGEDDON_STREAK_REQUIRED = BUILDER
+            .comment("How many hits in a row the wearer must take without landing one of their own before their next hit gets the Armageddon bonus")
+            .defineInRange("armageddonStreakRequired", 3, 1, 20);
+
+    public static final ModConfigSpec.DoubleValue ARMAGEDDON_DAMAGE_BONUS_PERCENT = BUILDER
+            .comment("Extra damage on the Armageddon bonus hit, as a fraction of that hit's damage (0.65 = +65%)")
+            .defineInRange("armageddonDamageBonusPercent", 0.65, 0.0, 5.0);
+
+    // --- Lifesteal ---
+
+    public static final ModConfigSpec.DoubleValue LIFESTEAL_MAX_HEAL_HEARTS = BUILDER
+            .comment("The most health Lifesteal can restore from a single hit, in hearts (1.5 hearts = 3 HP)")
+            .defineInRange("lifestealMaxHealHearts", 1.5, 0.0, 20.0);
+
+    // --- Gamble ---
+
+    public static final ModConfigSpec.DoubleValue GAMBLE_CHANCE = BUILDER
+            .comment("Chance, per qualifying hit, that Gamble deals true damage to either the attacker or the target")
+            .defineInRange("gambleChance", 0.5, 0.0, 1.0);
+
+    // --- Leather armor recoloring ---
+
+    public static final ModConfigSpec.IntValue RAGE_PANTS_COLOR = BUILDER
+            .comment("RGB color (0xRRGGBB) leather leggings are dyed when enchanted with Regularity")
+            .defineInRange("ragePantsColor", 0xFF4500, 0x000000, 0xFFFFFF);
+
+    public static final ModConfigSpec.IntValue SINGULARITY_PANTS_COLOR = BUILDER
+            .comment("RGB color (0xRRGGBB) leather leggings are dyed when enchanted with Singularity")
+            .defineInRange("singularityPantsColor", 0x1E3FFF, 0x000000, 0xFFFFFF);
+
+    public static final ModConfigSpec.IntValue ARMAGEDDON_BOOTS_COLOR = BUILDER
+            .comment("RGB color (0xRRGGBB) leather boots are dyed when enchanted with Armageddon")
+            .defineInRange("armageddonBootsColor", 0x8B0000, 0x000000, 0xFFFFFF);
+
     static final ModConfigSpec SPEC = BUILDER.build();
 
     private Config() {

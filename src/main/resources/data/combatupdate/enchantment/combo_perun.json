@@ -1,0 +1,20 @@
+{
+  "description": {
+    "translate": "enchantment.combatupdate.combo_perun"
+  },
+  "supported_items": "#minecraft:swords",
+  "slots": [
+    "mainhand"
+  ],
+  "weight": 1,
+  "max_level": 3,
+  "min_cost": {
+    "base": 25,
+    "per_level_above_first": 15
+  },
+  "max_cost": {
+    "base": 70,
+    "per_level_above_first": 15
+  },
+  "anvil_cost": 6
+}

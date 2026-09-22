@@ -42,6 +42,8 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import ch.bbcag.combatupdate.combat.CombatEnchantmentHandler;
+import ch.bbcag.combatupdate.combat.LeatherEnchantColor;
 import ch.bbcag.combatupdate.enchantment.BatteringRam;
 import ch.bbcag.combatupdate.enchantment.ShortbowEnchantmentHandler;
 import ch.bbcag.combatupdate.entity.CombatFireball;
@@ -105,6 +107,7 @@ public final class CombatUpdate {
         // Register ourselves for the game events the @SubscribeEvent methods below handle.
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.register(ShortbowEnchantmentHandler.class);
+        NeoForge.EVENT_BUS.register(CombatEnchantmentHandler.class);
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
@@ -178,5 +181,6 @@ public final class CombatUpdate {
     public void onPlayerTick(PlayerTickEvent.Pre event) {
         ElytraBoost.tick(event.getEntity());
         BatteringRam.tick(event.getEntity());
+        LeatherEnchantColor.tick(event.getEntity());
     }
 }

@@ -1,0 +1,38 @@
+{
+  "description": {
+    "translate": "enchantment.combatupdate.gotta_go_fast"
+  },
+  "effects": {
+    "minecraft:attributes": [
+      {
+        "amount": {
+          "type": "minecraft:lookup",
+          "values": [
+            0.05,
+            0.1,
+            0.2
+          ],
+          "fallback": 0.2
+        },
+        "attribute": "minecraft:movement_speed",
+        "id": "combatupdate:enchantment.gotta_go_fast",
+        "operation": "add_multiplied_total"
+      }
+    ]
+  },
+  "supported_items": "#minecraft:enchantable/foot_armor",
+  "slots": [
+    "feet"
+  ],
+  "weight": 5,
+  "max_level": 3,
+  "min_cost": {
+    "base": 10,
+    "per_level_above_first": 10
+  },
+  "max_cost": {
+    "base": 30,
+    "per_level_above_first": 10
+  },
+  "anvil_cost": 2
+}
