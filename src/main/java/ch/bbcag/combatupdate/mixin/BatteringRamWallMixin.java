@@ -31,7 +31,7 @@ public abstract class BatteringRamWallMixin {
         // Vanilla's own guard: the method is called every tick of a glide, but only a tick that ran
         // into something is an impact.
         if (self.horizontalCollision) {
-            BatteringRam.onWallImpact(player, moveHorLength - newMoveHorLength);
+            BatteringRam.onWallImpact(player, moveHorLength - newMoveHorLength, moveHorLength);
         }
     }
 }

@@ -35,6 +35,7 @@
   "combatupdate.configuration.ramSpeedLoss": "Battering Ram Self Speed Loss (%)",
   "combatupdate.configuration.ramCooldownTicks": "Battering Ram Cooldown (ticks)",
   "combatupdate.configuration.ramHelmetDamage": "Battering Ram Helmet Durability Cost",
+  "combatupdate.configuration.ramStunTicks": "Battering Ram Daze (ticks)",
   "combatupdate.configuration.ramWindBurstRadius": "Battering Ram Wind Burst Radius",
   "combatupdate.configuration.ramWindBurstKnockback": "Battering Ram Wind Burst Knockback",
   "combatupdate.configuration.ramExplosionPower": "Battering Ram Explosion Power",
@@ -57,7 +58,7 @@
   "combatupdate.configuration.damageNumberScale": "Damage Number Scale",
 
   "enchantment.combatupdate.shortbow.desc": "Releases at full draw the instant you let go, then needs a moment before it will do it again.",
-  "enchantment.combatupdate.battering_ram.desc": "Glide into something fast enough and you are the hammer: damage scaled by your speed, a wind burst and a blast on impact, and walls stop hurting you.",
+  "enchantment.combatupdate.battering_ram.desc": "Glide into something fast enough and you are the hammer: damage scaled by your speed, a wind burst and a blast on impact, and walls stop hurting you. Losing your charge leaves you dazed for a moment. Higher levels buy force rather than damage - a wider gust, a deeper hole, and more of your charge carried through the hit, so less of a daze with it.",
   "enchantment.combatupdate.regularity.desc": "A light hit is followed a moment later by a second one, for a share of what the first dealt.",
   "enchantment.combatupdate.singularity.desc": "Caps how much health any single hit can take off you, however hard it lands.",
   "enchantment.combatupdate.armageddon.desc": "Land enough hits in a row and the next one comes down harder.",

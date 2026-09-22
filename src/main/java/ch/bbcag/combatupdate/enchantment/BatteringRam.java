@@ -16,6 +16,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -56,9 +58,19 @@ public final class BatteringRam {
     // for the other rather than moving the goalposts.
     private static final double WALL_IMPACT_THRESHOLD = 0.3;
 
-    // What each level above the first adds to the burst's shove, matching vanilla Wind Burst's own
-    // progression of roughly 1.2 / 1.7 / 2.2.
+    // What each level above the first buys. Deliberately none of it is damage: a heavier helmet does
+    // not make you hit harder, it makes you hit through. So the levels go on force instead - a wider
+    // gust, a deeper hole, and more of your own speed carried out the far side of the impact.
     private static final float KNOCKBACK_PER_LEVEL = 0.5F;
+    private static final float BURST_RADIUS_PER_LEVEL = 1.0F;
+    private static final float EXPLOSION_POWER_PER_LEVEL = 0.75F;
+
+    // Percentage points knocked off the speed an impact costs, per level above the first.
+    private static final int SPEED_KEPT_PER_LEVEL = 20;
+
+    // How hard the daze pins the player down. Slowness VI leaves them shuffling rather than frozen,
+    // which still reads as knocked out without taking the controls away outright.
+    private static final int DAZE_SLOWNESS_AMPLIFIER = 5;
 
     private BatteringRam() {
     }
@@ -99,7 +111,7 @@ public final class BatteringRam {
         }
 
         DamageSource source = player.damageSources().playerAttack(player);
-        float damage = (float) (speed * Config.RAM_DAMAGE_PER_SPEED.getAsDouble() * enchantmentLevel);
+        float damage = (float) (speed * Config.RAM_DAMAGE_PER_SPEED.getAsDouble());
         Vec3 heading = velocity.scale(1.0 / speed);
 
         for (LivingEntity target : struck) {
@@ -113,11 +125,16 @@ public final class BatteringRam {
         serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.MACE_SMASH_AIR, SoundSource.PLAYERS, 1.0F, 1.0F);
 
-        // The ram costs the player the speed it just spent, so landing one is a committed attack
-        // rather than something that happens in passing. syncVelocity is what pushes the new velocity
-        // out to the client, which would otherwise keep flying on at the speed it still thinks it has.
-        player.setDeltaMovement(velocity.scale(1.0 - Config.RAM_SPEED_LOSS.getAsInt() / 100.0));
+        // The ram costs the player speed, so landing one is a committed attack rather than something
+        // that happens in passing - but the better the helmet, the more of the charge survives the
+        // hit, until at the top level you barely notice going through something. syncVelocity is what
+        // pushes the new velocity out to the client, which would otherwise keep flying on at the
+        // speed it still thinks it has.
+        int speedLoss = Math.max(0,
+                Config.RAM_SPEED_LOSS.getAsInt() - (enchantmentLevel - 1) * SPEED_KEPT_PER_LEVEL);
+        player.setDeltaMovement(velocity.scale(1.0 - speedLoss / 100.0));
         player.syncVelocity = true;
+        daze(player, speedLoss / 100.0);
 
         finishImpact(serverLevel, player, enchantmentLevel);
     }
@@ -125,7 +142,7 @@ public final class BatteringRam {
     // Flying into a wall, called from BatteringRamWallMixin once vanilla's own damage has been
     // cancelled. speedLost is how much the collision took off the player, which is the same figure
     // vanilla scored its damage from.
-    public static void onWallImpact(Player player, double speedLost) {
+    public static void onWallImpact(Player player, double speedLost, double speedBefore) {
         if (!(player.level() instanceof ServerLevel serverLevel)) {
             return;
         }
@@ -138,6 +155,11 @@ public final class BatteringRam {
         if (enchantmentLevel <= 0) {
             return;
         }
+
+        // A wall does not care how good the helmet is - it takes whatever speed it takes - so unlike
+        // ramming a mob, the daze here is measured off the collision itself rather than reduced by
+        // level. Hitting one flat out still knocks you out cold.
+        daze(player, speedBefore > 0.0 ? Math.min(1.0, speedLost / speedBefore) : 1.0);
 
         serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.MACE_SMASH_GROUND_HEAVY, SoundSource.PLAYERS, 1.0F, 1.0F);
@@ -173,7 +195,7 @@ public final class BatteringRam {
         Vec3 at = player.getEyePosition().add(player.getLookAngle());
 
         windBurst(level, player, enchantmentLevel, at);
-        blast(level, player, at);
+        blast(level, player, at, enchantmentLevel);
 
         player.getItemBySlot(EquipmentSlot.HEAD)
                 .hurtAndBreak(Config.RAM_HELMET_DAMAGE.getAsInt(), player, EquipmentSlot.HEAD);
@@ -184,10 +206,14 @@ public final class BatteringRam {
     // The same explosion a wind charge makes: no damage of its own and no terrain broken, just the
     // shove and the gust. TRIGGER still lets it flip a lever or set off TNT, as a wind charge would.
     private static void windBurst(ServerLevel level, Player player, int enchantmentLevel, Vec3 at) {
-        float radius = (float) Config.RAM_WIND_BURST_RADIUS.getAsDouble();
-        if (radius <= 0.0F) {
+        // Tested against the configured base rather than the grown radius, so setting it to 0 still
+        // means off however high the enchantment goes.
+        double configured = Config.RAM_WIND_BURST_RADIUS.getAsDouble();
+        if (configured <= 0.0) {
             return;
         }
+
+        float radius = (float) configured + (enchantmentLevel - 1) * BURST_RADIUS_PER_LEVEL;
 
         float knockback = (float) Config.RAM_WIND_BURST_KNOCKBACK.getAsDouble()
                 + (enchantmentLevel - 1) * KNOCKBACK_PER_LEVEL;
@@ -204,11 +230,13 @@ public final class BatteringRam {
     // A real blast on top of the gust, small enough to read as the impact rather than as ordnance.
     // The rammer is the one exception to it: taking the hit from their own charge would undo the
     // whole point of the helmet having just eaten the wall for them.
-    private static void blast(ServerLevel level, Player player, Vec3 at) {
-        float power = (float) Config.RAM_EXPLOSION_POWER.getAsDouble();
-        if (power <= 0.0F) {
+    private static void blast(ServerLevel level, Player player, Vec3 at, int enchantmentLevel) {
+        double configured = Config.RAM_EXPLOSION_POWER.getAsDouble();
+        if (configured <= 0.0) {
             return;
         }
+
+        float power = (float) configured + (enchantmentLevel - 1) * EXPLOSION_POWER_PER_LEVEL;
 
         level.explode(player, null, new SparesRammer(player), at, power, false,
                 Config.RAM_EXPLOSION_BREAKS_BLOCKS.get()
@@ -230,6 +258,22 @@ public final class BatteringRam {
         public boolean shouldDamageEntity(Explosion explosion, Entity entity) {
             return entity != this.rammer && super.shouldDamageEntity(explosion, entity);
         }
+    }
+
+    // Knocked out: an impact that costs the player their charge leaves them blind and barely able to
+    // move for a moment, in proportion to how much of it went. A high-level ram that hardly slows you
+    // hardly dazes you either, which is the other half of what the levels buy.
+    private static void daze(Player player, double speedLostFraction) {
+        int ticks = (int) Math.round(Config.RAM_STUN_TICKS.getAsInt() * speedLostFraction);
+        if (ticks <= 0) {
+            return;
+        }
+
+        // Neither ambient, visible nor icon'd: a daze this short is over before an effect icon has
+        // finished appearing, and the swirl of particles would outlast the daze itself.
+        player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, ticks, 0, false, false, false));
+        player.addEffect(new MobEffectInstance(
+                MobEffects.SLOWNESS, ticks, DAZE_SLOWNESS_AMPLIFIER, false, false, false));
     }
 
     private static boolean stillCoolingDown(Player player) {

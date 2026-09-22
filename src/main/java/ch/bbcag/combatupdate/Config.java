@@ -76,7 +76,7 @@ public final class Config {
             .defineInRange("ramMinSpeed", 0.8, 0.1, 10.0);
 
     public static final ModConfigSpec.DoubleValue RAM_DAMAGE_PER_SPEED = BUILDER
-            .comment("Damage a Battering Ram impact deals per level, for every block per tick of impact speed")
+            .comment("Damage a Battering Ram impact deals for every block per tick of impact speed. This does not scale with the enchantment's level - higher levels buy force rather than damage")
             .defineInRange("ramDamagePerSpeed", 4.0, 0.1, 50.0);
 
     public static final ModConfigSpec.DoubleValue RAM_KNOCKBACK = BUILDER
@@ -84,7 +84,7 @@ public final class Config {
             .defineInRange("ramKnockback", 1.0, 0.0, 10.0);
 
     public static final ModConfigSpec.IntValue RAM_SPEED_LOSS = BUILDER
-            .comment("What percentage of their own speed a Battering Ram impact costs the player")
+            .comment("What percentage of their own speed a Battering Ram impact costs the player at level I; every level above that costs 20 points less, so a better helmet carries more of the charge through the hit")
             .defineInRange("ramSpeedLoss", 60, 0, 100);
 
     public static final ModConfigSpec.IntValue RAM_COOLDOWN_TICKS = BUILDER
@@ -96,15 +96,19 @@ public final class Config {
             .defineInRange("ramHelmetDamage", 3, 0, 100);
 
     public static final ModConfigSpec.DoubleValue RAM_WIND_BURST_RADIUS = BUILDER
-            .comment("Radius of the wind burst a Battering Ram impact sets off, against walls as well as mobs (a thrown wind charge is 1.2, the vanilla Wind Burst enchantment is 3.5); 0 turns the burst off entirely")
+            .comment("Radius of the wind burst a Battering Ram impact sets off at level I, against walls as well as mobs, growing by 1.0 per level above that (a thrown wind charge is 1.2, the vanilla Wind Burst enchantment is 3.5); 0 turns the burst off entirely")
             .defineInRange("ramWindBurstRadius", 3.0, 0.0, 10.0);
 
     public static final ModConfigSpec.DoubleValue RAM_WIND_BURST_KNOCKBACK = BUILDER
             .comment("How hard the wind burst shoves at Battering Ram I; every level above that adds 0.5, matching the vanilla Wind Burst enchantment")
             .defineInRange("ramWindBurstKnockback", 1.2, 0.0, 10.0);
 
+    public static final ModConfigSpec.IntValue RAM_STUN_TICKS = BUILDER
+            .comment("How long, in ticks, an impact that costs the player all of their speed leaves them dazed - blind and barely able to move (20 ticks = 1 second). A partial loss dazes them for proportionally less, so a high-level ram that barely slows you barely stuns you either, while a wall taken flat out always earns the full daze; 0 turns it off")
+            .defineInRange("ramStunTicks", 20, 0, 200);
+
     public static final ModConfigSpec.DoubleValue RAM_EXPLOSION_POWER = BUILDER
-            .comment("Explosion power of the real blast a Battering Ram impact sets off on top of the wind burst (TNT is 4.0); 0 turns the blast off entirely")
+            .comment("Explosion power of the real blast a Battering Ram impact sets off on top of the wind burst, at level I, growing by 0.75 per level above that (TNT is 4.0); 0 turns the blast off entirely")
             .defineInRange("ramExplosionPower", 1.0, 0.0, 10.0);
 
     public static final ModConfigSpec.BooleanValue RAM_EXPLOSION_BREAKS_BLOCKS = BUILDER
@@ -179,7 +183,7 @@ public final class Config {
 
     public static final ModConfigSpec.DoubleValue DAMAGE_NUMBER_RISE = BUILDER
             .comment("How far, in blocks, a damage number drifts upwards each tick")
-            .defineInRange("damageNumberRise", 0.03, 0.0, 1.0);
+            .defineInRange("damageNumberRise", 0.07, 0.0, 1.0);
 
     public static final ModConfigSpec.DoubleValue DAMAGE_NUMBER_SPREAD = BUILDER
             .comment("How widely damage numbers are scattered around the entity they belong to, so a flurry of hits doesn't stack them all on the one spot")
@@ -187,7 +191,7 @@ public final class Config {
 
     public static final ModConfigSpec.DoubleValue DAMAGE_NUMBER_SCALE = BUILDER
             .comment("How large a damage number is drawn (1.0 is the size of a name tag)")
-            .defineInRange("damageNumberScale", 0.5, 0.1, 4.0);
+            .defineInRange("damageNumberScale", 0.8, 0.1, 4.0);
 
     static final ModConfigSpec SPEC = BUILDER.build();
 
