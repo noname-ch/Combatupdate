@@ -1,0 +1,20 @@
+{
+  "description": {
+    "translate": "enchantment.combatupdate.regularity"
+  },
+  "supported_items": "minecraft:leather_leggings",
+  "slots": [
+    "legs"
+  ],
+  "weight": 2,
+  "max_level": 1,
+  "min_cost": {
+    "base": 20,
+    "per_level_above_first": 0
+  },
+  "max_cost": {
+    "base": 70,
+    "per_level_above_first": 0
+  },
+  "anvil_cost": 4
+}

@@ -103,14 +103,6 @@ public final class Config {
             .comment("How hard the wind burst shoves at Battering Ram I; every level above that adds 0.5, matching the vanilla Wind Burst enchantment")
             .defineInRange("ramWindBurstKnockback", 1.2, 0.0, 10.0);
 
-    public static final ModConfigSpec.DoubleValue RAM_EXPLOSION_POWER = BUILDER
-            .comment("Strength of the explosion a Battering Ram impact sets off alongside the wind burst (a ghast fireball is 1.0, TNT is 4.0). The player who caused it is never hurt by it, only shoved. 0 turns it off")
-            .defineInRange("ramExplosionPower", 1.0, 0.0, 10.0);
-
-    public static final ModConfigSpec.BooleanValue RAM_EXPLOSION_BREAKS_BLOCKS = BUILDER
-            .comment("Whether that explosion breaks blocks, letting a hard enough charge punch a hole through a wall")
-            .define("ramExplosionBreaksBlocks", true);
-
     static final ModConfigSpec SPEC = BUILDER.build();
 
     private Config() {
