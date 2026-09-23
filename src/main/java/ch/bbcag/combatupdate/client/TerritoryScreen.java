@@ -30,6 +30,8 @@ import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import ch.bbcag.combatupdate.CombatUpdate;
+import ch.bbcag.combatupdate.Config;
+import ch.bbcag.combatupdate.GipfaeliArmyNetwork.MarchRequest;
 import ch.bbcag.combatupdate.territory.TerritoryNetwork.Action;
 import ch.bbcag.combatupdate.territory.TerritoryNetwork.ActionRequest;
 import ch.bbcag.combatupdate.territory.TerritoryNetwork.ChunkInfoPayload;
@@ -85,6 +87,15 @@ public final class TerritoryScreen extends Screen {
     private Button actionButton;
     private Button unclaimButton;
 
+    // The army row: how many soldiers to send to the selected chunk, and the button that sends
+    // them (see GipfaeliArmy#march). The count is the screen's guess; the server sends what the
+    // player actually has.
+    private static final int SOLDIERS_MAX = 16;
+    private int soldiers = 1;
+    private Button fewerButton;
+    private Button moreButton;
+    private Button sendButton;
+
     public TerritoryScreen() {
         super(Component.translatable("combatupdate.territory.title"));
     }
@@ -108,6 +119,17 @@ public final class TerritoryScreen extends Screen {
                 .bounds(MAP_X + 174, y, 60, 20).build());
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
                 .bounds(MAP_X + 238, y, 60, 20).build());
+
+        if (Config.on(Config.ENABLE_GIPFAELI_ARMY)) {
+            fewerButton = addRenderableWidget(Button.builder(Component.literal("-"), button -> adjustSoldiers(-1))
+                    .bounds(0, 0, 20, 20).build());
+            moreButton = addRenderableWidget(Button.builder(Component.literal("+"), button -> adjustSoldiers(1))
+                    .bounds(0, 0, 20, 20).build());
+            sendButton = addRenderableWidget(Button.builder(text("army.send", soldiers), button -> sendSoldiers())
+                    .bounds(0, 0, 110, 20).build());
+            sendButton.setTooltip(Tooltip.create(text("army.hint")));
+            layoutArmyRow();
+        }
 
         // Whatever came last time is shown at once, and a fresh copy asked for on top.
         if (map == null && TerritoryClient.map != null) {
@@ -146,6 +168,7 @@ public final class TerritoryScreen extends Screen {
         map = payload;
         rebuildTexture(payload);
         updateButtons();
+        layoutArmyRow();
     }
 
     public void onChunkInfo(ChunkInfoPayload payload) {
@@ -241,6 +264,29 @@ public final class TerritoryScreen extends Screen {
         } else {
             send(Action.CAPTURE);
         }
+    }
+
+    // The army row sits at the foot of the panel, under whatever the overview had room for. Laid
+    // out again whenever a map arrives, because the panel starts where the map ends and the map's
+    // size is the server's to say.
+    private void layoutArmyRow() {
+        if (sendButton == null) {
+            return;
+        }
+        int x = MAP_X + mapSize() + PANEL_GAP;
+        int y = height - 50;
+        fewerButton.setPosition(x, y);
+        moreButton.setPosition(x + 22, y);
+        sendButton.setPosition(x + 46, y);
+    }
+
+    private void adjustSoldiers(int by) {
+        soldiers = Math.clamp(soldiers + by, 1, SOLDIERS_MAX);
+        sendButton.setMessage(text("army.send", soldiers));
+    }
+
+    private void sendSoldiers() {
+        ClientPacketDistributor.sendToServer(new MarchRequest(selectedX, selectedZ, soldiers));
     }
 
     private boolean capturingSelected() {
@@ -418,7 +464,7 @@ public final class TerritoryScreen extends Screen {
         graphics.text(font, text("total_blocks", String.format("%,d", info.totalBlocks())), x, y, COLOUR_MUTED);
         y += LINE;
 
-        int bottom = height - 30;
+        int bottom = sendButton == null ? height - 30 : height - 54;
         for (ChunkInfoPayload.BlockCount block : info.blocks()) {
             if (y + LINE > bottom) {
                 break;

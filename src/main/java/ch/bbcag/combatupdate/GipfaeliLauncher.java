@@ -80,6 +80,11 @@ public final class GipfaeliLauncher {
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0F, 0.6F);
 
+        // A tube that throws a pastry hard enough to leave a crater does not do that for free. This
+        // is the heaviest recoil in the mod: fired level it staggers you, fired at your own feet it
+        // carries you - which is a way of getting somewhere as much as it is a cost.
+        GipfaeliRecoil.apply(player, GipfaeliRecoil.LAUNCHER);
+
         player.getCooldowns().addCooldown(stack, Config.GIPFAELI_COOLDOWN_TICKS.getAsInt());
         return true;
     }

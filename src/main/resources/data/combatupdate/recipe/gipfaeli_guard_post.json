@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "P": "#minecraft:planks",
+    "W": "minecraft:red_wool",
+    "G": "combatupdate:gipfaeli"
+  },
+  "pattern": [
+    "PWP",
+    "PGP",
+    "PPP"
+  ],
+  "result": {
+    "id": "combatupdate:gipfaeli_guard_post"
+  }
+}

@@ -41,6 +41,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import ch.bbcag.combatupdate.Config;
+import ch.bbcag.combatupdate.GipfaeliArmy;
 import ch.bbcag.combatupdate.territory.TerritoryNetwork.ActionRequest;
 import ch.bbcag.combatupdate.territory.TerritoryNetwork.ChunkInfoPayload;
 import ch.bbcag.combatupdate.territory.TerritoryNetwork.MapPayload;
@@ -108,11 +109,16 @@ public final class TerritoryManager {
 
     // Claims the chunk the player is standing in.
     public static boolean claim(ServerPlayer player) {
+        return claim(player, player.chunkPosition());
+    }
+
+    // Claims a chunk the player is not necessarily standing in: what the army does on their behalf
+    // once it is standing there itself (see GipfaeliArmy#march).
+    public static boolean claim(ServerPlayer player, ChunkPos pos) {
         if (!enabled()) {
             return false;
         }
         ServerLevel level = player.level();
-        ChunkPos pos = player.chunkPosition();
         TerritoryClaim.Key key = TerritoryClaim.Key.of(level, pos);
         TerritoryData data = TerritoryData.get(level.getServer());
         UUID me = player.getUUID();
@@ -174,12 +180,17 @@ public final class TerritoryManager {
 
     // Starts taking the chunk the player is standing in off whoever holds it.
     public static boolean capture(ServerPlayer player) {
+        return capture(player, player.chunkPosition());
+    }
+
+    // The same for a chunk the player's soldiers are standing in rather than the player. The
+    // capture then runs for as long as either of them is (see onServerTick).
+    public static boolean capture(ServerPlayer player, ChunkPos pos) {
         if (!enabled()) {
             return false;
         }
         ServerLevel level = player.level();
         MinecraftServer server = level.getServer();
-        ChunkPos pos = player.chunkPosition();
         TerritoryClaim.Key key = TerritoryClaim.Key.of(level, pos);
         TerritoryData data = TerritoryData.get(server);
         UUID me = player.getUUID();
@@ -223,6 +234,10 @@ public final class TerritoryManager {
         notify(server, existing.owner(), true, SoundEvents.NOTE_BLOCK_BELL, 0.7F,
                 "notify.capture_started", nameOf(player), pos.x(), pos.z());
         return true;
+    }
+
+    public static boolean isCapturing(UUID player) {
+        return CAPTURES.containsKey(player);
     }
 
     public static boolean cancelCapture(ServerPlayer player) {
@@ -386,9 +401,13 @@ public final class TerritoryManager {
             int chunkX = capture.key().chunkX();
             int chunkZ = capture.key().chunkZ();
 
+            // The attacker holds the chunk by standing in it, or by having soldiers standing in it
+            // for them - a siege laid off the map (see GipfaeliArmy) counts the same as a player's
+            // own two feet, for as long as one soldier is left on the ground.
             ServerPlayer attacker = server.getPlayerList().getPlayer(capture.attacker());
             boolean holding = attacker != null && attacker.isAlive()
-                    && TerritoryClaim.Key.of(attacker.level(), attacker.chunkPosition()).equals(capture.key());
+                    && (TerritoryClaim.Key.of(attacker.level(), attacker.chunkPosition()).equals(capture.key())
+                            || GipfaeliArmy.garrisons(attacker, capture.key()));
             if (!holding) {
                 captures.remove();
                 if (attacker != null) {

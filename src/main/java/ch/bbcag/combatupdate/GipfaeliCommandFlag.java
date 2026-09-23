@@ -42,7 +42,7 @@ public final class GipfaeliCommandFlag {
             if (commander.isShiftKeyDown()) {
                 GipfaeliArmy.menu(commander);
             } else {
-                GipfaeliArmy.recruit(commander);
+                GipfaeliArmy.recruit(commander, null);
             }
         }
 

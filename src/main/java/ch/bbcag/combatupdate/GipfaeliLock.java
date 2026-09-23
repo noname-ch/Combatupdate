@@ -220,7 +220,7 @@ public final class GipfaeliLock {
     // The living thing nearest the middle of the view, inside the sight's cone and its range. Scored on
     // angle off the centre rather than on distance, so a cow in the foreground doesn't steal a lock
     // meant for the player standing behind it.
-    private static @Nullable LivingEntity findTarget(Level level, Player player) {
+    static @Nullable LivingEntity findTarget(Level level, Player player) {
         double range = Config.GIPFAELI_LOCK_RANGE.getAsDouble();
         boolean needsLineOfSight = Config.GIPFAELI_LOCK_NEEDS_LINE_OF_SIGHT.get();
 

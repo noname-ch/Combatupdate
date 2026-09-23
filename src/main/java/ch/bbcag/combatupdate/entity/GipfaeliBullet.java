@@ -3,6 +3,8 @@ package ch.bbcag.combatupdate.entity;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -31,6 +33,11 @@ public final class GipfaeliBullet extends Fireball {
     // Long enough to cross any weapon's range; a round that has somehow outlived its own weapon's
     // reckoning still clears itself up rather than flying until the chunk unloads.
     private static final int MAX_LIFETIME_TICKS = 200;
+
+    // How far up a target the head is taken to start, as a share of its eye height. Measured off the
+    // eyes rather than off a fixed number of blocks so it lands on the head of a chicken and of a
+    // player alike, instead of being a rule written for one of them.
+    private static final double HEAD_FRACTION = 0.88;
 
     private float damage;
     private int lifetimeTicks = MAX_LIFETIME_TICKS;
@@ -98,16 +105,53 @@ public final class GipfaeliBullet extends Fireball {
         Entity target = hitResult.getEntity();
         DamageSource damageSource = this.damageSources().mobProjectile(this,
                 this.getOwner() instanceof LivingEntity shooter ? shooter : null);
-        target.hurtServer(serverLevel, damageSource, this.damage);
+
+        // Where on the body the round landed is the difference between a wound and an end to it, and
+        // it is the one thing that makes aiming with these worth doing: a marksman's shot that finds
+        // a head is a different shot from the same round through a shoulder.
+        boolean head = headshot(target, hitResult.getLocation());
+        float dealt = head ? this.damage * (float) Config.WEAPON_HEADSHOT.getAsDouble() : this.damage;
+        target.hurtServer(serverLevel, damageSource, dealt);
         EnchantmentHelper.doPostAttackEffects(serverLevel, target, damageSource);
+
+        if (head) {
+            announceHeadshot(serverLevel, hitResult.getLocation());
+        }
+    }
+
+    // The head is the top slice of the target, taken from its eyes up. Only living things have one;
+    // a round into a boat or a minecart is a round into a boat.
+    private static boolean headshot(Entity target, Vec3 impact) {
+        if (!(target instanceof LivingEntity) || Config.WEAPON_HEADSHOT.getAsDouble() <= 1.0) {
+            return false;
+        }
+
+        return impact.y >= target.getY() + target.getEyeHeight() * HEAD_FRACTION;
+    }
+
+    // The ding an arrow gives on a player, borrowed for the same job: the shooter is usually too far
+    // off to read a health bar, and this is how they learn the shot was worth taking.
+    private static void announceHeadshot(ServerLevel level, Vec3 at) {
+        level.playSound(null, at.x, at.y, at.z, SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 1.0F, 1.4F);
+        level.sendParticles(ParticleTypes.CRIT, true, false, at.x, at.y, at.z, 12, 0.15, 0.15, 0.15, 0.25);
     }
 
     @Override
     protected void onHit(HitResult hitResult) {
         super.onHit(hitResult);
-        if (!this.level().isClientSide()) {
-            this.discard();
+        if (!(this.level() instanceof ServerLevel serverLevel)) {
+            return;
         }
+
+        // Something to show for a miss. Without it a round that goes wide simply stops existing, and
+        // a gun you cannot see landing is a gun you cannot correct your aim with.
+        if (hitResult.getType() == HitResult.Type.BLOCK) {
+            Vec3 at = hitResult.getLocation();
+            serverLevel.sendParticles(ParticleTypes.SMOKE, true, false, at.x, at.y, at.z, 4, 0.05, 0.05, 0.05, 0.02);
+            serverLevel.playSound(null, at.x, at.y, at.z, SoundEvents.STONE_HIT, SoundSource.BLOCKS, 0.9F, 1.6F);
+        }
+
+        this.discard();
     }
 
     @Override

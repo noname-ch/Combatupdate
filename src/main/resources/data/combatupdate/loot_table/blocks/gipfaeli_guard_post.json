@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "combatupdate:gipfaeli_guard_post"
+        }
+      ],
+      "rolls": 1
+    }
+  ],
+  "random_sequence": "combatupdate:blocks/gipfaeli_guard_post"
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "B": "minecraft:iron_block",
+    "G": "combatupdate:gipfaeli",
+    "S": "minecraft:stick"
+  },
+  "pattern": [
+    "III",
+    "GBI",
+    " S "
+  ],
+  "result": {
+    "id": "combatupdate:gipfaeli_heavy_mg"
+  }
+}

@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.ClientAvatarEntity;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
+import net.minecraft.client.renderer.entity.TntRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Avatar;
@@ -134,6 +135,38 @@ public final class CombatUpdateClient {
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
 
+        if (stack.is(CombatUpdate.GIPFAELI_HEAVY_MG.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_heavy_mg.desc")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        if (stack.is(CombatUpdate.GIPFAELI_GUARD_POST_ITEM.get())) {
+            event.getToolTip().add(Component.translatable("block.combatupdate.gipfaeli_guard_post.desc")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        if (stack.is(CombatUpdate.GIPFAELI_WAR_BANNER.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_war_banner.desc")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        // The explosives say what they do, since the grenade is the first pastry here that goes off
+        // on a timer rather than on arrival, and the Ultra is not just a bigger block of the other.
+        if (stack.is(CombatUpdate.GIPFAELI_GRENADE.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_grenade.desc")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        if (stack.is(CombatUpdate.GIPFAELI_TNT_ITEM.get())) {
+            event.getToolTip().add(Component.translatable("block.combatupdate.gipfaeli_tnt.desc")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        if (stack.is(CombatUpdate.GIPFAELI_ULTRA_TNT_ITEM.get())) {
+            event.getToolTip().add(Component.translatable("block.combatupdate.gipfaeli_ultra_tnt.desc")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
         describeAll(event, stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY));
         // An enchanted book keeps what it teaches in a different component from what it is enchanted
         // with, and a book is exactly where someone reads up on an enchantment.
@@ -165,6 +198,11 @@ public final class CombatUpdateClient {
         // tracer rather than as lunch going past.
         event.registerEntityRenderer(CombatUpdate.GIPFAELI_BULLET.get(), context -> new ThrownItemRenderer<>(context, 0.5F, false));
         event.registerEntityRenderer(CombatUpdate.GIPFAELI_SOLDIER.get(), GipfaeliSoldierRenderer::new);
+        // The grenade is drawn as its own item, pin and all, tumbling the way a thrown thing does.
+        event.registerEntityRenderer(CombatUpdate.GIPFAELI_GRENADE_ENTITY.get(), context -> new ThrownItemRenderer<>(context, 1.0F, false));
+        // Lit Gipfaeli TNT is drawn by vanilla's own TNT renderer, which draws whatever block state
+        // the entity carries - so the plain and Ultra kinds each come out looking like their block.
+        event.registerEntityRenderer(CombatUpdate.GIPFAELI_TNT.get(), TntRenderer::new);
     }
 
     @SubscribeEvent
