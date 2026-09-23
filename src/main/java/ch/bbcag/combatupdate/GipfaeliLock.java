@@ -20,7 +20,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 // The launcher's sight. Sneak and use the launcher to take whatever is nearest the middle of the view,
-// and a Gipfaeli fired afterwards bends towards it (see GipfaeliRocket).
+// and a Gipfaeli fired afterwards bends towards it (see GipfaeliRocket). Sneak and use it pointing at
+// nothing to let that lock go again.
 //
 // Server-side throughout. The lock decides where a rocket flies, which is the server's to settle, and
 // what the player is told about it goes out over the action bar rather than through any state the
@@ -47,34 +48,51 @@ public final class GipfaeliLock {
     private GipfaeliLock() {
     }
 
-    // Takes a lock on whatever is nearest the middle of the view, or lets go of the one already held.
-    // Returns whether the sight did anything at all, which is the caller's cue to swallow the click.
+    // Takes a lock on whatever is nearest the middle of the view, and lets the one already held go if
+    // that is nothing. Returns whether the sight did anything at all, which is the caller's cue to
+    // swallow the click.
+    //
+    // Deliberately not a toggle. The game re-runs a held right-click every four ticks
+    // (Minecraft#rightClickDelay), and no cooldown short of the length of the press can stop some of
+    // those repeats landing here - so a toggle would flip the lock on and off for as long as the
+    // button was down, and whether you came away locked would come down to when you happened to let
+    // go. Taking the lock from what is in the cone is idempotent instead: hold the button on a target
+    // and it stays locked, hold it on nothing and it stays released.
+    //
+    // It also means a lock can be moved straight from one target to another, rather than having to be
+    // dropped first and taken again.
     public static boolean sight(Player player) {
         if (!(player.level() instanceof ServerLevel level)) {
             // What the server decides is still the only lock that steers a rocket. This runs the same
             // search over the same entities to reach the same answer, purely so the sight has
             // something to draw straightaway.
             if (player.isLocalPlayer()) {
-                LivingEntity predicted = clientLock != NO_TARGET ? null : findTarget(player.level(), player);
+                LivingEntity predicted = findTarget(player.level(), player);
                 clientLock = predicted == null ? NO_TARGET : predicted.getId();
             }
             return true;
         }
 
-        if (LOCKS.remove(player.getUUID()) != null) {
-            readout(player, Component.translatable("combatupdate.gipfaeli.released"));
-            return true;
-        }
-
         LivingEntity target = findTarget(level, player);
         if (target == null) {
-            readout(player, Component.translatable("combatupdate.gipfaeli.no_target"));
+            // Pointing the sight at nothing is how a lock is let go of: it is where the sight is
+            // aimed that decides, so looking away is the plainest way to say you are done with a
+            // target.
+            boolean held = LOCKS.remove(player.getUUID()) != null;
+            readout(player, Component.translatable(held
+                    ? "combatupdate.gipfaeli.released"
+                    : "combatupdate.gipfaeli.no_target"));
             return true;
         }
 
-        LOCKS.put(player.getUUID(), target.getUUID());
+        UUID previous = LOCKS.put(player.getUUID(), target.getUUID());
         glow(target);
-        readout(player, Component.translatable("combatupdate.gipfaeli.locked", target.getDisplayName()));
+        // Announced only when the lock actually moves. A held button re-takes the same lock every few
+        // ticks, and there is nothing to say about that; the tracking readout below carries it from
+        // here.
+        if (!target.getUUID().equals(previous)) {
+            readout(player, Component.translatable("combatupdate.gipfaeli.locked", target.getDisplayName()));
+        }
         return true;
     }
 

@@ -21,8 +21,11 @@ import ch.bbcag.combatupdate.entity.GipfaeliRocket;
 public final class GipfaeliLauncher {
     private static final int NO_AMMO = -1;
 
-    // Long enough to outlast the repeat rate of a held right-click, short enough that sighting and
-    // then firing still feels like two halves of the one motion.
+    // A rate limit, not a guard against repeats: a held right-click re-runs every four ticks
+    // (Minecraft#rightClickDelay) and will outlast any cooldown short of the press itself, so what
+    // makes holding the button harmless is that sighting is idempotent (see GipfaeliLock#sight). This
+    // only keeps the search, the glow and the readout off every fourth tick, and is short enough that
+    // sighting and then firing still feels like two halves of the one motion.
     private static final int SIGHT_COOLDOWN_TICKS = 10;
 
     private GipfaeliLauncher() {
@@ -35,8 +38,6 @@ public final class GipfaeliLauncher {
             return false;
         }
 
-        // The game re-runs a held right-click every few ticks, which without this would have the sight
-        // flickering on and off several times a second for as long as the button was down.
         if (player.getCooldowns().isOnCooldown(stack)) {
             return false;
         }
