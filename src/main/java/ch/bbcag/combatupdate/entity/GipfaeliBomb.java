@@ -106,17 +106,12 @@ public final class GipfaeliBomb extends Entity implements ItemSupplier {
         this.target = target;
         this.timer = Config.GIPFAELI_BOMB_COUNTDOWN_TICKS.getAsInt();
         this.ownerId = owner == null ? null : owner.getUUID();
-        CombatUpdate.LOGGER.info("BOMBPROBE spawned at {} aimed at {} countdown={}", position, target, this.timer);
     }
 
     @Override
     public void tick() {
         if (!(this.level() instanceof ServerLevel level)) {
             return;
-        }
-
-        if (this.tickCount == 1) {
-            CombatUpdate.LOGGER.info("BOMBPROBE first server tick, phase={} timer={}", this.phase, this.timer);
         }
 
         switch (this.phase) {
@@ -167,8 +162,6 @@ public final class GipfaeliBomb extends Entity implements ItemSupplier {
                 MIN_FLIGHT_TICKS, MAX_FLIGHT_TICKS);
         this.arcHeight = Math.max(MIN_ARC_HEIGHT, distance * Config.GIPFAELI_BOMB_ARC.getAsDouble());
 
-        CombatUpdate.LOGGER.info("BOMBPROBE launch from={} target={} distance={} flightTicks={} arc={}",
-                this.launchFrom, this.target, distance, this.flightTicks, this.arcHeight);
         this.phase = Phase.FLIGHT;
         this.timer = 0;
         this.setPos(this.launchFrom);
@@ -186,10 +179,6 @@ public final class GipfaeliBomb extends Entity implements ItemSupplier {
     }
 
     private void tickFlight(ServerLevel level) {
-        if (this.timer % 20 == 0) {
-            CombatUpdate.LOGGER.info("BOMBPROBE flying tick={}/{} at {} {} {}",
-                    this.timer, this.flightTicks, this.getX(), this.getY(), this.getZ());
-        }
         if (this.launchFrom == null || this.target == null) {
             detonate(level);
             return;
@@ -231,8 +220,6 @@ public final class GipfaeliBomb extends Entity implements ItemSupplier {
     }
 
     private void detonate(ServerLevel level) {
-        CombatUpdate.LOGGER.info("BOMBPROBE detonate at {} {} {} phase={} timer={}",
-                this.getX(), this.getY(), this.getZ(), this.phase, this.timer);
         double power = Config.GIPFAELI_BOMB_EXPLOSION_POWER.getAsDouble();
         if (power > 0.0) {
             // The boolean is fire, not griefing. What breaks blocks is the interaction: MOB weighs

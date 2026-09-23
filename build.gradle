@@ -173,6 +173,8 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+    // Every warning javac can raise, minus the ones about Mojang's own class files, so a new one shows up in the build.
+    options.compilerArgs += ['-Xlint:all,-classfile,-processing']
 }
 
 // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.

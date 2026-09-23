@@ -99,7 +99,7 @@ public final class GipfaeliArmyData extends SavedData {
                 return true;
             }
 
-            return level.hasChunkAt(ref.pos()) && !(level.getBlockEntity(ref.pos()) instanceof GipfaeliGuardPost.Post);
+            return level.isLoaded(ref.pos()) && !(level.getBlockEntity(ref.pos()) instanceof GipfaeliGuardPost.Post);
         });
         if (changed) {
             this.setDirty();

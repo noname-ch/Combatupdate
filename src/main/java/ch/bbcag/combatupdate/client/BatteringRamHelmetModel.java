@@ -18,8 +18,6 @@ import net.minecraft.client.resources.model.EquipmentClientInfo;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 
 import ch.bbcag.combatupdate.CombatUpdate;
@@ -32,7 +30,6 @@ import ch.bbcag.combatupdate.enchantment.BatteringRam;
 // A helmet only ever shows its "head" part (the rest of a HumanoidModel's parts are hidden for that
 // slot), so the replacement only needs that one part built; everything else is pruned away exactly the
 // way vanilla prunes its own per-slot armor models.
-@OnlyIn(Dist.CLIENT)
 public final class BatteringRamHelmetModel implements IClientItemExtensions {
     public static final ModelLayerLocation LAYER =
             new ModelLayerLocation(Identifier.fromNamespaceAndPath(CombatUpdate.MODID, "battering_ram_helmet"), "main");
@@ -85,6 +82,8 @@ public final class BatteringRamHelmetModel implements IClientItemExtensions {
         return flattenedModel;
     }
 
+    // IClientItemExtensions declares this with the raw Model type, and an override has to match it.
+    @SuppressWarnings("rawtypes")
     @Override
     public Model getHumanoidArmorModel(ItemStack itemStack, EquipmentClientInfo.LayerType layerType, Model original) {
         if (!(original instanceof HumanoidModel<?>)) {

@@ -14,8 +14,6 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import org.jspecify.annotations.Nullable;
 
 import ch.bbcag.combatupdate.CombatUpdate;
@@ -27,7 +25,6 @@ import ch.bbcag.combatupdate.Config;
 // A book holding several of ours shows the first one it lists. Nothing is reported when the
 // textures are switched off, or for a book of vanilla enchantments only, and the model falls
 // back to the vanilla book. Read every frame, so flipping the config switch shows straight away.
-@OnlyIn(Dist.CLIENT)
 public record BookEnchantmentProperty() implements SelectItemModelProperty<ResourceKey<Enchantment>> {
     public static final Codec<ResourceKey<Enchantment>> VALUE_CODEC = ResourceKey.codec(Registries.ENCHANTMENT);
     public static final SelectItemModelProperty.Type<BookEnchantmentProperty, ResourceKey<Enchantment>> TYPE =

@@ -88,7 +88,6 @@ public final class GipfaeliLaunchRig {
 
     private static void callSpot(ServerLevel level, Player player) {
         Vec3 spot = pickSpot(level, player);
-        CombatUpdate.LOGGER.info("BOMBPROBE spot called: {}", spot);
         TARGETS.put(player.getUUID(), spot);
 
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -121,7 +120,6 @@ public final class GipfaeliLaunchRig {
         // On the face that was clicked rather than inside the block: a bomb sits on the ground the way
         // anything else placed against a block does.
         Vec3 seat = Vec3.atBottomCenterOf(ground.getBlockPos().relative(ground.getDirection()));
-        CombatUpdate.LOGGER.info("BOMBPROBE placing bomb at {} for spot {}", seat, spot);
         level.addFreshEntity(new GipfaeliBomb(level, seat, spot, player));
 
         // The spot is spent. The next press aims again rather than dropping a second bomb on a target
@@ -222,7 +220,6 @@ public final class GipfaeliLaunchRig {
     }
 
     private static void refuse(ServerLevel level, Player player, String message) {
-        CombatUpdate.LOGGER.info("BOMBPROBE refused: {}", message);
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.DISPENSER_FAIL, SoundSource.PLAYERS, 0.8F, 1.0F);
         GipfaeliLock.readout(player, Component.translatable(message));
