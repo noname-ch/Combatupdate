@@ -31,6 +31,7 @@ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import ch.bbcag.combatupdate.CombatUpdate;
 import ch.bbcag.combatupdate.Config;
+import ch.bbcag.combatupdate.GipfaeliArmy;
 import ch.bbcag.combatupdate.GipfaeliArmyNetwork.MarchRequest;
 import ch.bbcag.combatupdate.territory.TerritoryNetwork.Action;
 import ch.bbcag.combatupdate.territory.TerritoryNetwork.ActionRequest;
@@ -119,6 +120,15 @@ public final class TerritoryScreen extends Screen {
                 .bounds(MAP_X + 174, y, 60, 20).build());
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
                 .bounds(MAP_X + 238, y, 60, 20).build());
+
+        // The map's other half: the army screen, opened on the chunk that is selected here so its
+        // Send button marches on the same place (see ArmyScreen).
+        if (Config.on(Config.ENABLE_GIPFAELI_ARMY)) {
+            Button army = addRenderableWidget(Button.builder(text("army.open"),
+                    button -> minecraft.gui.setScreen(new ArmyScreen(GipfaeliArmy.Scope.ALL.token(), new ChunkPos(selectedX, selectedZ))))
+                    .bounds(MAP_X + 302, y, 60, 20).build());
+            army.setTooltip(Tooltip.create(text("army.open.hint")));
+        }
 
         if (Config.on(Config.ENABLE_GIPFAELI_ARMY)) {
             fewerButton = addRenderableWidget(Button.builder(Component.literal("-"), button -> adjustSoldiers(-1))

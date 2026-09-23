@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -157,7 +158,7 @@ public final class GipfaeliSoldierScreen extends AbstractContainerScreen<Gipfael
     }
 
     private void line(GuiGraphicsExtractor graphics, Component text, int y) {
-        graphics.text(this.font, this.font.substrByWidth(text, STATUS_WIDTH), STATUS_X, y, COLOUR_TEXT, false);
+        graphics.text(this.font, Language.getInstance().getVisualOrder(this.font.substrByWidth(text, STATUS_WIDTH)), STATUS_X, y, COLOUR_TEXT, false);
     }
 
     @Override
