@@ -62,6 +62,21 @@ public final class GipfaeliArmyCommand {
     }
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        // Short forms for typing: /soldats attack Steve for the whole army, /soldats-red hold for
+        // one squad, /soldats-camo follow for the reserve. Every order the long form takes.
+        dispatcher.register(orders(Commands.literal("soldats"), context -> Scope.ALL)
+                .requires(CommandSourceStack::isPlayer)
+                .executes(context -> run(context, GipfaeliArmy::menu)));
+        dispatcher.register(orders(Commands.literal("soldats-camo"), context -> Scope.RESERVE)
+                .requires(CommandSourceStack::isPlayer)
+                .executes(context -> scoped(context, c -> Scope.RESERVE, GipfaeliArmy::squadMenu)));
+        for (DyeColor colour : DyeColor.values()) {
+            Scope scope = Scope.of(colour);
+            dispatcher.register(orders(Commands.literal("soldats-" + colour.getName()), context -> scope)
+                    .requires(CommandSourceStack::isPlayer)
+                    .executes(context -> scoped(context, c -> scope, GipfaeliArmy::squadMenu)));
+        }
+
         dispatcher.register(orders(Commands.literal("gipfaeliarmy"), context -> Scope.ALL)
                 .requires(CommandSourceStack::isPlayer)
                 .executes(context -> run(context, GipfaeliArmy::menu))
@@ -73,6 +88,9 @@ public final class GipfaeliArmyCommand {
                         .executes(context -> run(context, GipfaeliArmy::menu)))
                 .then(Commands.literal("manual")
                         .executes(context -> run(context, GipfaeliArmy::manual)))
+                // A new squad: what the flag does.
+                .then(Commands.literal("raise")
+                        .executes(context -> run(context, GipfaeliArmy::raiseSquad)))
                 // One squad: its menu, and every order the army takes, for it alone.
                 .then(Commands.literal("squad")
                         .then(orders(Commands.argument("squad", StringArgumentType.word()), GipfaeliArmyCommand::squadScope)
@@ -90,6 +108,10 @@ public final class GipfaeliArmyCommand {
                                         .executes(context -> soldier(context, GipfaeliArmy::stripSoldier)))
                                 .then(Commands.literal("promote")
                                         .executes(context -> soldier(context, GipfaeliArmy::promote)))
+                                .then(Commands.literal("post")
+                                        .then(Commands.argument("number", IntegerArgumentType.integer(1))
+                                                .executes(context -> soldier(context, (commander, soldier) -> GipfaeliArmy.sendToPost(
+                                                        commander, soldier, IntegerArgumentType.getInteger(context, "number"))))))
                                 .then(Commands.literal("demote")
                                         .executes(context -> soldier(context, GipfaeliArmy::demote)))
                                 .then(Commands.literal("kit")
@@ -170,6 +192,14 @@ public final class GipfaeliArmyCommand {
                                                 .executes(context -> parade(context, IntegerArgumentType.getInteger(context, "count"), true)))
                                         .then(Commands.literal("behind")
                                                 .executes(context -> parade(context, IntegerArgumentType.getInteger(context, "count"), false))))))
+                // A fortress with its garrison, around whoever asks: operator-only, since it lays
+                // a few hundred blocks of wall across whatever was there.
+                .then(Commands.literal("fortress")
+                        .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                        .executes(context -> run(context, commander -> GipfaeliFortress.build(commander, GipfaeliFortress.defaultRadius(null))))
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(6, 40))
+                                .executes(context -> run(context, commander -> GipfaeliFortress.build(
+                                        commander, IntegerArgumentType.getInteger(context, "radius"))))))
                 .then(Commands.literal("recruit")
                         .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                         .then(Commands.argument("role", StringArgumentType.word())
@@ -239,6 +269,40 @@ public final class GipfaeliArmyCommand {
 
                                     GipfaeliArmy.paint(commander, s, DyeColor.byName(wanted, null));
                                 }))))
+                // The whole squad's kit and armour, from its commander's menu.
+                .then(Commands.literal("kit")
+                        .then(Commands.argument("role", StringArgumentType.word())
+                                .suggests(GipfaeliArmyCommand::roles)
+                                .executes(context -> scoped(context, scope, (commander, s) -> {
+                                    GipfaeliWeapon role = role(context);
+                                    if (role != null) {
+                                        GipfaeliArmy.armSquad(commander, s, role);
+                                    }
+                                }))))
+                .then(Commands.literal("disarm")
+                        .executes(context -> scoped(context, scope, GipfaeliArmy::disarmSquad)))
+                .then(Commands.literal("armour")
+                        .then(Commands.argument("armour", StringArgumentType.word())
+                                .suggests((context, builder) -> SharedSuggestionProvider.suggest(
+                                        Arrays.stream(GipfaeliArmour.values()).map(GipfaeliArmour::token), builder))
+                                .executes(context -> scoped(context, scope, (commander, s) -> {
+                                    String wanted = StringArgumentType.getString(context, "armour");
+                                    GipfaeliArmour armour = GipfaeliArmour.byName(wanted);
+                                    if (armour == null) {
+                                        context.getSource().sendFailure(Component.translatable("combatupdate.army.no_such_armour", wanted));
+                                        return;
+                                    }
+
+                                    GipfaeliArmy.dressSquad(commander, s, armour);
+                                }))))
+                .then(Commands.literal("strip")
+                        .executes(context -> scoped(context, scope, GipfaeliArmy::stripSquad)))
+                // Filling the squad the order is for with unarmed soldiers: what a commander's spawn
+                // buttons run.
+                .then(Commands.literal("fill")
+                        .then(Commands.argument("count", IntegerArgumentType.integer(1, 200))
+                                .executes(context -> scoped(context, scope, (commander, s) -> GipfaeliArmy.fill(
+                                        commander, s, IntegerArgumentType.getInteger(context, "count"))))))
                 // Signing on one soldier: unarmed, for its rations, into the squad the order is for
                 // - the reserve, from the army's own menu; or with a role's kit out of the pack
                 // when one is named.

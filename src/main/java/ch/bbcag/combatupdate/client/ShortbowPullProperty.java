@@ -9,15 +9,12 @@ import net.minecraft.world.entity.ItemOwner;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import org.jspecify.annotations.Nullable;
 
 // Drives the Shortbow item model's pull-stage texture (assets/minecraft/items/bow.json).
 // Off cooldown the shot will insta-charge on release, so the bow should already look fully
 // drawn the moment it's raised. On cooldown it draws normally, so this reports the real
 // hold time instead, same as vanilla's "minecraft:use_duration" property.
-@OnlyIn(Dist.CLIENT)
 public record ShortbowPullProperty() implements RangeSelectItemModelProperty {
     public static final MapCodec<ShortbowPullProperty> MAP_CODEC = MapCodec.unit(new ShortbowPullProperty());
 
