@@ -142,7 +142,7 @@ public final class GipfaeliArmyNetwork {
 
     // What a squad - or the whole army - can be told from its screen.
     public enum SquadAction {
-        ATTACK, STAND, HOLD, FOLLOW, KIT, DISARM, ARMOUR, STRIP, FILL, FORM, DISMISS, RAISE;
+        ATTACK, STAND, HOLD, FOLLOW, KIT, DISARM, ARMOUR, STRIP, FILL, FORM, DISMISS, RAISE, COLOUR;
 
         private static final SquadAction[] ALL = values();
     }

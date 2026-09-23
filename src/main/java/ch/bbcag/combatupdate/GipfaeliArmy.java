@@ -1635,6 +1635,12 @@ public final class GipfaeliArmy {
             }
             case DISMISS -> dismiss(commander, scope);
             case RAISE -> raiseSquad(commander);
+            // The argument is a dye's name or "camo"; anything else is left alone.
+            case COLOUR -> {
+                if (argument.equalsIgnoreCase("camo") || DyeColor.byName(argument, null) != null) {
+                    paint(commander, scope, DyeColor.byName(argument, null));
+                }
+            }
         }
 
         sendRoster(commander);

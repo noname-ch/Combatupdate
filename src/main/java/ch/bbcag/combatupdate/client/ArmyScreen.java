@@ -447,6 +447,20 @@ public final class ArmyScreen extends Screen {
         this.armourWidgets.add(this.button(x, top + ((suits.length + 1) / 2) * STEP, PANE_WIDTH,
                 Component.translatable("combatupdate.army.soldier.strip"), SquadAction.STRIP, "", null));
 
+        // And the squad's colour, under the armour it goes on: sixteen dyes and the camouflage,
+        // each a small button in its own colour. Painting a squad is renaming it, so the whole
+        // roster changes hands with the click.
+        int swatchTop = top + ((suits.length + 1) / 2 + 1) * STEP;
+        int perRow = 6;
+        int swatchWidth = (PANE_WIDTH - (perRow - 1) * 2) / perRow;
+        for (int index = 0; index <= DyeColor.VALUES.size(); index++) {
+            DyeColor colour = index == 0 ? null : DyeColor.VALUES.get(index - 1);
+            Component label = Component.literal("■").withStyle(style -> style.withColor(SoldierControls.swatchColour(colour) & 0xFFFFFF));
+            this.armourWidgets.add(this.button(x + (index % perRow) * (swatchWidth + 2), swatchTop + (index / perRow) * STEP, swatchWidth, label,
+                    SquadAction.COLOUR, colour == null ? "camo" : colour.getName(),
+                    Component.translatable("combatupdate.army.screen.colour.hover", GipfaeliArmy.colourName(colour))));
+        }
+
         this.selectSquadTab(this.squadTab);
     }
 
