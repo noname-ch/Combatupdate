@@ -41,7 +41,7 @@ public final class GipfaeliCommandFlag {
             if (commander.isShiftKeyDown()) {
                 GipfaeliArmy.menu(commander);
             } else {
-                GipfaeliArmy.recruit(commander, null);
+                GipfaeliArmy.recruit(commander, null, GipfaeliArmy.Scope.ALL);
             }
         }
 
@@ -62,9 +62,9 @@ public final class GipfaeliCommandFlag {
             } else if (target instanceof GipfaeliSoldier soldier && soldier.isOwnedBy(commander)) {
                 // One of ours. Pointing the squad at itself is never what was meant, so this press
                 // opens the one soldier's own menu instead: its kit, its armour, its colour.
-                GipfaeliArmy.soldierMenu(commander, soldier);
+                GipfaeliArmy.click(commander, soldier);
             } else if (target instanceof LivingEntity victim) {
-                GipfaeliArmy.attack(commander, victim);
+                GipfaeliArmy.attack(commander, GipfaeliArmy.Scope.ALL, victim);
             }
         }
 

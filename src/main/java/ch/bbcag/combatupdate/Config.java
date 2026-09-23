@@ -541,8 +541,12 @@ public final class Config {
             .defineInRange("armyRecruitRations", 2, 0, 64);
 
     public static final ModConfigSpec.IntValue ARMY_MAX_SQUAD = BUILDER
-            .comment("How many soldiers one commander may have at once. Every one of them paths, shoots and is tracked by everybody nearby, so this is as much a budget for the server as it is a balance knob")
-            .defineInRange("armyMaxSquad", 8, 1, 64);
+            .comment("How many soldiers one player may have in all their squads together. Every one of them paths, shoots and is tracked by everybody nearby, so this is as much a budget for the server as it is a balance knob")
+            .defineInRange("armyMaxSquad", 200, 1, 2000);
+
+    public static final ModConfigSpec.IntValue ARMY_SQUAD_SIZE = BUILDER
+            .comment("How many soldiers one squad - one colour - holds, not counting its commander. Forty is eight ranks of five, which is what a squad stands as on parade")
+            .defineInRange("armySquadSize", 40, 1, 200);
 
     public static final ModConfigSpec.DoubleValue ARMY_HEALTH_MULTIPLIER = BUILDER
             .comment("Multiplies the health every role is signed on with (a rifleman's is 20, a Panzer soldier's 44; 1.0 leaves each role at its own)")
@@ -604,7 +608,7 @@ public final class Config {
 
     public static final ModConfigSpec.IntValue ARMY_PARADE_DEPTH = BUILDER
             .comment("How many ranks deep one block of a parade stands. Width times depth is how many soldiers go down before a second block falls in beside the first")
-            .defineInRange("armyParadeDepth", 10, 1, 64);
+            .defineInRange("armyParadeDepth", 8, 1, 64);
 
     public static final ModConfigSpec.DoubleValue ARMY_PARADE_SPACING = BUILDER
             .comment("How far apart, in blocks, soldiers stand from one another in the ranks. 1.0 is shoulder to shoulder, a block each; larger opens the ranks up")
@@ -612,7 +616,7 @@ public final class Config {
 
     public static final ModConfigSpec.DoubleValue ARMY_PARADE_BLOCK_GAP = BUILDER
             .comment("How wide a gap, in blocks, is left between one block of a parade and the next, on top of the spacing. One soldier's worth by default, so the blocks read apart")
-            .defineInRange("armyParadeBlockGap", 1.0, 0.0, 16.0);
+            .defineInRange("armyParadeBlockGap", 2.0, 0.0, 16.0);
 
     public static final ModConfigSpec.DoubleValue ARMY_PARADE_STANDOFF = BUILDER
             .comment("How far, in blocks, the front rank of a parade stands from the commander who called it")

@@ -30,11 +30,11 @@ public enum GipfaeliFormation {
     // it has been told to stand, and the shape it marches in when told to follow that way.
     PARADE;
 
-    private static final int PARADE_WIDTH = 5;
-    private static final int PARADE_DEPTH = 10;
-    private static final int PARADE_COMPANY = PARADE_WIDTH * PARADE_DEPTH;
-    private static final double PARADE_PACE = 1.2;
-    private static final double PARADE_GAP = 2.0;
+    // The commander stands this many paces in front of the first rank.
+    private static final double COMMANDER_LEAD = 2.0;
+
+    // Marks the commander's place in a block rather than a soldier's.
+    public static final int COMMANDER_SLOT = -1;
 
     private static final GipfaeliFormation[] ALL = values();
 
@@ -63,6 +63,32 @@ public enum GipfaeliFormation {
 
     public String key() {
         return "combatupdate.army.formation." + this.token();
+    }
+
+    // On parade: where soldier number index of block number block, of blocks in all, stands, with
+    // whoever called the parade at anchor facing yaw. Each squad is one block - as many abreast
+    // and as deep as the config says, five and eight by default - and the blocks stand side by
+    // side with clear ground between them. The squad's commander (COMMANDER_SLOT) stands out in
+    // front of its block, on the middle file, a couple of paces ahead of the first rank.
+    public static Vec3 parade(int block, int blocks, int index, Vec3 anchor, float yaw) {
+        int width = Config.ARMY_PARADE_WIDTH.getAsInt();
+        double pace = Config.ARMY_PARADE_SPACING.getAsDouble();
+        double standoff = Config.ARMY_PARADE_STANDOFF.getAsDouble();
+        double blockPitch = width * pace + Config.ARMY_PARADE_BLOCK_GAP.getAsDouble();
+
+        Vec3 forward = Vec3.directionFromRotation(0.0F, yaw);
+        Vec3 right = new Vec3(-forward.z, 0.0, forward.x);
+
+        double blockAcross = (block - (blocks - 1) / 2.0) * blockPitch;
+        if (index == COMMANDER_SLOT) {
+            return anchor.subtract(forward.scale(standoff)).add(right.scale(blockAcross));
+        }
+
+        int rank = index / width;
+        int file = index % width;
+        double across = blockAcross + (file - (width - 1) / 2.0) * pace;
+        double back = standoff + COMMANDER_LEAD * pace + rank * pace;
+        return anchor.subtract(forward.scale(back)).add(right.scale(across));
     }
 
     // Where soldier number index of size stands, given the commander at anchor facing yaw. Null for
@@ -97,23 +123,8 @@ public enum GipfaeliFormation {
                 yield anchor.subtract(forward.scale(Math.cos(angle) * radius))
                         .add(right.scale(Math.sin(angle) * radius));
             }
-            case PARADE -> {
-                int companies = (size + PARADE_COMPANY - 1) / PARADE_COMPANY;
-                int company = index / PARADE_COMPANY;
-                int within = index % PARADE_COMPANY;
-                int rank = within / PARADE_WIDTH;
-                int file = within % PARADE_WIDTH;
-
-                // Companies stand two abreast before they stand behind one another, and a lone
-                // company stands square behind the commander rather than off to one side.
-                int columns = Math.min(2, companies);
-                double companyStride = (PARADE_WIDTH - 1) * PARADE_PACE + PARADE_GAP + PARADE_PACE;
-                double rankStride = (PARADE_DEPTH - 1) * PARADE_PACE + PARADE_GAP + PARADE_PACE;
-                double across = (file - (PARADE_WIDTH - 1) / 2.0) * PARADE_PACE
-                        + ((company % 2) - (columns - 1) / 2.0) * companyStride;
-                double back = STANDOFF + rank * PARADE_PACE + (company / 2) * rankStride;
-                yield anchor.subtract(forward.scale(back)).add(right.scale(across));
-            }
+            // A parade is drawn up a squad at a time, not a soldier at a time; see parade().
+            case PARADE -> parade(0, 1, index, anchor, yaw);
             case LOOSE -> null;
         };
     }

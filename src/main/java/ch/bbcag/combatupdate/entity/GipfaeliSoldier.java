@@ -82,6 +82,14 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     private static final EntityDataAccessor<Byte> DATA_STANCE =
             SynchedEntityData.defineId(GipfaeliSoldier.class, EntityDataSerializers.BYTE);
 
+    // Whether this is the squad's commander: the one soldier of its colour who stands out in
+    // front, wears black with the squad's stripe, and can be clicked for the whole squad's orders.
+    private static final EntityDataAccessor<Boolean> DATA_COMMANDER =
+            SynchedEntityData.defineId(GipfaeliSoldier.class, EntityDataSerializers.BOOLEAN);
+
+    // A commander is built a little sturdier than the soldiers it leads.
+    private static final double COMMANDER_TOUGHNESS = 1.5;
+
     // What the squad is doing as a whole. ATTACK is a squad in the field - it engages, it follows
     // orders, it keeps whatever shape it was given. STAND is a squad on parade: in ranks, at
     // attention, shooting nothing unless shot at.
@@ -146,6 +154,10 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     private int slot;
     private int slots = 1;
 
+    // On parade, which block (which squad) this one stands in, out of how many are standing.
+    private int block;
+    private int blocks = 1;
+
     // Where the parade is drawn up around, when it is drawn up somewhere rather than around the
     // commander: the spot and the facing at the moment they said "stand". Null means the shape
     // walks with the commander instead.
@@ -197,6 +209,7 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         super.defineSynchedData(entityData);
         entityData.define(DATA_UNIFORM, CAMO);
         entityData.define(DATA_STANCE, (byte) Stance.ATTACK.ordinal());
+        entityData.define(DATA_COMMANDER, false);
     }
 
     @Override
@@ -281,8 +294,9 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
 
         GipfaeliWeapon kit = this.weapon();
         GipfaeliWeapon.Body body = kit == null ? UNARMED : kit.body();
-        this.setBase(Attributes.MAX_HEALTH, body.health() * Config.ARMY_HEALTH_MULTIPLIER.getAsDouble());
-        this.setBase(Attributes.ARMOR, body.armor() * Config.ARMY_ARMOR_MULTIPLIER.getAsDouble());
+        double toughness = this.commander() ? COMMANDER_TOUGHNESS : 1.0;
+        this.setBase(Attributes.MAX_HEALTH, body.health() * toughness * Config.ARMY_HEALTH_MULTIPLIER.getAsDouble());
+        this.setBase(Attributes.ARMOR, body.armor() * toughness * Config.ARMY_ARMOR_MULTIPLIER.getAsDouble());
         this.setBase(Attributes.MOVEMENT_SPEED, BASE_SPEED * body.speed());
         this.setBase(Attributes.KNOCKBACK_RESISTANCE, body.knockbackResistance());
 
@@ -306,6 +320,17 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
 
     public void setUniform(@Nullable DyeColor color) {
         this.entityData.set(DATA_UNIFORM, color == null ? CAMO : color.getId());
+    }
+
+    public boolean commander() {
+        return this.entityData.get(DATA_COMMANDER);
+    }
+
+    // Makes or unmakes a commander. The frame is rebuilt from the kit, because a commander stands
+    // in a sturdier one; which squad it commands is simply its colour.
+    public void setCommander(boolean commander) {
+        this.entityData.set(DATA_COMMANDER, commander);
+        this.arm(this.getMainHandItem());
     }
 
     public Stance stance() {
@@ -339,6 +364,10 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     // and the nameplate all show.
     @Override
     protected Component getTypeName() {
+        if (this.commander()) {
+            return Component.translatable("combatupdate.army.soldier.commander");
+        }
+
         GipfaeliWeapon kit = this.weapon();
         return kit == null ? super.getTypeName() : Component.translatable("combatupdate.army.soldier.named", kit.roleName());
     }
@@ -447,24 +476,36 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     }
 
     public void formUp(GipfaeliFormation formation, int slot, int slots) {
+        this.formUp(formation, slot, slots, 0, 1);
+    }
+
+    // Its number in the shape - and, on parade, which block that shape is and how many there are.
+    public void formUp(GipfaeliFormation formation, int slot, int slots, int block, int blocks) {
         this.formation = formation;
         this.slot = slot;
         this.slots = Math.max(1, slots);
+        this.block = block;
+        this.blocks = Math.max(1, blocks);
     }
 
     // Where this soldier belongs in the squad's shape right now, or null if the squad has no shape
     // or nobody to shape itself around.
     private @Nullable Vec3 formationSpot() {
-        if (this.paradeAnchor != null) {
-            return this.formation.slot(this.slot, this.slots, this.paradeAnchor, this.paradeYaw);
+        Vec3 anchor = this.paradeAnchor;
+        float yaw = this.paradeYaw;
+        if (anchor == null) {
+            LivingEntity owner = this.getOwner();
+            if (owner == null) {
+                return null;
+            }
+
+            anchor = owner.position();
+            yaw = owner.getYRot();
         }
 
-        LivingEntity owner = this.getOwner();
-        if (owner == null) {
-            return null;
-        }
-
-        return this.formation.slot(this.slot, this.slots, owner.position(), owner.getYRot());
+        return this.formation == GipfaeliFormation.PARADE
+                ? GipfaeliFormation.parade(this.block, this.blocks, this.slot, anchor, yaw)
+                : this.formation.slot(this.slot, this.slots, anchor, yaw);
     }
 
     // Which way the shape faces: the anchor's facing on a fixed parade, the commander's otherwise.
@@ -494,7 +535,7 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
             this.heal(REGEN_AMOUNT);
         }
 
-        if (this.tickCount % RALLY_INTERVAL_TICKS == 0 && this.weapon() == GipfaeliWeapon.MARCHER) {
+        if (this.tickCount % RALLY_INTERVAL_TICKS == 0 && (this.weapon() == GipfaeliWeapon.MARCHER || this.commander())) {
             this.rally(level);
         }
 
@@ -601,9 +642,9 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
             return InteractionResult.SUCCESS;
         }
 
-        // An empty hand opens the soldier's own menu: its kit, its armour, its colour.
+        // An empty hand opens the menu: the squad's, on a commander; the soldier's own otherwise.
         if (held.isEmpty() && player instanceof net.minecraft.server.level.ServerPlayer commander) {
-            GipfaeliArmy.soldierMenu(commander, this);
+            GipfaeliArmy.click(commander, this);
             return InteractionResult.SUCCESS;
         }
 
@@ -707,9 +748,12 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         }
 
         output.putBoolean("Holding", this.holding);
+        output.putBoolean("Commander", this.commander());
         output.putInt("Formation", this.formation.ordinal());
         output.putInt("Slot", this.slot);
         output.putInt("Slots", this.slots);
+        output.putInt("Block", this.block);
+        output.putInt("Blocks", this.blocks);
     }
 
     @Override
@@ -723,9 +767,12 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         this.paradeAnchor = input.read("ParadeAnchor", Vec3.CODEC).orElse(null);
         this.paradeYaw = input.getFloatOr("ParadeYaw", 0.0F);
         this.holding = input.getBooleanOr("Holding", false);
+        this.entityData.set(DATA_COMMANDER, input.getBooleanOr("Commander", false));
         this.formation = GipfaeliFormation.byOrdinal(input.getIntOr("Formation", 0));
         this.slot = input.getIntOr("Slot", 0);
         this.slots = Math.max(1, input.getIntOr("Slots", 1));
+        this.block = input.getIntOr("Block", 0);
+        this.blocks = Math.max(1, input.getIntOr("Blocks", 1));
     }
 
     // --- The goals that are its own ---
