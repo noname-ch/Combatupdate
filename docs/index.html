@@ -261,7 +261,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     <div class="stats">
       <div class="stat">10<small>new enchantments</small></div>
       <div class="stat">6<small>soldier kits</small></div>
-      <div class="stat">22<small>features, each with an off switch</small></div>
+      <div class="stat">25<small>features, each with an off switch</small></div>
     </div>
   </div>
   <div class="hero-art">
@@ -276,6 +276,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
 <nav class="toc" aria-label="Sections">
   <ul>
     <li><a href="#melee"><img class="px" src="img/mod/iron_shortsword.png" alt="">Melee</a></li>
+    <li><a href="#movement"><img class="px" src="img/mc/feather.png" alt="">Movement</a></li>
     <li><a href="#flight"><img class="px" src="img/mc/elytra.png" alt="">Flight</a></li>
     <li><a href="#enchantments"><img class="px" src="img/mod/enchanted_book_combo_perun.png" alt="">Enchantments</a></li>
     <li><a href="#gipfaeli"><img class="px" src="img/mod/gipfaeli.png" alt="">Gipfäli</a></li>
@@ -368,6 +369,36 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     <div class="recipe-wrap"><span class="recipe" data-recipe="exoblade"></span></div>
     <div class="recipe-wrap"><span class="recipe" data-recipe="scarlet_devil"></span></div>
     <div class="recipe-wrap"><span class="recipe" data-recipe="zenith"></span></div>
+  </div>
+</section>
+
+<!-- ============ MOVEMENT ============ -->
+<section class="chapter" id="movement">
+  <div class="chapter-head">
+    <img class="px" src="img/mc/feather.png" alt="">
+    <div><h2>Movement</h2><p class="thesis">Two ways to get somewhere fast on foot: a dash to close the gap or get out of trouble, and a slide that keeps your sprint and fits under what you'd otherwise have to crawl through.</p></div>
+  </div>
+  <div class="features">
+    <div class="feat">
+      <img class="px" src="img/mc/feather.png" alt="">
+      <h3>Dash</h3>
+      <p>Press <kbd>R</kbd> to burst a few blocks the way you're walking. Hold <kbd>A</kbd> or <kbd>D</kbd> to sidestep, <kbd>S</kbd> to hop back, or nothing to go where you're looking. It stays flat, so it covers the same ground in the air as on it. You get one in the air per jump, and dashing mid-fall wipes out the fall damage you'd built up so far.</p>
+      <div class="chips"><span class="chip">Distance <b>~5 blocks</b></span><span class="chip">Cooldown <b>1.5 s</b></span><span class="chip">In the air <b>1×</b></span></div>
+    </div>
+    <div class="feat">
+      <img class="px" src="img/mc/sugar.png" alt="">
+      <h3>Slide</h3>
+      <p>Press <kbd>Sneak</kbd> while sprinting and you drop flat and keep going, faster than you were running, easing off over a second. Flat means you fit under a one-block gap. Look left or right to curve it. Let go of sneak to stand up, or jump to launch out of it with the speed it still had.</p>
+      <div class="chips"><span class="chip">Start <b>2.5× sprint</b></span><span class="chip">Up to <b>1 s</b></span><span class="chip">Cooldown <b>0.5 s</b></span></div>
+    </div>
+  </div>
+  <div class="split">
+    <figure class="shot" data-shot="dash">
+      <div class="frame"><div class="ph"><span class="tag">screenshot · dash</span><p>Third person (F5), mid-dash sideways past a zombie or another player, the puff of cloud still hanging where you started.</p></div></div>
+    </figure>
+    <figure class="shot" data-shot="slide">
+      <div class="frame"><div class="ph"><span class="tag">screenshot · slide</span><p>Third person, lying flat and sliding under a one-block gap in a wall, dust kicking up behind.</p></div></div>
+    </figure>
   </div>
 </section>
 
@@ -752,7 +783,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
         <li>Combat enchantments</li><li>Shortbow</li><li>Leather enchant colours</li><li>Enchanted book textures</li><li>Thrown fireballs</li>
         <li>TNT blast retuning</li><li>Weapon reach</li><li>Sword blocking</li><li>Gipfäli Launcher</li><li>Gipfäli Launch Rig</li>
         <li>Gipfäli grenade &amp; TNT</li><li>Gipfäli Army</li><li>Damage numbers</li><li>Territory</li>
-        <li>Exoblade</li><li>Scarlet Devil</li><li>Training dummy</li>
+        <li>Exoblade</li><li>Scarlet Devil</li><li>Zenith</li><li>Training dummy</li><li>Dash</li><li>Slide</li>
       </ul>
     </div>
     <figure class="shot" data-shot="config-screen">
@@ -778,6 +809,8 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
       <table class="keys">
         <thead><tr><th>Control</th><th>Does</th></tr></thead>
         <tbody>
+          <tr><td><kbd>R</kbd></td><td>Dash (rebind under Controls → CombatUpdate)</td></tr>
+          <tr><td><kbd>Sneak</kbd> while sprinting</td><td>Slide</td></tr>
           <tr><td><kbd>W</kbd> <kbd>S</kbd> · <kbd>A</kbd> <kbd>D</kbd></td><td>Pitch · roll while gliding</td></tr>
           <tr><td><kbd>Shift</kbd> gliding</td><td>Continuous rocket boost</td></tr>
           <tr><td>Right-click TNT gliding</td><td>Drop it as a bomb</td></tr>
@@ -809,6 +842,8 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
             <tr><td><code>/gipfaeliarmy status</code></td><td>How many soldiers you have and what they're doing, in chat</td></tr>
             <tr><td><code>/gipfaeliarmy raise</code></td><td>Raise a new squad: its commander appears (what the flag does)</td></tr>
             <tr><td><code>/gipfaeliarmy manual</code></td><td>Put a copy of the field manual in your pack</td></tr>
+            <tr><td><code>/gipfaeliarmy training <i>[count]</i> <i>[armed]</i></code></td><td>Stand 1–30 grey practice soldiers up in front of you (5 by default). <code>armed</code> gives them rifles and they shoot back at whoever hits them. They pack up after ten minutes</td></tr>
+            <tr><td><code>/gipfaeliarmy training clear</code></td><td>Take every practice soldier nearby down again</td></tr>
           </tbody>
         </table></div>
       </div>
