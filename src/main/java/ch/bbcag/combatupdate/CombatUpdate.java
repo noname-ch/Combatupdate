@@ -62,6 +62,7 @@ import ch.bbcag.combatupdate.entity.GipfaeliSoldier;
 import ch.bbcag.combatupdate.entity.GipfaeliTnt;
 import ch.bbcag.combatupdate.entity.ScarletBullet;
 import ch.bbcag.combatupdate.entity.ScarletSpear;
+import ch.bbcag.combatupdate.entity.ZenithBlade;
 import ch.bbcag.combatupdate.entity.TrainingDummy;
 import ch.bbcag.combatupdate.mixin.PrimedTntAccessor;
 import ch.bbcag.combatupdate.territory.TerritoryBorders;
@@ -173,6 +174,17 @@ public final class CombatUpdate {
                     .updateInterval(2)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "scarlet_bullet"))));
 
+    // The phantom swords a Zenith swing sends looping out and back; see ZenithBlade
+    public static final DeferredHolder<EntityType<?>, EntityType<ZenithBlade>> ZENITH_BLADE = ENTITY_TYPES.register("zenith_blade",
+            () -> EntityType.Builder.<ZenithBlade>of(ZenithBlade::new, MobCategory.MISC)
+                    .noLootTable()
+                    .sized(0.5F, 0.5F)
+                    .clientTrackingRange(8)
+                    // Loose, unlike the other projectiles: the client flies its own copy along the same
+                    // loop, and a position update only ever drags it back a tick.
+                    .updateInterval(20)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "zenith_blade"))));
+
     // Lit Gipfaeli TNT of either kind, built the way vanilla builds primed TNT; see GipfaeliTnt
     public static final DeferredHolder<EntityType<?>, EntityType<GipfaeliTnt>> GIPFAELI_TNT = ENTITY_TYPES.register("gipfaeli_tnt",
             () -> EntityType.Builder.<GipfaeliTnt>of(GipfaeliTnt::new, MobCategory.MISC)
@@ -248,6 +260,10 @@ public final class CombatUpdate {
     public static final DeferredItem<ScarletDevil> SCARLET_DEVIL = ITEMS.registerItem("scarlet_devil",
             ScarletDevil::new, ScarletDevil::properties);
 
+    // Terraria's endgame sword, forged from all the others, that throws looping phantoms of them; see Zenith.
+    public static final DeferredItem<Item> ZENITH = ITEMS.registerSimpleItem("zenith",
+            Zenith::properties);
+
     // The launcher's ammunition, and a decent breakfast in its own right.
     public static final DeferredItem<Item> GIPFAELI = ITEMS.registerSimpleItem("gipfaeli",
             p -> p.food(new FoodProperties.Builder().nutrition(5).saturationModifier(0.6F).build()));
@@ -303,6 +319,7 @@ public final class CombatUpdate {
         NeoForge.EVENT_BUS.register(GipfaeliLock.class);
         NeoForge.EVENT_BUS.register(GipfaeliLaunchRig.class);
         NeoForge.EVENT_BUS.register(Exoblade.class);
+        NeoForge.EVENT_BUS.register(Zenith.class);
         NeoForge.EVENT_BUS.register(TrainingDummy.class);
         NeoForge.EVENT_BUS.register(TerritoryManager.class);
         NeoForge.EVENT_BUS.register(TerritoryBorders.class);
@@ -343,6 +360,9 @@ public final class CombatUpdate {
             }
             if (Config.on(Config.ENABLE_SCARLET_DEVIL)) {
                 event.accept(SCARLET_DEVIL);
+            }
+            if (Config.on(Config.ENABLE_ZENITH)) {
+                event.accept(ZENITH);
             }
             if (Config.on(Config.ENABLE_TRAINING_DUMMY)) {
                 event.accept(TRAINING_DUMMY_ITEM);

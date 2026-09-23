@@ -50,6 +50,7 @@ import ch.bbcag.combatupdate.client.ExobladeAutoSwing;
 import ch.bbcag.combatupdate.client.GipfaeliSight;
 import ch.bbcag.combatupdate.client.GipfaeliSoldierRenderer;
 import ch.bbcag.combatupdate.client.ScarletSpearRenderer;
+import ch.bbcag.combatupdate.client.ZenithBladeRenderer;
 import ch.bbcag.combatupdate.client.ShortbowPullProperty;
 import ch.bbcag.combatupdate.client.TerritoryClient;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -173,6 +174,12 @@ public final class CombatUpdateClient {
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
 
+        // A sword that never hits with its own blade has to say what it does instead.
+        if (stack.is(CombatUpdate.ZENITH.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.zenith.phantoms")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
         // The explosives say what they do, since the grenade is the first pastry here that goes off
         // on a timer rather than on arrival, and the Ultra is not just a bigger block of the other.
         if (stack.is(CombatUpdate.GIPFAELI_GRENADE.get())) {
@@ -240,6 +247,7 @@ public final class CombatUpdateClient {
         event.registerEntityRenderer(CombatUpdate.SCARLET_SPEAR.get(), ScarletSpearRenderer::new);
         // Like the Exobeam, a bullet is nothing but its trail (see ScarletBullet#trail).
         event.registerEntityRenderer(CombatUpdate.SCARLET_BULLET.get(), NoopRenderer::new);
+        event.registerEntityRenderer(CombatUpdate.ZENITH_BLADE.get(), ZenithBladeRenderer::new);
     }
 
     @SubscribeEvent

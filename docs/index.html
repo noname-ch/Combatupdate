@@ -321,7 +321,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
   </div>
 
   <h3 style="margin-top:56px;margin-bottom:6px">Endgame weapons</h3>
-  <p style="color:var(--muted);margin-bottom:24px;max-width:60ch">Two weapons borrowed from Terraria's Calamity mod, and priced like it: each one takes a nether star.</p>
+  <p style="color:var(--muted);margin-bottom:24px;max-width:60ch">Three weapons borrowed from Terraria and its Calamity mod, and priced like it: each one takes a nether star.</p>
   <div class="features">
     <div class="feat">
       <img class="px" src="img/mod/exoblade.png" alt="">
@@ -334,6 +334,12 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
       <h3>Scarlet Devil</h3>
       <p>Right-click to throw, and hold it to keep throwing. It never leaves your hand: what flies is a piercing spear of red light that sheds homing bullets and bursts into a Scarlet Blast on every hit. Go two seconds without throwing and it chimes: the next throw is a Gungnir, Calamity's stealth strike. It hits twice as hard, blasts twice as wide and heals you for everything it strikes.</p>
       <div class="chips"><span class="chip">Spear <b>14</b></span><span class="chip">Throws <b>every 0.6 s</b></span><span class="chip">Stealth strike <b>Gungnir ×2</b></span><span class="chip">Never <b>used up</b></span></div>
+    </div>
+    <div class="feat">
+      <img class="px" src="img/mod/zenith.png" alt="">
+      <h3>Zenith</h3>
+      <p>Terraria's own last sword, forged from every other one, and it swings none of them. Each full swing sends phantoms of the swords that went into it looping out to whatever you aim at and back to your hand, cutting through everything on the way there and on the way back, walls included. Hold attack and it keeps swinging, so the air in front of you fills with them.</p>
+      <div class="chips"><span class="chip">Phantom <b>8</b></span><span class="chip">Per swing <b>2</b></span><span class="chip">Swings <b>2.4/s</b></span><span class="chip">Reach <b>16</b></span></div>
     </div>
   </div>
 
@@ -361,6 +367,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     <div class="recipe-wrap"><span class="recipe" data-recipe="diamond_shortsword"></span></div>
     <div class="recipe-wrap"><span class="recipe" data-recipe="exoblade"></span></div>
     <div class="recipe-wrap"><span class="recipe" data-recipe="scarlet_devil"></span></div>
+    <div class="recipe-wrap"><span class="recipe" data-recipe="zenith"></span></div>
   </div>
 </section>
 
@@ -916,6 +923,9 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     'minecraft:glass_pane':[V+'glass.png','Glass Pane'],
     'minecraft:echo_shard':[V+'echo_shard.png','Echo Shard'],'minecraft:heart_of_the_sea':[V+'heart_of_the_sea.png','Heart of the Sea'],
     'minecraft:nether_star':[V+'nether_star.png','Nether Star'],'minecraft:netherite_sword':[V+'netherite_sword.png','Netherite Sword'],
+    'minecraft:wooden_sword':[V+'wooden_sword.png','Wooden Sword'],'minecraft:stone_sword':[V+'stone_sword.png','Stone Sword'],
+    'minecraft:copper_sword':[V+'copper_sword.png','Copper Sword'],'minecraft:iron_sword':[V+'iron_sword.png','Iron Sword'],
+    'minecraft:golden_sword':[V+'golden_sword.png','Golden Sword'],'minecraft:diamond_sword':[V+'diamond_sword.png','Diamond Sword'],
     'minecraft:trident':[V+'trident.png','Trident'],'minecraft:redstone_block':[B+'redstone_block.png','Block of Redstone'],
     'minecraft:wither_rose':[V+'wither_rose.png','Wither Rose'],
     'combatupdate:gipfaeli_tnt':[B+'gipfaeli_tnt.png','Gipfäli TNT'],'combatupdate:gipfaeli_ultra_tnt':[B+'gipfaeli_ultra_tnt.png','Gipfäli Ultra TNT'],
@@ -927,7 +937,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     gipfaeli_launcher:'Gipfäli Launcher',gipfaeli_launch_rig:'Gipfäli Launch Rig',gipfaeli_command_flag:'Command Flag',gipfaeli_guard_post:'Guard Post',
     letony_mate_ak47:'Letony-Mate-AK47',gipfaeli_shotgun:'Gipfäli Shotgun',gipfaeli_marksman:'Marksman Rifle',gipfaeli_heavy_mg:'Heavy MG',
     gipfaeli_war_banner:'War Banner',iron_shortsword:'Iron Shortsword',diamond_shortsword:'Diamond Shortsword',meat_obelisk:'Meat Obelisk',
-    elytra_chestplate:'Elytra Chestplate (any chestplate + elytra)',exoblade:'Exoblade',scarlet_devil:'Scarlet Devil',training_dummy:'Training Dummy'};
+    elytra_chestplate:'Elytra Chestplate (any chestplate + elytra)',exoblade:'Exoblade',scarlet_devil:'Scarlet Devil',zenith:'Zenith',training_dummy:'Training Dummy'};
   const shaped=(p,k,out,n)=>({p,k,out,n});
   const shapeless=(ings,out,n)=>({ings,out,n});
   const R={
@@ -949,6 +959,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     gipfaeli_war_banner:shaped(['RGR','RRR','S  '],{R:'minecraft:red_wool',G:'combatupdate:gipfaeli',S:'minecraft:stick'},'combatupdate:gipfaeli_war_banner'),
     exoblade:shaped(['EHE','ENE',' S '],{E:'minecraft:echo_shard',H:'minecraft:heart_of_the_sea',N:'minecraft:nether_star',S:'minecraft:netherite_sword'},'combatupdate:exoblade'),
     scarlet_devil:shaped([' RN','RTR','WR '],{N:'minecraft:nether_star',R:'minecraft:redstone_block',T:'minecraft:trident',W:'minecraft:wither_rose'},'combatupdate:scarlet_devil'),
+    zenith:shapeless(['minecraft:wooden_sword','minecraft:stone_sword','minecraft:copper_sword','minecraft:iron_sword','minecraft:golden_sword','minecraft:diamond_sword','minecraft:netherite_sword','combatupdate:iron_shortsword','minecraft:nether_star'],'combatupdate:zenith'),
     training_dummy:shaped([' H ','STS',' S '],{H:'minecraft:hay_block',S:'minecraft:stick',T:'minecraft:target'},'combatupdate:training_dummy'),
     meat_obelisk:shaped(['###','###','###'],{'#':'minecraft:porkchop'},'combatupdate:meat_obelisk'),
   };

@@ -7,11 +7,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import ch.bbcag.combatupdate.Exoblade;
+import ch.bbcag.combatupdate.Zenith;
 import net.minecraft.network.protocol.game.ServerboundPunchPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 
-// The Exoblade throws a beam on every well-timed swing, including one at thin air. A swing that hits
+// The Exoblade throws a beam on every well-timed swing, including one at thin air, and the Zenith its
+// phantoms. A swing that hits
 // nothing reaches the server only as this packet, and there is no event for it.
 //
 // Hooked just before the strength meter is reset rather than at the head: the head still runs on the
@@ -26,5 +28,6 @@ public abstract class ExobladeSwingMixin {
             target = "Lnet/minecraft/server/level/ServerPlayer;resetAttackStrengthTicker()V"))
     private void combatupdate$exobladeSwing(ServerboundPunchPacket packet, CallbackInfo ci) {
         Exoblade.onSwing(this.player);
+        Zenith.onSwing(this.player);
     }
 }

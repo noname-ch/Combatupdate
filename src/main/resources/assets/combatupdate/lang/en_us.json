@@ -12,6 +12,9 @@
   "item.combatupdate.scarlet_devil.gungnir": "Stealth strike: hold off throwing until it chimes, and the next throw is a Gungnir, twice as strong, that heals you for everything it strikes",
   "entity.combatupdate.scarlet_spear": "Scarlet Devil",
   "entity.combatupdate.scarlet_bullet": "Scarlet Bullet",
+  "item.combatupdate.zenith": "Zenith",
+  "item.combatupdate.zenith.phantoms": "Hold attack to keep swinging: every full swing sends phantoms of the swords it was forged from looping out to what you aim at and back, cutting through everything on the way",
+  "entity.combatupdate.zenith_blade": "Zenith",
   "item.combatupdate.training_dummy": "Training Dummy",
   "entity.combatupdate.training_dummy": "Training Dummy",
   "item.combatupdate.gipfaeli": "Gipfäli",
@@ -288,6 +291,7 @@
   "combatupdate.configuration.enableSwordBlocking": "Enable Sword Blocking",
   "combatupdate.configuration.enableExoblade": "Enable Exoblade",
   "combatupdate.configuration.enableScarletDevil": "Enable Scarlet Devil",
+  "combatupdate.configuration.enableZenith": "Enable Zenith",
   "combatupdate.configuration.enableTrainingDummy": "Enable Training Dummy",
   "combatupdate.configuration.enableGipfaeli": "Enable Gipfäli Launcher",
   "combatupdate.configuration.gipfaeliConsumesAmmo": "Firing Spends a Gipfäli",
@@ -544,5 +548,9 @@
   "combatupdate.configuration.scarletBlastRadius": "Scarlet Blast Radius (blocks)",
   "combatupdate.configuration.scarletBulletDamage": "Bullet Damage",
   "combatupdate.configuration.gungnirChargeTicks": "Stealth Strike Charge Time (ticks)",
-  "combatupdate.configuration.gungnirHeal": "Gungnir Heal per Hit"
+  "combatupdate.configuration.gungnirHeal": "Gungnir Heal per Hit",
+  "combatupdate.configuration.zenith": "Zenith",
+  "combatupdate.configuration.zenithBladeDamage": "Phantom Sword Damage",
+  "combatupdate.configuration.zenithBladesPerSwing": "Phantom Swords per Swing",
+  "combatupdate.configuration.zenithReach": "Phantom Reach (blocks)"
 }

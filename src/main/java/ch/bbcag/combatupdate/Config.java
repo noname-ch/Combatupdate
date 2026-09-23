@@ -80,6 +80,10 @@ public final class Config {
             .comment("Whether the Scarlet Devil can be thrown. Off leaves it a spear that only stabs and takes it out of the creative tab; the item stays registered, so a world already holding one still loads")
             .define("enableScarletDevil", true);
 
+    public static final ModConfigSpec.BooleanValue ENABLE_ZENITH = BUILDER
+            .comment("Whether the Zenith throws its looping phantom swords on full-strength swings. Off leaves it an ordinary (if very fast) sword and takes it out of the creative tab; the item stays registered, so a world already holding one still loads")
+            .define("enableZenith", true);
+
     public static final ModConfigSpec.BooleanValue ENABLE_TRAINING_DUMMY = BUILDER
             .comment("Whether a training dummy can be set down. Off also takes it out of the creative tab; dummies already standing stay where they are, and the item stays registered, so a world already holding one still loads")
             .define("enableTrainingDummy", true);
@@ -445,6 +449,29 @@ public final class Config {
     public static final ModConfigSpec.DoubleValue GUNGNIR_HEAL = BUILDER
             .comment("How much health (2 = one heart) the thrower gets back for each creature a Gungnir spear strikes")
             .defineInRange("gungnirHeal", 2.0, 0.0, 40.0);
+    static {
+        BUILDER.pop();
+    }
+
+    // Its own page in the config screen: a pushed section renders as a button that
+    // opens a screen showing only what is inside it.
+    static {
+        BUILDER.comment("The Zenith: how hard its phantom swords cut, how many each swing throws, and how far out they loop. Switched on and off on the Features page.").push("zenith");
+    }
+    // --- Phantom swords (thrown by a full-strength swing) ---
+
+
+    public static final ModConfigSpec.DoubleValue ZENITH_BLADE_DAMAGE = BUILDER
+            .comment("How much damage a phantom sword deals to each thing it cuts through (the Zenith itself hits for 12). Each phantom cuts each creature once, on its way out or back")
+            .defineInRange("zenithBladeDamage", 8.0, 0.0, 200.0);
+
+    public static final ModConfigSpec.IntValue ZENITH_BLADES_PER_SWING = BUILDER
+            .comment("How many phantom swords each full-strength swing throws, each on a loop of its own. The Zenith swings 2.4 times a second")
+            .defineInRange("zenithBladesPerSwing", 2, 1, 8);
+
+    public static final ModConfigSpec.DoubleValue ZENITH_REACH = BUILDER
+            .comment("How far out, in blocks, the phantoms loop at most: to whatever you are aiming at within this range, or this far along your look if nothing is in the way")
+            .defineInRange("zenithReach", 16.0, 4.0, 48.0);
     static {
         BUILDER.pop();
     }
