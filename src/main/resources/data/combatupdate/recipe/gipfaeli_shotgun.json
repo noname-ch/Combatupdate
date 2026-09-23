@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": "minecraft:copper_ingot",
+    "G": "combatupdate:gipfaeli",
+    "S": "minecraft:stick"
+  },
+  "pattern": [
+    "CCC",
+    "GSS"
+  ],
+  "result": {
+    "id": "combatupdate:gipfaeli_shotgun"
+  }
+}

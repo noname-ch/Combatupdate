@@ -13,13 +13,13 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.hurtingprojectile.Fireball;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.event.EventHooks;
 
 import ch.bbcag.combatupdate.CombatUpdate;
 import ch.bbcag.combatupdate.Config;
@@ -101,11 +101,78 @@ public final class GipfaeliRocket extends Fireball {
         Vec3 heading = velocity.scale(1.0 / speed);
         Vec3 desired = toTarget.scale(1.0 / distance);
 
+        if (Config.GIPFAELI_AVOID_BLOCKS.get()) {
+            // Never further than the target itself: past that, anything solid is behind whatever we
+            // are aiming at and is none of our business.
+            desired = steerClearOf(desired, Math.min(distance, Config.GIPFAELI_AVOID_LOOKAHEAD.getAsDouble()));
+        }
+
         double maxTurn = Math.toRadians(turnRate);
         double angle = Math.acos(Math.clamp(heading.dot(desired), -1.0, 1.0));
         Vec3 steered = angle <= maxTurn ? desired : turn(heading, desired, maxTurn);
 
         this.setDeltaMovement(steered.scale(speed));
+    }
+
+    // How far off the straight line to the target the rocket will look for a way past, nearest first.
+    // Anything wider than the last of these is not a detour any more, and it flies the line instead.
+    private static final double[] DETOUR_DEGREES = {15.0, 30.0, 45.0, 60.0, 75.0};
+
+    // Picks a heading that has clear air along it, as close to the one wanted as can be found.
+    //
+    // Climbing is tried before turning and turning before diving, because what is usually in the way is
+    // ground: going over a hill gets there, going round it takes longer, and going under it does not
+    // happen. The turn rate still caps how fast the rocket can take up whatever this returns, so a
+    // detour is leaned into rather than snapped to.
+    private Vec3 steerClearOf(Vec3 desired, double lookahead) {
+        if (isClear(desired, lookahead)) {
+            return desired;
+        }
+
+        // A frame around the direction we want: one axis level with the horizon, one at right angles
+        // to it. Rotating about the level one pitches; rotating about the other yaws.
+        Vec3 level = desired.cross(new Vec3(0.0, 1.0, 0.0));
+        if (level.lengthSqr() < EPSILON * EPSILON) {
+            // Pointing straight up or down leaves no horizon to work from; any level axis will do.
+            level = new Vec3(1.0, 0.0, 0.0);
+        }
+        level = level.normalize();
+        Vec3 lift = level.cross(desired).normalize();
+
+        for (double degrees : DETOUR_DEGREES) {
+            double radians = Math.toRadians(degrees);
+            Vec3[] attempts = {
+                    rotateAbout(desired, level, -radians),   // climb
+                    rotateAbout(desired, lift, radians),     // one way round
+                    rotateAbout(desired, lift, -radians),    // the other
+                    rotateAbout(desired, level, radians),    // dive, last of all
+            };
+
+            for (Vec3 attempt : attempts) {
+                if (isClear(attempt, lookahead)) {
+                    return attempt;
+                }
+            }
+        }
+
+        // Boxed in on every side: hold the line and let it hit whatever is there.
+        return desired;
+    }
+
+    private boolean isClear(Vec3 direction, double distance) {
+        Vec3 from = this.position();
+        Vec3 to = from.add(direction.scale(distance));
+        return this.level().clip(new ClipContext(
+                from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this)).getType() == HitResult.Type.MISS;
+    }
+
+    // Rodrigues' rotation: turns a vector about an arbitrary axis, which the two frames above both need.
+    private static Vec3 rotateAbout(Vec3 vector, Vec3 axis, double radians) {
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+        return vector.scale(cos)
+                .add(axis.cross(vector).scale(sin))
+                .add(axis.scale(axis.dot(vector) * (1.0 - cos)));
     }
 
     // Rotates heading the given angle towards desired, in the plane the two of them span.
@@ -141,10 +208,13 @@ public final class GipfaeliRocket extends Fireball {
 
         double power = Config.GIPFAELI_EXPLOSION_POWER.getAsDouble();
         if (power > 0.0) {
-            boolean grief = Config.GIPFAELI_BREAKS_BLOCKS.get()
-                    && EventHooks.canEntityGrief(serverLevel, this.getOwner());
-            serverLevel.explode(this, this.getX(), this.getY(), this.getZ(),
-                    (float) power, grief, Level.ExplosionInteraction.MOB);
+            // The boolean is fire, not griefing. What breaks blocks is the interaction: MOB weighs
+            // mobGriefing and the owner's say in it, NONE leaves the terrain standing whatever the
+            // game rules say.
+            serverLevel.explode(this, this.getX(), this.getY(), this.getZ(), (float) power, false,
+                    Config.GIPFAELI_BREAKS_BLOCKS.get()
+                            ? Level.ExplosionInteraction.MOB
+                            : Level.ExplosionInteraction.NONE);
         }
 
         this.discard();

@@ -13,7 +13,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.event.EventHooks;
 
 // A thrown fireball that flies at a constant speed (no acceleration or drag, unlike vanilla Blaze/Ghast
 // fireballs) and explodes on impact, similar to a Ghast's fireball.
@@ -41,9 +40,11 @@ public final class CombatFireball extends Fireball {
     protected void onHit(HitResult hitResult) {
         super.onHit(hitResult);
         if (this.level() instanceof ServerLevel serverLevel) {
-            boolean grief = EventHooks.canEntityGrief(serverLevel, this.getOwner());
+            // The boolean is whether the blast leaves fires burning, not whether it breaks blocks.
+            // Breaking is the interaction's to decide, and MOB already weighs mobGriefing and the
+            // owner's say in it, which is all this ever wanted.
             serverLevel.explode(this, this.getX(), this.getY(), this.getZ(),
-                    (float) Config.FIREBALL_EXPLOSION_POWER.getAsDouble(), grief, Level.ExplosionInteraction.MOB);
+                    (float) Config.FIREBALL_EXPLOSION_POWER.getAsDouble(), false, Level.ExplosionInteraction.MOB);
             this.discard();
         }
     }

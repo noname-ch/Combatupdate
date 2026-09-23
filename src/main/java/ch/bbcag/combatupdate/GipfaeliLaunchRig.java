@@ -6,8 +6,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jspecify.annotations.Nullable;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -22,33 +25,38 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
-import net.minecraft.core.BlockPos;
-
 import ch.bbcag.combatupdate.entity.GipfaeliBomb;
 
-// The Gipfaeli launch rig: the thing a Gipfaeli bomb is set down with, and then aimed by.
+// The Gipfaeli launch rig: the thing a strike is called with, and then set down.
 //
-// Two presses on the one button, told apart by whether the player already has a bomb waiting on a
-// spot. The first press sets a bomb on the ground in front of them; the second calls the spot it
-// flies to, wherever they are looking. From there the bomb is on its own - see GipfaeliBomb for the
+// Two presses on the one button, in that order. The first picks the block the bomb lands on, which
+// is then marked until it is used. The second sets the bomb down in front of the player, and because
+// the spot was settled first, the five seconds start right there and then - see GipfaeliBomb for the
 // countdown and the arc.
 //
-// Aiming is deliberately not the launcher's lock-on sight. That sight takes something that moves, and
-// tells a rocket to chase it; this takes a place, which then stays where it was put for the five
-// seconds it takes the bomb to leave. A strike called on a spot is a different promise from a shot
-// fired at a target, and neither one wants the other's controls.
+// Aiming before placing rather than after is what makes the spot binding: there is never a bomb
+// sitting in the world waiting to be told where to go, and so never a moment where the answer can
+// change. Sneaking picks a new block instead of placing, so a spot taken by mistake costs a press
+// rather than a pastry.
+//
+// Aiming is deliberately not the launcher's lock-on sight. That sight takes something that moves,
+// and tells a rocket to chase it; this takes a place, and the place stays where it was put.
 public final class GipfaeliLaunchRig {
-    // Which bomb each player has set down and not yet called a spot on. Server-side, and only ever
-    // holding the one per player: a second bomb can only be set down once the first has been sent.
-    private static final Map<UUID, UUID> WAITING = new ConcurrentHashMap<>();
+    // The block each player has called and not yet set a bomb on. Server-side, and only ever one per
+    // player: calling a second spot replaces the first.
+    private static final Map<UUID, Vec3> TARGETS = new ConcurrentHashMap<>();
 
-    // Long enough to outlast the repeat rate of a held right-click, so setting a bomb down and aiming
-    // it cannot both happen inside the one press.
+    // Long enough to outlast the repeat rate of a held right-click, so calling a spot and setting the
+    // bomb down cannot both happen inside the one press.
     private static final int CLICK_COOLDOWN_TICKS = 10;
 
     // How far in front of the player a bomb can be set down. Placing is a thing done at arm's length;
     // it is aiming that reaches across the map.
     private static final double PLACE_REACH = 6.0;
+
+    // Both of these go out as packets, so neither is done every tick.
+    private static final int MARKER_INTERVAL_TICKS = 10;
+    private static final int READOUT_INTERVAL_TICKS = 20;
 
     private GipfaeliLaunchRig() {
     }
@@ -65,11 +73,12 @@ public final class GipfaeliLaunchRig {
         }
 
         if (level instanceof ServerLevel serverLevel) {
-            GipfaeliBomb waiting = waitingBomb(serverLevel, player);
-            if (waiting == null) {
-                place(serverLevel, player);
+            // With no spot called there is nothing to set a bomb on, so the press can only be an aim.
+            // Sneaking is how you say so anyway, and re-aim a spot you would rather not keep.
+            if (player.isShiftKeyDown() || !TARGETS.containsKey(player.getUUID())) {
+                callSpot(serverLevel, player);
             } else {
-                callStrike(serverLevel, player, waiting);
+                place(serverLevel, player);
             }
         }
 
@@ -77,7 +86,22 @@ public final class GipfaeliLaunchRig {
         return true;
     }
 
+    private static void callSpot(ServerLevel level, Player player) {
+        Vec3 spot = pickSpot(level, player);
+        TARGETS.put(player.getUUID(), spot);
+
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.COMPARATOR_CLICK, SoundSource.PLAYERS, 0.8F, 1.6F);
+        mark(level, player, spot);
+        announce(player, spot);
+    }
+
     private static void place(ServerLevel level, Player player) {
+        Vec3 spot = TARGETS.get(player.getUUID());
+        if (spot == null) {
+            return;
+        }
+
         BlockHitResult ground = pickGround(level, player);
         if (ground == null) {
             refuse(level, player, "combatupdate.gipfaeli.bomb.no_ground");
@@ -96,9 +120,11 @@ public final class GipfaeliLaunchRig {
         // On the face that was clicked rather than inside the block: a bomb sits on the ground the way
         // anything else placed against a block does.
         Vec3 seat = Vec3.atBottomCenterOf(ground.getBlockPos().relative(ground.getDirection()));
-        GipfaeliBomb bomb = new GipfaeliBomb(level, seat, player, !free);
-        level.addFreshEntity(bomb);
-        WAITING.put(player.getUUID(), bomb.getUUID());
+        level.addFreshEntity(new GipfaeliBomb(level, seat, spot, player));
+
+        // The spot is spent. The next press aims again rather than dropping a second bomb on a target
+        // that has already been sent one.
+        TARGETS.remove(player.getUUID());
 
         if (!free) {
             player.getInventory().getItem(ammoSlot).shrink(1);
@@ -106,21 +132,44 @@ public final class GipfaeliLaunchRig {
 
         level.playSound(null, seat.x, seat.y, seat.z,
                 SoundEvents.IRON_TRAPDOOR_CLOSE, SoundSource.BLOCKS, 0.9F, 1.4F);
-        GipfaeliLock.readout(player, Component.translatable("combatupdate.gipfaeli.bomb.placed"));
-    }
-
-    private static void callStrike(ServerLevel level, Player player, GipfaeliBomb bomb) {
-        Vec3 spot = pickSpot(level, player);
-        int countdown = bomb.arm(spot);
-
-        // The rig is free for the next bomb the moment this one has somewhere to be.
-        WAITING.remove(player.getUUID());
-
         GipfaeliLock.readout(player, Component.translatable("combatupdate.gipfaeli.bomb.armed",
-                Mth.floor(spot.x), Mth.floor(spot.y), Mth.floor(spot.z), (countdown + 19) / 20));
+                Mth.floor(spot.x), Mth.floor(spot.y), Mth.floor(spot.z),
+                (Config.GIPFAELI_BOMB_COUNTDOWN_TICKS.getAsInt() + 19) / 20));
     }
 
-    // The spot the strike is called on: wherever the player is looking, out to the rig's range.
+    // Keeps the called spot lit and named while the rig waits for a bomb to be set on it, so aiming
+    // first and placing second has something to look at in between. Driven from the player tick.
+    public static void tick(Player player) {
+        if (TARGETS.isEmpty() || !(player.level() instanceof ServerLevel level)) {
+            return;
+        }
+
+        Vec3 spot = TARGETS.get(player.getUUID());
+        if (spot == null) {
+            return;
+        }
+
+        // Putting the rig away drops the spot. The aim belongs to the tool, so holding something else
+        // is the plainest way to say you are done with it.
+        if (!Config.on(Config.ENABLE_GIPFAELI_BOMB) || !holdingRig(player)) {
+            TARGETS.remove(player.getUUID());
+            GipfaeliLock.readout(player, Component.translatable("combatupdate.gipfaeli.bomb.dropped"));
+            return;
+        }
+
+        if (player.tickCount % MARKER_INTERVAL_TICKS == 0) {
+            mark(level, player, spot);
+        }
+
+        if (player.tickCount % READOUT_INTERVAL_TICKS == 0) {
+            announce(player, spot);
+        }
+    }
+
+    // The block the strike lands on: whatever the player is looking at, out to the rig's range, taken
+    // as the top of that block rather than the point on it the ray happened to touch. A strike is
+    // called on a block, not on a spot two pixels down its side, and squaring it up here is what lets
+    // the bomb be promised to land on that block from anywhere.
     //
     // A ray that runs out without hitting anything is taken down to the ground under where it ended,
     // so a strike can be called by pointing at the skyline rather than only at something solid. That
@@ -133,11 +182,10 @@ public final class GipfaeliLaunchRig {
         BlockHitResult hit = level.clip(new ClipContext(
                 eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, player));
         if (hit.getType() != HitResult.Type.MISS) {
-            return hit.getLocation();
+            return Vec3.atBottomCenterOf(hit.getBlockPos().above());
         }
 
-        BlockPos ground = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, BlockPos.containing(end));
-        return Vec3.atBottomCenterOf(ground);
+        return Vec3.atBottomCenterOf(level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, BlockPos.containing(end)));
     }
 
     // Where a bomb can be set down: the face of whatever block is within reach of the crosshair.
@@ -150,21 +198,25 @@ public final class GipfaeliLaunchRig {
         return hit.getType() == HitResult.Type.BLOCK ? hit : null;
     }
 
-    // The bomb this player is still to aim, or null if there isn't one. A bomb that went off, was
-    // blown up, or went out of the world with the chunk it stood on leaves the rig free to set down
-    // another rather than jamming on a reference to something that is no longer there.
-    private static @Nullable GipfaeliBomb waitingBomb(ServerLevel level, Player player) {
-        UUID bombId = WAITING.get(player.getUUID());
-        if (bombId == null) {
-            return null;
+    // Lights the called block for the player who called it, and only for them: the spot is worth
+    // knowing and not worth broadcasting, and the countdown gives everyone else their warning soon
+    // enough. Forced past the client's particle range limit, since the whole point is that it can be
+    // a hundred blocks off.
+    private static void mark(ServerLevel level, Player player, Vec3 spot) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            level.sendParticles(serverPlayer, ParticleTypes.END_ROD, true, true,
+                    spot.x, spot.y + 0.3, spot.z, 8, 0.2, 0.25, 0.2, 0.0);
         }
+    }
 
-        if (!(level.getEntity(bombId) instanceof GipfaeliBomb bomb) || !bomb.isAlive() || !bomb.isWaiting()) {
-            WAITING.remove(player.getUUID());
-            return null;
-        }
+    private static void announce(Player player, Vec3 spot) {
+        GipfaeliLock.readout(player, Component.translatable("combatupdate.gipfaeli.bomb.target",
+                Mth.floor(spot.x), Mth.floor(spot.y), Mth.floor(spot.z)));
+    }
 
-        return bomb;
+    private static boolean holdingRig(Player player) {
+        return player.getMainHandItem().is(CombatUpdate.GIPFAELI_LAUNCH_RIG.get())
+                || player.getOffhandItem().is(CombatUpdate.GIPFAELI_LAUNCH_RIG.get());
     }
 
     private static void refuse(ServerLevel level, Player player, String message) {
@@ -175,6 +227,6 @@ public final class GipfaeliLaunchRig {
 
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        WAITING.remove(event.getEntity().getUUID());
+        TARGETS.remove(event.getEntity().getUUID());
     }
 }

@@ -43,7 +43,11 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import ch.bbcag.combatupdate.client.BatteringRamHelmetModel;
 import ch.bbcag.combatupdate.client.ElytraOrientation;
 import ch.bbcag.combatupdate.client.GipfaeliSight;
+import ch.bbcag.combatupdate.client.GipfaeliSoldierRenderer;
 import ch.bbcag.combatupdate.client.ShortbowPullProperty;
+import ch.bbcag.combatupdate.client.TerritoryClient;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
 @Mod(value = CombatUpdate.MODID, dist = Dist.CLIENT)
@@ -58,6 +62,9 @@ public final class CombatUpdateClient {
         // The config screen is accessed by going to the Mods screen > clicking on your mod > clicking on config.
         // Do not forget to add translations for your config options to the en_us.json file.
         container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+
+        // Hands the territory packets to the screen; see TerritoryClient.
+        TerritoryClient.wire();
     }
 
     @SubscribeEvent
@@ -83,11 +90,40 @@ public final class CombatUpdateClient {
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
 
-        // And the rig has two, told apart by what it is already holding, which is less guessable still.
+        // And the rig has three presses in an order, which is less guessable still.
         if (stack.is(CombatUpdate.GIPFAELI_LAUNCH_RIG.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launch_rig.call")
+                    .withStyle(ChatFormatting.DARK_GRAY));
             event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launch_rig.place")
                     .withStyle(ChatFormatting.DARK_GRAY));
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launch_rig.call")
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launch_rig.reaim")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        // The flag has three orders on the one button and no way to guess at any of them.
+        if (stack.is(CombatUpdate.GIPFAELI_COMMAND_FLAG.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_command_flag.recruit")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_command_flag.attack")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_command_flag.menu")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        // And a gun says what it is for, since what separates the three of them is entirely in how
+        // they shoot rather than in anything you can see on them.
+        if (stack.is(CombatUpdate.LETONY_MATE_AK47.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.letony_mate_ak47.desc")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        if (stack.is(CombatUpdate.GIPFAELI_SHOTGUN.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_shotgun.desc")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        if (stack.is(CombatUpdate.GIPFAELI_MARKSMAN.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_marksman.desc")
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
 
@@ -118,6 +154,10 @@ public final class CombatUpdateClient {
         // The same pastry, sitting on its pad and then arcing over: a bomb is a Gipfaeli taking the
         // slow way round, and it has no business looking like anything else.
         event.registerEntityRenderer(CombatUpdate.GIPFAELI_BOMB.get(), context -> new ThrownItemRenderer<>(context, 1.0F, false));
+        // A round out of a Gipfaeli gun: the same pastry again, small and quick enough to read as a
+        // tracer rather than as lunch going past.
+        event.registerEntityRenderer(CombatUpdate.GIPFAELI_BULLET.get(), context -> new ThrownItemRenderer<>(context, 0.5F, false));
+        event.registerEntityRenderer(CombatUpdate.GIPFAELI_SOLDIER.get(), GipfaeliSoldierRenderer::new);
     }
 
     @SubscribeEvent
@@ -255,5 +295,17 @@ public final class CombatUpdateClient {
             event.getPoseStack().popPose();
             banked = false;
         }
+    }
+
+    @SubscribeEvent
+    static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+        TerritoryClient.registerKeys(event);
+    }
+
+    // The territory key is read once a tick rather than on the key event, the way vanilla reads
+    // its own, so a press held across a lag spike still opens the screen exactly once.
+    @SubscribeEvent
+    static void onClientTick(ClientTickEvent.Post event) {
+        TerritoryClient.tick();
     }
 }
