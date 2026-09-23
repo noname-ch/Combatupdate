@@ -349,7 +349,7 @@ public final class Config {
     // Its own page in the config screen: a pushed section renders as a button that
     // opens a screen showing only what is inside it.
     static {
-        BUILDER.comment("The Gipfaeli launcher: what it fires, how hard it lands, and how far it can lock on. Switched on and off on the Features page.").push("gipfaeli");
+        BUILDER.comment("The Gipfaeli launcher and the launch rig: what they throw, how hard it lands, how far they can reach, and how long a called strike takes to leave. Switched on and off on the Features page.").push("gipfaeli");
     }
     // --- Gipfaeli launcher ---
 
@@ -407,6 +407,40 @@ public final class Config {
     public static final ModConfigSpec.DoubleValue GIPFAELI_ZOOM_SECONDS = BUILDER
             .comment("How long the zoom takes to come in and go back out again, in seconds (0 snaps to it)")
             .defineInRange("gipfaeliZoomSeconds", 0.25, 0.0, 3.0);
+    // --- Launch rig and its bombs ---
+
+
+    public static final ModConfigSpec.BooleanValue ENABLE_GIPFAELI_BOMB = BUILDER
+            .comment("Whether the Gipfaeli launch rig sets bombs down and calls strikes with them. Off also takes it out of the creative tab; the item stays registered, so a world already holding one still loads")
+            .define("enableGipfaeliBomb", true);
+
+    public static final ModConfigSpec.IntValue GIPFAELI_BOMB_COUNTDOWN_TICKS = BUILDER
+            .comment("How long a bomb counts down between the spot being called and it leaving the pad, in ticks (20 ticks = 1 second). This is the whole warning anyone standing on the spot gets, and the whole warning the shooter gets that they picked the wrong one")
+            .defineInRange("gipfaeliBombCountdownTicks", 100, 0, 1200);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_BOMB_RANGE = BUILDER
+            .comment("How far away, in blocks, a strike can be called. Reaching much past the server's simulation distance is asking for the bomb to fly into chunks nobody has loaded")
+            .defineInRange("gipfaeliBombRange", 128.0, 16.0, 512.0);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_BOMB_FLIGHT_SPEED = BUILDER
+            .comment("How fast a bomb crosses the ground towards the spot, in blocks per tick, which is what sets how long the flight takes. It always lands where it was called; this is how long anyone has to get out of the way once they hear it go")
+            .defineInRange("gipfaeliBombFlightSpeed", 1.5, 0.2, 10.0);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_BOMB_ARC = BUILDER
+            .comment("How high the bomb climbs over the middle of its flight, as a fraction of the distance to the spot (0.4 is a mortar's lob, low values are a flat throw that clips into anything in the way). Never less than 6 blocks, however short the shot")
+            .defineInRange("gipfaeliBombArc", 0.4, 0.0, 2.0);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_BOMB_EXPLOSION_POWER = BUILDER
+            .comment("Explosion power of a bomb where it lands (TNT is 4.0). Larger than a fired Gipfaeli on purpose: this one took five seconds and a called spot to deliver")
+            .defineInRange("gipfaeliBombExplosionPower", 6.0, 0.0, 20.0);
+
+    public static final ModConfigSpec.BooleanValue GIPFAELI_BOMB_BREAKS_BLOCKS = BUILDER
+            .comment("Whether a bomb's blast breaks terrain, rather than only dealing damage and knockback")
+            .define("gipfaeliBombBreaksBlocks", false);
+
+    public static final ModConfigSpec.IntValue GIPFAELI_BOMB_ARM_WINDOW_TICKS = BUILDER
+            .comment("How long a bomb waits for a spot to be called on it before it packs up, in ticks, dropping the Gipfaeli it cost back on the ground. Keeps forgotten bombs from collecting in the world")
+            .defineInRange("gipfaeliBombArmWindowTicks", 600, 20, 12000);
     static {
         BUILDER.pop();
     }

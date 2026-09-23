@@ -75,6 +75,22 @@ public final class CombatUpdateClient {
     @SubscribeEvent
     static void onItemTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
+        // The launcher has two actions on the one button and no way to guess at either, so it says so.
+        if (stack.is(CombatUpdate.GIPFAELI_LAUNCHER.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launcher.sight")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launcher.fire")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        // And the rig has two, told apart by what it is already holding, which is less guessable still.
+        if (stack.is(CombatUpdate.GIPFAELI_LAUNCH_RIG.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launch_rig.place")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launch_rig.call")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
         describeAll(event, stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY));
         // An enchanted book keeps what it teaches in a different component from what it is enchanted
         // with, and a book is exactly where someone reads up on an enchantment.
@@ -99,6 +115,9 @@ public final class CombatUpdateClient {
         event.registerEntityRenderer(CombatUpdate.COMBAT_FIREBALL.get(), context -> new ThrownItemRenderer<>(context, 3.0F, true));
         // At its own size and lit by the world, unlike the fireball: a pastry does not glow in the dark.
         event.registerEntityRenderer(CombatUpdate.GIPFAELI_ROCKET.get(), context -> new ThrownItemRenderer<>(context, 1.0F, false));
+        // The same pastry, sitting on its pad and then arcing over: a bomb is a Gipfaeli taking the
+        // slow way round, and it has no business looking like anything else.
+        event.registerEntityRenderer(CombatUpdate.GIPFAELI_BOMB.get(), context -> new ThrownItemRenderer<>(context, 1.0F, false));
     }
 
     @SubscribeEvent

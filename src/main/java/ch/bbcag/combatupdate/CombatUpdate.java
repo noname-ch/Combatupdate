@@ -50,6 +50,7 @@ import ch.bbcag.combatupdate.combat.LeatherEnchantColor;
 import ch.bbcag.combatupdate.enchantment.BatteringRam;
 import ch.bbcag.combatupdate.enchantment.ShortbowEnchantmentHandler;
 import ch.bbcag.combatupdate.entity.CombatFireball;
+import ch.bbcag.combatupdate.entity.GipfaeliBomb;
 import ch.bbcag.combatupdate.entity.GipfaeliRocket;
 import ch.bbcag.combatupdate.mixin.PrimedTntAccessor;
 
@@ -90,6 +91,17 @@ public final class CombatUpdate {
                     .updateInterval(2)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "gipfaeli_rocket"))));
 
+    // The bomb the launch rig sets down; see GipfaeliBomb for the countdown and the arc it leaves on
+    public static final DeferredHolder<EntityType<?>, EntityType<GipfaeliBomb>> GIPFAELI_BOMB = ENTITY_TYPES.register("gipfaeli_bomb",
+            () -> EntityType.Builder.<GipfaeliBomb>of(GipfaeliBomb::new, MobCategory.MISC)
+                    .noLootTable()
+                    .sized(0.5F, 0.5F)
+                    // Wider than the rocket's, because a strike is watched from the rig it left rather
+                    // than followed: the whole arc has to stay drawn from where the shooter is standing.
+                    .clientTrackingRange(10)
+                    .updateInterval(2)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "gipfaeli_bomb"))));
+
     // Creates a new Block with the id "combatupdate:example_block", combining the namespace and path
     public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", p -> p.mapColor(MapColor.STONE));
     // Creates a new BlockItem with the id "combatupdate:example_block", combining the namespace and path
@@ -111,6 +123,10 @@ public final class CombatUpdate {
 
     // Fires the above; see GipfaeliLauncher for the sight and the trigger.
     public static final DeferredItem<Item> GIPFAELI_LAUNCHER = ITEMS.registerSimpleItem("gipfaeli_launcher",
+            p -> p.stacksTo(1));
+
+    // Sets one of the above down as a bomb and calls the spot it flies to; see GipfaeliLaunchRig.
+    public static final DeferredItem<Item> GIPFAELI_LAUNCH_RIG = ITEMS.registerSimpleItem("gipfaeli_launch_rig",
             p -> p.stacksTo(1));
 
     // Creates a creative tab with the id "combatupdate:example_tab" for the example item, that is placed after the combat tab
@@ -139,6 +155,7 @@ public final class CombatUpdate {
         NeoForge.EVENT_BUS.register(ShortbowEnchantmentHandler.class);
         NeoForge.EVENT_BUS.register(CombatEnchantmentHandler.class);
         NeoForge.EVENT_BUS.register(GipfaeliLock.class);
+        NeoForge.EVENT_BUS.register(GipfaeliLaunchRig.class);
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
@@ -167,8 +184,13 @@ public final class CombatUpdate {
             if (Config.on(Config.ENABLE_GIPFAELI)) {
                 event.accept(GIPFAELI_LAUNCHER);
             }
+            if (Config.on(Config.ENABLE_GIPFAELI_BOMB)) {
+                event.accept(GIPFAELI_LAUNCH_RIG);
+            }
         }
-        if (event.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS && Config.on(Config.ENABLE_GIPFAELI)) {
+        // The pastry is ammunition for both of them, so either one being on is reason to stock it.
+        if (event.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS
+                && (Config.on(Config.ENABLE_GIPFAELI) || Config.on(Config.ENABLE_GIPFAELI_BOMB))) {
             event.accept(GIPFAELI);
         }
     }
@@ -179,7 +201,8 @@ public final class CombatUpdate {
         ItemStack stack = event.getItemStack();
         if (throwFireballIfHeld(player, stack, event.getLevel())
                 || ElytraBomb.release(player, stack, event.getLevel())
-                || GipfaeliLauncher.use(player, stack, event.getLevel())) {
+                || GipfaeliLauncher.use(player, stack, event.getLevel())
+                || GipfaeliLaunchRig.use(player, stack, event.getLevel())) {
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.SUCCESS);
         }
@@ -189,7 +212,8 @@ public final class CombatUpdate {
     // events above never see: a click that lands on an entity arrives here instead.
     @SubscribeEvent
     public void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
-        if (GipfaeliLauncher.use(event.getEntity(), event.getItemStack(), event.getLevel())) {
+        if (GipfaeliLauncher.use(event.getEntity(), event.getItemStack(), event.getLevel())
+                || GipfaeliLaunchRig.use(event.getEntity(), event.getItemStack(), event.getLevel())) {
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.SUCCESS);
         }
@@ -203,7 +227,8 @@ public final class CombatUpdate {
         ItemStack stack = event.getItemStack();
         if (throwFireballIfHeld(player, stack, event.getLevel())
                 || ElytraBomb.release(player, stack, event.getLevel())
-                || GipfaeliLauncher.use(player, stack, event.getLevel())) {
+                || GipfaeliLauncher.use(player, stack, event.getLevel())
+                || GipfaeliLaunchRig.use(player, stack, event.getLevel())) {
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.SUCCESS);
         }

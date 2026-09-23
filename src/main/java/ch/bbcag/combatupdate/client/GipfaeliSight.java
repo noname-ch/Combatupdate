@@ -22,7 +22,10 @@ import ch.bbcag.combatupdate.GipfaeliLock;
 // size and never behind anything - and the projection is a handful of dot products, against a good
 // deal more machinery to billboard a quad in the level and keep it out of the depth buffer.
 public final class GipfaeliSight {
-    private static final int RETICLE_COLOUR = 0xFFFF4A32;
+    // Locked is hard and red; a target merely under the sight is pale and thin, so the two never read
+    // as the same thing at a glance.
+    private static final int LOCKED_COLOUR = 0xFFFF4A32;
+    private static final int CANDIDATE_COLOUR = 0xB2FFFFFF;
     private static final int RETICLE_SHADOW = 0x66000000;
 
     // The brackets stay legible on a distant target and stop swallowing the screen on a close one.
@@ -53,7 +56,9 @@ public final class GipfaeliSight {
     // Winds the field of view in while something is sighted, and notes what the world ends up being
     // drawn at either way.
     public static float computeFov(float fov) {
-        boolean sighted = Config.on(Config.ENABLE_GIPFAELI) && target() != null;
+        // Only a taken lock zooms. Pulling the view in every time something wandered under the sight
+        // would be unusable.
+        boolean sighted = Config.on(Config.ENABLE_GIPFAELI) && locked() != null;
         zoom = ease(zoom, sighted ? 1.0F : 0.0F);
 
         if (zoom > 0.0F) {
@@ -72,7 +77,11 @@ public final class GipfaeliSight {
             return;
         }
 
-        LivingEntity target = target();
+        LivingEntity target = locked();
+        boolean isLocked = target != null;
+        if (target == null) {
+            target = candidate();
+        }
         if (target == null) {
             return;
         }
@@ -102,12 +111,14 @@ public final class GipfaeliSight {
         float halfSize = (float) Math.clamp(
                 target.getBbHeight() * 0.62 / depth * scale, MIN_HALF_SIZE, MAX_HALF_SIZE);
 
-        drawReticle(graphics, (int) Math.round(centreX), (int) Math.round(centreY), halfSize);
+        drawReticle(graphics, (int) Math.round(centreX), (int) Math.round(centreY), halfSize, isLocked);
     }
 
-    private static void drawReticle(GuiGraphicsExtractor graphics, int centreX, int centreY, float halfSize) {
+    private static void drawReticle(GuiGraphicsExtractor graphics, int centreX, int centreY,
+            float halfSize, boolean isLocked) {
         int extent = Math.round(halfSize);
         int arm = Math.max(3, Math.round(halfSize * 2 * BRACKET_ARM_FRACTION));
+        int thickness = isLocked ? BRACKET_THICKNESS : 1;
 
         int left = centreX - extent;
         int right = centreX + extent;
@@ -118,16 +129,19 @@ public final class GipfaeliSight {
         // bright sky as well as against dark ground.
         for (int pass = 0; pass < 2; pass++) {
             boolean shadowPass = pass == 0;
-            int colour = shadowPass ? RETICLE_SHADOW : RETICLE_COLOUR;
+            int colour = shadowPass ? RETICLE_SHADOW : (isLocked ? LOCKED_COLOUR : CANDIDATE_COLOUR);
             int nudge = shadowPass ? 1 : 0;
 
-            corner(graphics, left + nudge, top + nudge, arm, BRACKET_THICKNESS, colour, true, true);
-            corner(graphics, right + nudge, top + nudge, arm, BRACKET_THICKNESS, colour, false, true);
-            corner(graphics, left + nudge, bottom + nudge, arm, BRACKET_THICKNESS, colour, true, false);
-            corner(graphics, right + nudge, bottom + nudge, arm, BRACKET_THICKNESS, colour, false, false);
+            corner(graphics, left + nudge, top + nudge, arm, thickness, colour, true, true);
+            corner(graphics, right + nudge, top + nudge, arm, thickness, colour, false, true);
+            corner(graphics, left + nudge, bottom + nudge, arm, thickness, colour, true, false);
+            corner(graphics, right + nudge, bottom + nudge, arm, thickness, colour, false, false);
 
-            graphics.fill(centreX - 1 + nudge, centreY - 1 + nudge,
-                    centreX + 1 + nudge, centreY + 1 + nudge, colour);
+            // Only a real lock gets the centre pip, so the two states differ by more than colour.
+            if (isLocked) {
+                graphics.fill(centreX - 1 + nudge, centreY - 1 + nudge,
+                        centreX + 1 + nudge, centreY + 1 + nudge, colour);
+            }
         }
     }
 
@@ -145,9 +159,14 @@ public final class GipfaeliSight {
                 Math.max(x, x + thickX), Math.max(y, y + vertical), colour);
     }
 
-    private static @Nullable LivingEntity target() {
+    private static @Nullable LivingEntity locked() {
         Minecraft minecraft = Minecraft.getInstance();
         return minecraft.level == null ? null : GipfaeliLock.clientTarget(minecraft.level);
+    }
+
+    private static @Nullable LivingEntity candidate() {
+        Minecraft minecraft = Minecraft.getInstance();
+        return minecraft.level == null ? null : GipfaeliLock.clientCandidate(minecraft.level);
     }
 
     // Framerate-independent ease: over one wind-in's worth of time the zoom closes the same fraction
