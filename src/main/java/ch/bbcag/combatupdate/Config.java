@@ -89,6 +89,10 @@ public final class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_LEATHER_ENCHANT_COLORS = BUILDER
             .comment("Whether leather leggings and boots are recoloured to show which combat enchantment they carry. Off leaves whatever dye is already on them; it does not put back a colour this has overwritten")
             .define("enableLeatherEnchantColors", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_BOOK_TEXTURES = BUILDER
+            .comment("Whether an enchanted book holding one of the mod's enchantments shows that enchantment's own cover. Off draws every enchanted book as vanilla's. Only changes how books look, so each player can set it for themselves")
+            .define("enableBookTextures", true);
     // --- Gipfaeli launcher and launch rig ---
 
 

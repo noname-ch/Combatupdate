@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "combatupdate:item/enchanted_book_combo_perun"
+  }
+}

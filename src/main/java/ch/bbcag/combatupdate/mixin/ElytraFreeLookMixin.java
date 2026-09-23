@@ -34,7 +34,7 @@ public abstract class ElytraFreeLookMixin {
 
         ElytraOrientation.ensureActive(living);
         ElytraOrientation.applyMouse(xo, yo);
-        ElytraOrientation.writeRotation(self);
+        ElytraOrientation.writeRotation(living);
 
         // Vanilla's tail end, which the cancellation would otherwise skip.
         if (self.getVehicle() != null) {

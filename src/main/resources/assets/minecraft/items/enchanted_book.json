@@ -1,0 +1,82 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "combatupdate:book_enchantment",
+    "cases": [
+      {
+        "when": "combatupdate:shortbow",
+        "model": {
+          "type": "minecraft:model",
+          "model": "combatupdate:item/enchanted_book_shortbow"
+        }
+      },
+      {
+        "when": "combatupdate:battering_ram",
+        "model": {
+          "type": "minecraft:model",
+          "model": "combatupdate:item/enchanted_book_battering_ram"
+        }
+      },
+      {
+        "when": "combatupdate:regularity",
+        "model": {
+          "type": "minecraft:model",
+          "model": "combatupdate:item/enchanted_book_regularity"
+        }
+      },
+      {
+        "when": "combatupdate:singularity",
+        "model": {
+          "type": "minecraft:model",
+          "model": "combatupdate:item/enchanted_book_singularity"
+        }
+      },
+      {
+        "when": "combatupdate:armageddon",
+        "model": {
+          "type": "minecraft:model",
+          "model": "combatupdate:item/enchanted_book_armageddon"
+        }
+      },
+      {
+        "when": "combatupdate:gotta_go_fast",
+        "model": {
+          "type": "minecraft:model",
+          "model": "combatupdate:item/enchanted_book_gotta_go_fast"
+        }
+      },
+      {
+        "when": "combatupdate:lifesteal",
+        "model": {
+          "type": "minecraft:model",
+          "model": "combatupdate:item/enchanted_book_lifesteal"
+        }
+      },
+      {
+        "when": "combatupdate:combo_perun",
+        "model": {
+          "type": "minecraft:model",
+          "model": "combatupdate:item/enchanted_book_combo_perun"
+        }
+      },
+      {
+        "when": "combatupdate:gamble",
+        "model": {
+          "type": "minecraft:model",
+          "model": "combatupdate:item/enchanted_book_gamble"
+        }
+      },
+      {
+        "when": "combatupdate:mirror",
+        "model": {
+          "type": "minecraft:model",
+          "model": "combatupdate:item/enchanted_book_mirror"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/enchanted_book"
+    }
+  }
+}

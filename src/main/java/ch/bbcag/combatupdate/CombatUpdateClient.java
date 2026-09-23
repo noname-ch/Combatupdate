@@ -21,6 +21,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterRangeSelectItemModelPropertyEvent;
+import net.neoforged.neoforge.client.event.RegisterSelectItemModelPropertyEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent;
@@ -41,6 +42,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 import ch.bbcag.combatupdate.client.BatteringRamHelmetModel;
+import ch.bbcag.combatupdate.client.BookEnchantmentProperty;
 import ch.bbcag.combatupdate.client.ElytraOrientation;
 import ch.bbcag.combatupdate.client.GipfaeliSight;
 import ch.bbcag.combatupdate.client.GipfaeliSoldierRenderer;
@@ -70,6 +72,11 @@ public final class CombatUpdateClient {
     @SubscribeEvent
     static void onRegisterRangeSelectItemModelProperty(RegisterRangeSelectItemModelPropertyEvent event) {
         event.register(Identifier.fromNamespaceAndPath(CombatUpdate.MODID, "shortbow_pull"), ShortbowPullProperty.MAP_CODEC);
+    }
+
+    @SubscribeEvent
+    static void onRegisterSelectItemModelProperty(RegisterSelectItemModelPropertyEvent event) {
+        event.register(Identifier.fromNamespaceAndPath(CombatUpdate.MODID, "book_enchantment"), BookEnchantmentProperty.TYPE);
     }
 
     // Vanilla lists an enchantment by name and level and stops there, which is fine for Sharpness
@@ -244,7 +251,15 @@ public final class CombatUpdateClient {
                 // degrees of it (LivingEntity#tickHeadTurn), so under free look the body swims along
                 // behind the camera through every turn - and every time a loop over the top flips the
                 // yaw by 180 degrees, it spends half a second spiralling round to catch up.
-                renderState.bodyRot = renderState.yRot;
+                //
+                // The nose is where the head is looking, and the render state does not carry that as
+                // one number: bodyRot is the body's yaw in the world, while yRot is only the head's
+                // offset from it (LivingEntityRenderer#extractRenderState computes it as
+                // headRot - bodyRot). Their sum is the head's world yaw, which is what the body wants
+                // to be put on - and the head then wants no offset left over, because it is already
+                // pointing where the body now does.
+                renderState.bodyRot += renderState.yRot;
+                renderState.yRot = 0.0F;
 
                 // Vanilla also yaws the model by the angle between where it is looking and where it is
                 // actually travelling, so it crabs into a turn. That angle is folded into 0-90 degrees
@@ -277,7 +292,11 @@ public final class CombatUpdateClient {
 
         // Rotation happens before the renderer moves into model space, so the pose is still lined up
         // with the world and the bank is taken about the nose direction in world terms.
-        Vec3 nose = Entity.calculateViewVector(state.xRot, state.yRot);
+        //
+        // Off bodyRot rather than yRot: by here the modifier above has put the body's world yaw there
+        // and zeroed the head's offset, and it is the world yaw the axis has to be built from. xRot is
+        // an absolute pitch either way.
+        Vec3 nose = Entity.calculateViewVector(state.xRot, state.bodyRot);
         float pivot = state.boundingBoxHeight * 0.5F;
 
         PoseStack poseStack = event.getPoseStack();
