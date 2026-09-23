@@ -103,6 +103,10 @@ public final class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_GIPFAELI_BOMB = BUILDER
             .comment("Whether the Gipfaeli launch rig sets bombs down and calls strikes with them. Off also takes it out of the creative tab; the item stays registered, so a world already holding one still loads")
             .define("enableGipfaeliBomb", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_GIPFAELI_EXPLOSIVES = BUILDER
+            .comment("Whether the Gipfaeli hand grenade can be thrown and Gipfaeli TNT (plain and Ultra) can be lit. Off also takes them out of the creative tab; the items and blocks stay registered, so a world already holding them still loads")
+            .define("enableGipfaeliExplosives", true);
     // --- Floating damage numbers ---
 
 
@@ -462,6 +466,63 @@ public final class Config {
     // Its own page in the config screen: a pushed section renders as a button that
     // opens a screen showing only what is inside it.
     static {
+        BUILDER.comment("The Gipfaeli hand grenade and the two Gipfaeli TNT blocks: how long each one takes to go off, how hard it goes, and whether the blast takes the terrain with it. Switched on and off on the Features page.").push("gipfaeliExplosives");
+    }
+    // --- Gipfaeli hand grenade ---
+
+
+    public static final ModConfigSpec.IntValue GRENADE_FUSE_TICKS = BUILDER
+            .comment("How many ticks a thrown grenade rolls about before it goes off (20 ticks = 1 second). It counts from the throw, not from where it lands")
+            .defineInRange("grenadeFuseTicks", 40, 1, 400);
+
+    public static final ModConfigSpec.DoubleValue GRENADE_THROW_SPEED = BUILDER
+            .comment("How hard a grenade leaves the hand, in blocks per tick. A snowball is 1.5; gravity and a bounce or two take it from there")
+            .defineInRange("grenadeThrowSpeed", 1.2, 0.1, 5.0);
+
+    public static final ModConfigSpec.DoubleValue GRENADE_EXPLOSION_POWER = BUILDER
+            .comment("Explosion power of a grenade where it goes off (TNT is 4.0). Smaller than TNT: it fits in a pocket and there are sixteen to a stack")
+            .defineInRange("grenadeExplosionPower", 2.5, 0.0, 20.0);
+
+    public static final ModConfigSpec.BooleanValue GRENADE_BREAKS_BLOCKS = BUILDER
+            .comment("Whether a grenade's blast breaks terrain, rather than only dealing damage and knockback")
+            .define("grenadeBreaksBlocks", false);
+
+    public static final ModConfigSpec.IntValue GRENADE_COOLDOWN_TICKS = BUILDER
+            .comment("How many ticks must pass between throws (20 ticks = 1 second)")
+            .defineInRange("grenadeCooldownTicks", 15, 0, 1200);
+    // --- Gipfaeli TNT ---
+
+
+    public static final ModConfigSpec.IntValue GIPFAELI_TNT_FUSE_TICKS = BUILDER
+            .comment("How many ticks lit Gipfaeli TNT burns before it goes off (vanilla TNT is 80)")
+            .defineInRange("gipfaeliTntFuseTicks", 80, 1, 1200);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_TNT_EXPLOSION_POWER = BUILDER
+            .comment("Explosion power of Gipfaeli TNT (vanilla TNT is 4.0)")
+            .defineInRange("gipfaeliTntExplosionPower", 8.0, 0.0, 64.0);
+
+    public static final ModConfigSpec.IntValue ULTRA_TNT_FUSE_TICKS = BUILDER
+            .comment("How many ticks lit Gipfaeli Ultra TNT burns before it goes off. Longer than the plain kind on purpose: what it does deserves a head start")
+            .defineInRange("ultraTntFuseTicks", 100, 1, 1200);
+
+    public static final ModConfigSpec.DoubleValue ULTRA_TNT_EXPLOSION_POWER = BUILDER
+            .comment("Explosion power of Gipfaeli Ultra TNT (vanilla TNT is 4.0). This is the first blast; the grenades it scatters are on top")
+            .defineInRange("ultraTntExplosionPower", 16.0, 0.0, 128.0);
+
+    public static final ModConfigSpec.IntValue ULTRA_TNT_GRENADES = BUILDER
+            .comment("How many live Gipfaeli grenades Ultra TNT throws out when it goes off, each with a short fuse of its own. 0 makes it a plain, very large bang")
+            .defineInRange("ultraTntGrenades", 12, 0, 64);
+
+    public static final ModConfigSpec.BooleanValue GIPFAELI_TNT_BREAKS_BLOCKS = BUILDER
+            .comment("Whether either Gipfaeli TNT's blast breaks terrain the way vanilla TNT does, rather than only dealing damage and knockback")
+            .define("gipfaeliTntBreaksBlocks", true);
+    static {
+        BUILDER.pop();
+    }
+
+    // Its own page in the config screen: a pushed section renders as a button that
+    // opens a screen showing only what is inside it.
+    static {
         BUILDER.comment("The Gipfaeli army: what a soldier costs to sign on, what it can take, and how far it will go after something it was pointed at.").push("gipfaeliArmy");
     }
     // --- Gipfaeli army ---
@@ -483,17 +544,37 @@ public final class Config {
             .comment("How many soldiers one commander may have at once. Every one of them paths, shoots and is tracked by everybody nearby, so this is as much a budget for the server as it is a balance knob")
             .defineInRange("armyMaxSquad", 8, 1, 64);
 
-    public static final ModConfigSpec.DoubleValue ARMY_SOLDIER_HEALTH = BUILDER
-            .comment("How much health a soldier is signed on with (a player is 20)")
-            .defineInRange("armySoldierHealth", 20.0, 1.0, 200.0);
+    public static final ModConfigSpec.DoubleValue ARMY_HEALTH_MULTIPLIER = BUILDER
+            .comment("Multiplies the health every role is signed on with (a rifleman's is 20, a Panzer soldier's 44; 1.0 leaves each role at its own)")
+            .defineInRange("armyHealthMultiplier", 1.0, 0.1, 10.0);
 
-    public static final ModConfigSpec.DoubleValue ARMY_SOLDIER_ARMOR = BUILDER
-            .comment("How much armour a soldier stands in (a full set of iron is 15)")
-            .defineInRange("armySoldierArmor", 4.0, 0.0, 30.0);
+    public static final ModConfigSpec.DoubleValue ARMY_ARMOR_MULTIPLIER = BUILDER
+            .comment("Multiplies the armour every role stands in (a rifleman's is 4, a Panzer soldier's 12; a full set of iron is 15)")
+            .defineInRange("armyArmorMultiplier", 1.0, 0.0, 5.0);
+
+    public static final ModConfigSpec.BooleanValue ARMY_AIMBOT = BUILDER
+            .comment("Whether soldiers lead their shots - fire at where a moving target will be when the round arrives, rather than where it is now. Off has them shoot straight at the target the way a skeleton does, and miss anything that keeps moving")
+            .define("armyAimbot", true);
+
+    public static final ModConfigSpec.BooleanValue ARMY_BANNER_RALLY = BUILDER
+            .comment("Whether a marcher's banner makes the squad and its commander faster, harder-hitting and tougher within ten blocks of it. Off leaves the marcher a soldier with no gun")
+            .define("armyBannerRally", true);
 
     public static final ModConfigSpec.DoubleValue ARMY_WEAPON_DAMAGE = BUILDER
             .comment("Multiplies what every Gipfaeli gun deals, in a soldier's hands and in a player's alike (1.0 leaves each weapon at its own damage). The launcher is not included: what it throws is a Gipfaeli, and that one is tuned above")
             .defineInRange("armyWeaponDamageMultiplier", 1.0, 0.0, 10.0);
+
+    public static final ModConfigSpec.DoubleValue WEAPON_RECOIL = BUILDER
+            .comment("How far the muzzle of a gun climbs when it is fired, as a multiple of what each weapon is tuned for (1.0 as designed, 0 turns the climb off and leaves the crosshair where you put it). This moves the aim itself, not just the view, so it costs you the next shot - a shotgun throws it up hard, a rifle walks it up over a burst. The launcher climbs hardest of all")
+            .defineInRange("weaponRecoil", 1.0, 0.0, 5.0);
+
+    public static final ModConfigSpec.DoubleValue WEAPON_KNOCKBACK = BUILDER
+            .comment("How hard a gun shoves the person firing it, as a multiple of what each weapon is tuned for (0 turns the shove off). The launcher's is heavy enough to ride: aim at your own feet and it will carry you somewhere")
+            .defineInRange("weaponKnockback", 1.0, 0.0, 5.0);
+
+    public static final ModConfigSpec.DoubleValue WEAPON_HEADSHOT = BUILDER
+            .comment("What a round that lands on a target's head is worth, as a multiple of its normal damage (1.0 turns headshots off). Applies to every Gipfaeli gun, in a player's hands and a soldier's alike")
+            .defineInRange("weaponHeadshotMultiplier", 2.0, 1.0, 10.0);
 
     public static final ModConfigSpec.DoubleValue ARMY_MARCH_RANGE = BUILDER
             .comment("How far away, in blocks, something can be and still be worth marching on. Past this an order lapses and the squad falls back in - which is what stops a target picked off the far end of the menu walking the whole army off the map")

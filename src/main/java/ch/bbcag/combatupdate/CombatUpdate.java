@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
@@ -26,6 +27,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.IEventBus;
@@ -54,8 +57,10 @@ import ch.bbcag.combatupdate.enchantment.ShortbowEnchantmentHandler;
 import ch.bbcag.combatupdate.entity.CombatFireball;
 import ch.bbcag.combatupdate.entity.GipfaeliBomb;
 import ch.bbcag.combatupdate.entity.GipfaeliBullet;
+import ch.bbcag.combatupdate.entity.GipfaeliGrenade;
 import ch.bbcag.combatupdate.entity.GipfaeliRocket;
 import ch.bbcag.combatupdate.entity.GipfaeliSoldier;
+import ch.bbcag.combatupdate.entity.GipfaeliTnt;
 import ch.bbcag.combatupdate.mixin.PrimedTntAccessor;
 import ch.bbcag.combatupdate.territory.TerritoryCommands;
 import ch.bbcag.combatupdate.territory.TerritoryManager;
@@ -77,6 +82,8 @@ public final class CombatUpdate {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
     // Create a Deferred Register to hold Entity Types which will all be registered under the "combatupdate" namespace
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
+    // And one for block entities, of which the guard post is so far the only one
+    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
 
     // The projectile entity thrown fire charges turn into; see CombatFireball for its constant-speed, explosive behavior
     public static final DeferredHolder<EntityType<?>, EntityType<CombatFireball>> COMBAT_FIREBALL = ENTITY_TYPES.register("combat_fireball",
@@ -120,6 +127,28 @@ public final class CombatUpdate {
                     .updateInterval(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "gipfaeli_bullet"))));
 
+    // The hand grenade in the air; see GipfaeliGrenade for the bounce and the fuse
+    public static final DeferredHolder<EntityType<?>, EntityType<GipfaeliGrenade>> GIPFAELI_GRENADE_ENTITY = ENTITY_TYPES.register("gipfaeli_grenade",
+            () -> EntityType.Builder.<GipfaeliGrenade>of(GipfaeliGrenade::new, MobCategory.MISC)
+                    .noLootTable()
+                    .sized(0.25F, 0.25F)
+                    .clientTrackingRange(8)
+                    // Tight, like the rocket's: a grenade changes direction every time it bounces,
+                    // and the client has to be told about each one rather than left to guess.
+                    .updateInterval(2)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "gipfaeli_grenade"))));
+
+    // Lit Gipfaeli TNT of either kind, built the way vanilla builds primed TNT; see GipfaeliTnt
+    public static final DeferredHolder<EntityType<?>, EntityType<GipfaeliTnt>> GIPFAELI_TNT = ENTITY_TYPES.register("gipfaeli_tnt",
+            () -> EntityType.Builder.<GipfaeliTnt>of(GipfaeliTnt::new, MobCategory.MISC)
+                    .noLootTable()
+                    .fireImmune()
+                    .sized(0.98F, 0.98F)
+                    .eyeHeight(0.15F)
+                    .clientTrackingRange(10)
+                    .updateInterval(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "gipfaeli_tnt"))));
+
     // The army itself; see GipfaeliSoldier for what one does with the gun it is handed
     public static final DeferredHolder<EntityType<?>, EntityType<GipfaeliSoldier>> GIPFAELI_SOLDIER = ENTITY_TYPES.register("gipfaeli_soldier",
             () -> EntityType.Builder.of(GipfaeliSoldier::new, MobCategory.CREATURE)
@@ -135,6 +164,25 @@ public final class CombatUpdate {
     public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", p -> p.mapColor(MapColor.STONE));
     // Creates a new BlockItem with the id "combatupdate:example_block", combining the namespace and path
     public static final DeferredItem<BlockItem> EXAMPLE_BLOCK_ITEM = ITEMS.registerSimpleBlockItem("example_block", EXAMPLE_BLOCK);
+
+    // Gipfaeli TNT, plain and Ultra, with vanilla TNT's own block properties; see GipfaeliTntBlock.
+    public static final DeferredBlock<GipfaeliTntBlock> GIPFAELI_TNT_BLOCK = BLOCKS.registerBlock("gipfaeli_tnt",
+            p -> new GipfaeliTntBlock(GipfaeliTntBlock.Kind.STANDARD, p),
+            p -> p.mapColor(MapColor.COLOR_ORANGE).instabreak().sound(SoundType.GRASS).ignitedByLava().isRedstoneConductor((state, level, pos) -> false));
+    public static final DeferredBlock<GipfaeliTntBlock> GIPFAELI_ULTRA_TNT_BLOCK = BLOCKS.registerBlock("gipfaeli_ultra_tnt",
+            p -> new GipfaeliTntBlock(GipfaeliTntBlock.Kind.ULTRA, p),
+            p -> p.mapColor(MapColor.FIRE).instabreak().sound(SoundType.GRASS).ignitedByLava().isRedstoneConductor((state, level, pos) -> false));
+    // The army's guard post: set it down, click it, station soldiers at it; see GipfaeliGuardPost.
+    public static final DeferredBlock<GipfaeliGuardPost.PostBlock> GIPFAELI_GUARD_POST = BLOCKS.registerBlock("gipfaeli_guard_post",
+            GipfaeliGuardPost.PostBlock::new,
+            p -> p.mapColor(MapColor.WOOD).strength(2.0F, 6.0F).sound(SoundType.WOOD));
+    public static final DeferredItem<BlockItem> GIPFAELI_GUARD_POST_ITEM = ITEMS.registerSimpleBlockItem("gipfaeli_guard_post", GIPFAELI_GUARD_POST);
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GipfaeliGuardPost.Post>> GIPFAELI_GUARD_POST_ENTITY =
+            BLOCK_ENTITY_TYPES.register("gipfaeli_guard_post",
+                    () -> new BlockEntityType<>(GipfaeliGuardPost.Post::new, GIPFAELI_GUARD_POST.get()));
+
+    public static final DeferredItem<BlockItem> GIPFAELI_TNT_ITEM = ITEMS.registerSimpleBlockItem("gipfaeli_tnt", GIPFAELI_TNT_BLOCK);
+    public static final DeferredItem<BlockItem> GIPFAELI_ULTRA_TNT_ITEM = ITEMS.registerSimpleBlockItem("gipfaeli_ultra_tnt", GIPFAELI_ULTRA_TNT_BLOCK);
 
     // Creates a new food item with the id "combatupdate:example_id", nutrition 1 and saturation 2
     public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", p -> p.food(new FoodProperties.Builder()
@@ -158,6 +206,10 @@ public final class CombatUpdate {
     public static final DeferredItem<Item> GIPFAELI_LAUNCH_RIG = ITEMS.registerSimpleItem("gipfaeli_launch_rig",
             p -> p.stacksTo(1));
 
+    // A pastry with a pin in it; see GipfaeliHandGrenade for the throw and GipfaeliGrenade for the rest.
+    public static final DeferredItem<Item> GIPFAELI_GRENADE = ITEMS.registerSimpleItem("gipfaeli_grenade",
+            p -> p.stacksTo(16));
+
     // The army's guns. What each one does is in GipfaeliWeapon; all any of them is here is an item
     // to hold, because the gun in a soldier's hand is the only record of what it is carrying.
     public static final DeferredItem<Item> LETONY_MATE_AK47 = ITEMS.registerSimpleItem("letony_mate_ak47",
@@ -165,6 +217,11 @@ public final class CombatUpdate {
     public static final DeferredItem<Item> GIPFAELI_SHOTGUN = ITEMS.registerSimpleItem("gipfaeli_shotgun",
             p -> p.stacksTo(1));
     public static final DeferredItem<Item> GIPFAELI_MARKSMAN = ITEMS.registerSimpleItem("gipfaeli_marksman",
+            p -> p.stacksTo(1));
+    // The Panzer soldier's heavy machine gun, and the marcher's banner: the last two kits.
+    public static final DeferredItem<Item> GIPFAELI_HEAVY_MG = ITEMS.registerSimpleItem("gipfaeli_heavy_mg",
+            p -> p.stacksTo(1));
+    public static final DeferredItem<Item> GIPFAELI_WAR_BANNER = ITEMS.registerSimpleItem("gipfaeli_war_banner",
             p -> p.stacksTo(1));
 
     // Signs soldiers on and tells them where to go; see GipfaeliCommandFlag and GipfaeliArmy.
@@ -191,6 +248,7 @@ public final class CombatUpdate {
         CREATIVE_MODE_TABS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so entity types get registered
         ENTITY_TYPES.register(modEventBus);
+        BLOCK_ENTITY_TYPES.register(modEventBus);
 
         // Register ourselves for the game events the @SubscribeEvent methods below handle.
         NeoForge.EVENT_BUS.register(this);
@@ -203,6 +261,9 @@ public final class CombatUpdate {
 
         // The packets the territory screen and the server trade; see TerritoryNetwork.
         modEventBus.addListener(TerritoryNetwork::register);
+        // And the one the screen sends the army; see GipfaeliArmyNetwork.
+        modEventBus.addListener(GipfaeliArmyNetwork::register);
+        NeoForge.EVENT_BUS.register(GipfaeliArmy.class);
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
@@ -237,12 +298,25 @@ public final class CombatUpdate {
             if (Config.on(Config.ENABLE_GIPFAELI_BOMB)) {
                 event.accept(GIPFAELI_LAUNCH_RIG);
             }
+            if (Config.on(Config.ENABLE_GIPFAELI_EXPLOSIVES)) {
+                event.accept(GIPFAELI_GRENADE);
+                event.accept(GIPFAELI_TNT_ITEM);
+                event.accept(GIPFAELI_ULTRA_TNT_ITEM);
+            }
             if (Config.on(Config.ENABLE_GIPFAELI_ARMY)) {
                 event.accept(LETONY_MATE_AK47);
                 event.accept(GIPFAELI_SHOTGUN);
                 event.accept(GIPFAELI_MARKSMAN);
+                event.accept(GIPFAELI_HEAVY_MG);
+                event.accept(GIPFAELI_WAR_BANNER);
                 event.accept(GIPFAELI_COMMAND_FLAG);
+                event.accept(GIPFAELI_GUARD_POST_ITEM);
             }
+        }
+        // The TNT is a block that redstone lights, so it belongs with vanilla's TNT as well.
+        if (event.getTabKey() == CreativeModeTabs.REDSTONE_BLOCKS && Config.on(Config.ENABLE_GIPFAELI_EXPLOSIVES)) {
+            event.accept(GIPFAELI_TNT_ITEM);
+            event.accept(GIPFAELI_ULTRA_TNT_ITEM);
         }
         // The pastry is ammunition for both of them, so either one being on is reason to stock it.
         if (event.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS
@@ -274,6 +348,7 @@ public final class CombatUpdate {
                 || GipfaeliLauncher.use(player, stack, event.getLevel())
                 || GipfaeliLaunchRig.use(player, stack, event.getLevel())
                 || GipfaeliCommandFlag.use(player, stack, event.getLevel())
+                || GipfaeliHandGrenade.use(player, stack, event.getLevel())
                 || GipfaeliWeapon.use(player, stack, event.getLevel())) {
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.SUCCESS);
@@ -288,6 +363,7 @@ public final class CombatUpdate {
         if (GipfaeliLauncher.use(event.getEntity(), event.getItemStack(), event.getLevel())
                 || GipfaeliLaunchRig.use(event.getEntity(), event.getItemStack(), event.getLevel())
                 || GipfaeliCommandFlag.useOn(event.getEntity(), event.getItemStack(), event.getTarget(), event.getLevel())
+                || GipfaeliHandGrenade.use(event.getEntity(), event.getItemStack(), event.getLevel())
                 || GipfaeliWeapon.use(event.getEntity(), event.getItemStack(), event.getLevel())) {
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.SUCCESS);
@@ -300,11 +376,18 @@ public final class CombatUpdate {
     public void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         Player player = event.getEntity();
         ItemStack stack = event.getItemStack();
+        if (player instanceof ServerPlayer commander && GipfaeliGuardPost.useFlag(commander, stack, event.getPos())) {
+            event.setCanceled(true);
+            event.setCancellationResult(InteractionResult.SUCCESS);
+            return;
+        }
+
         if (throwFireballIfHeld(player, stack, event.getLevel())
                 || ElytraBomb.release(player, stack, event.getLevel())
                 || GipfaeliLauncher.use(player, stack, event.getLevel())
                 || GipfaeliLaunchRig.use(player, stack, event.getLevel())
                 || GipfaeliCommandFlag.use(player, stack, event.getLevel())
+                || GipfaeliHandGrenade.use(player, stack, event.getLevel())
                 || GipfaeliWeapon.use(player, stack, event.getLevel())) {
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.SUCCESS);
@@ -342,7 +425,9 @@ public final class CombatUpdate {
             return;
         }
 
-        if (!event.getLevel().isClientSide() && event.getEntity() instanceof PrimedTnt tnt) {
+        // Gipfaeli TNT sets its own power when it goes off (see GipfaeliTnt#explode), so the vanilla
+        // retune is kept off it: this knob is for vanilla TNT.
+        if (!event.getLevel().isClientSide() && event.getEntity() instanceof PrimedTnt tnt && !(tnt instanceof GipfaeliTnt)) {
             ((PrimedTntAccessor) tnt).setExplosionPower((float) Config.TNT_BLAST_RADIUS.getAsDouble());
         }
     }
@@ -354,6 +439,7 @@ public final class CombatUpdate {
         LeatherEnchantColor.tick(event.getEntity());
         GipfaeliLock.tick(event.getEntity());
         GipfaeliLaunchRig.tick(event.getEntity());
+        GipfaeliRecoil.tick(event.getEntity());
     }
 
     // Post rather than Pre: by then the hit has been through armour, resistance and absorption, so
@@ -368,5 +454,6 @@ public final class CombatUpdate {
     @SubscribeEvent
     public void onServerTick(ServerTickEvent.Post event) {
         DamageNumbers.tick();
+        GipfaeliArmy.tick(event.getServer());
     }
 }
