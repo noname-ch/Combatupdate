@@ -36,7 +36,9 @@ public final class ScarletSpearRenderer extends EntityRenderer<ScarletSpear, Sca
     private static final float GUNGNIR_SCALE = 3.5F;
 
     private final ItemModelResolver itemModelResolver;
-    private final ItemStack spear;
+    // Made on first use: renderers are built during the first resource reload, before item components
+    // are bound, and an ItemStack cannot be made until they are.
+    private ItemStack spear;
 
     public static final class State extends ThrownItemRenderState {
         private final Vector3f direction = new Vector3f(0.0F, 0.0F, 1.0F);
@@ -47,7 +49,6 @@ public final class ScarletSpearRenderer extends EntityRenderer<ScarletSpear, Sca
     public ScarletSpearRenderer(EntityRendererProvider.Context context) {
         super(context);
         this.itemModelResolver = context.getItemModelResolver();
-        this.spear = new ItemStack(CombatUpdate.SCARLET_DEVIL.get());
     }
 
     @Override
@@ -64,6 +65,9 @@ public final class ScarletSpearRenderer extends EntityRenderer<ScarletSpear, Sca
     @Override
     public void extractRenderState(ScarletSpear entity, State state, float partialTicks) {
         super.extractRenderState(entity, state, partialTicks);
+        if (this.spear == null) {
+            this.spear = new ItemStack(CombatUpdate.SCARLET_DEVIL.get());
+        }
         this.itemModelResolver.updateForNonLiving(state.item, this.spear, ItemDisplayContext.NONE, entity);
         Vec3 velocity = entity.getDeltaMovement();
         if (velocity.lengthSqr() > 1.0E-6) {
