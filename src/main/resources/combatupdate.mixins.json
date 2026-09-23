@@ -12,6 +12,7 @@
     "ExobladeSwingMixin"
   ],
   "client": [
-    "ElytraFreeLookMixin"
+    "ElytraFreeLookMixin",
+    "MinecraftAttackInvoker"
   ]
 }

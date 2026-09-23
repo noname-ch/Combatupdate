@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jspecify.annotations.Nullable;
 
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -25,6 +26,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.component.AttackRange;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -34,6 +36,10 @@ import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import ch.bbcag.combatupdate.entity.Exobeam;
 
 // The Exoblade, after the Calamity mod's endgame Terraria sword, and its moves there:
+//
+// It is a big blade: it reaches further than any other sword, every full-strength swing cuts
+// everything in the arc in front of the player and not just what was aimed at, and holding the attack
+// key keeps it swinging (see ExobladeAutoSwing), as Terraria's auto-reuse swords do.
 //
 // A full-strength swing throws an Exobeam (see Exobeam), whether or not it connects with anything,
 // so the blade fights at range as well as up close. Half-charged swings throw nothing: the beam is
@@ -59,6 +65,13 @@ public final class Exoblade {
     // How full the strength meter has to be for a swing to throw a beam. Not quite 1.0, because the
     // meter is read a fraction of a tick after the click and a well-timed swing can fall just short.
     private static final float FULL_SWING = 0.9F;
+
+    // How far it reaches, in blocks: a sword reaches 3, and creative players 5.
+    private static final float REACH = 4.5F;
+    private static final float CREATIVE_REACH = 6.5F;
+
+    // How wide an arc an ordinary full-strength swing cuts either side of the look direction.
+    private static final double SWING_CUT_HALF_ARC = Math.toRadians(60.0);
 
     // How long a lunge lasts, in ticks.
     private static final int DASH_TICKS = 6;
@@ -88,7 +101,7 @@ public final class Exoblade {
 
     // How far in front of the eyes, and how far below them, a swing's arc is drawn, and how wide.
     private static final double SWING_DROP = 0.3;
-    private static final double SWING_RADIUS = 2.2;
+    private static final double SWING_RADIUS = 3.0;
     private static final double SWING_HALF_ARC = Math.toRadians(70.0);
 
     // Players who are lunging right now. Kept per side for the reason ElytraBoost gives: in single
@@ -132,6 +145,7 @@ public final class Exoblade {
 
     public static Item.Properties properties(Item.Properties properties) {
         return properties.sword(ToolMaterial.NETHERITE, ATTACK_DAMAGE_BASELINE, ATTACK_SPEED_BASELINE)
+                .component(DataComponents.ATTACK_RANGE, new AttackRange(0.0F, REACH, 0.0F, CREATIVE_REACH, 0.3F, 1.0F))
                 .fireResistant()
                 .rarity(Rarity.EPIC);
     }
@@ -141,7 +155,7 @@ public final class Exoblade {
     // meter is reset for the swing, so the meter still says how well it was timed.
     public static void onSwing(ServerPlayer player) {
         if (!bigSlash(player) && player.getAttackStrengthScale(0.5F) >= FULL_SWING) {
-            throwBeam(player);
+            fullSwing(player, null);
         }
     }
 
@@ -154,7 +168,7 @@ public final class Exoblade {
         if (event.getEntity() instanceof ServerPlayer player
                 && !bigSlash(player)
                 && player.getAttackStrengthScale(0.5F) >= FULL_SWING) {
-            throwBeam(player);
+            fullSwing(player, event.getTarget());
         }
     }
 
@@ -162,7 +176,9 @@ public final class Exoblade {
         return Config.on(Config.ENABLE_EXOBLADE) && player.getMainHandItem().is(CombatUpdate.EXOBLADE.get());
     }
 
-    private static void throwBeam(ServerPlayer player) {
+    // A full-strength swing: a beam thrown, and everything in the arc cut. Whatever the swing was
+    // aimed at is left out of the cut, since the swing itself is already hitting it.
+    private static void fullSwing(ServerPlayer player, @Nullable Entity struck) {
         if (!wielding(player)) {
             return;
         }
@@ -172,6 +188,35 @@ public final class Exoblade {
         swingArc(level, player, nextBackhand(player), SWING_RADIUS, 14, 5);
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.2F, 1.6F);
+
+        float damage = (float) Config.EXOBLADE_SWING_CUT_DAMAGE.getAsDouble();
+        if (damage > 0.0F) {
+            DamageSource source = level.damageSources().playerAttack(player);
+            for (LivingEntity caught : inArc(player, REACH, SWING_CUT_HALF_ARC)) {
+                if (caught != struck && caught.hurtServer(level, source, damage)) {
+                    Vec3 look = player.getLookAngle();
+                    caught.knockback(0.4, -look.x, -look.z, source, damage);
+                }
+            }
+        }
+    }
+
+    // Monsters and players within reach of the eyes and inside the given half-angle of where the
+    // player is looking.
+    private static List<LivingEntity> inArc(ServerPlayer player, double reach, double halfArc) {
+        Vec3 look = player.getLookAngle();
+        Vec3 eye = player.getEyePosition();
+        double minDot = Math.cos(halfArc);
+        List<LivingEntity> caught = new ArrayList<>();
+        for (LivingEntity candidate : player.level().getEntitiesOfClass(LivingEntity.class,
+                player.getBoundingBox().inflate(reach), candidate -> isQuarry(player, candidate))) {
+            Vec3 toCandidate = candidate.getBoundingBox().getCenter().subtract(eye);
+            if (toCandidate.lengthSqr() <= reach * reach && toCandidate.normalize().dot(look) >= minDot) {
+                caught.add(candidate);
+            }
+        }
+
+        return caught;
     }
 
     private static void launchBeam(ServerLevel level, ServerPlayer player, Vec3 direction) {
@@ -218,16 +263,7 @@ public final class Exoblade {
         float damage = (float) Config.EXOBLADE_BIG_SLASH_DAMAGE.getAsDouble();
         if (damage > 0.0F) {
             DamageSource source = level.damageSources().playerAttack(player);
-            double minDot = Math.cos(BIG_SLASH_HALF_ARC);
-            for (LivingEntity caught : level.getEntitiesOfClass(LivingEntity.class,
-                    player.getBoundingBox().inflate(BIG_SLASH_REACH),
-                    candidate -> isQuarry(player, candidate))) {
-                Vec3 toCaught = caught.getBoundingBox().getCenter().subtract(eye);
-                if (toCaught.lengthSqr() > BIG_SLASH_REACH * BIG_SLASH_REACH
-                        || toCaught.normalize().dot(look) < minDot) {
-                    continue;
-                }
-
+            for (LivingEntity caught : inArc(player, BIG_SLASH_REACH, BIG_SLASH_HALF_ARC)) {
                 caught.setInvulnerableTime(0);
                 if (caught.hurtServer(level, source, damage)) {
                     caught.knockback(1.2, -look.x, -look.z, source, damage);

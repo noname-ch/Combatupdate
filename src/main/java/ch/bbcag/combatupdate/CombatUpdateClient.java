@@ -46,6 +46,7 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import ch.bbcag.combatupdate.client.BatteringRamHelmetModel;
 import ch.bbcag.combatupdate.client.BookEnchantmentProperty;
 import ch.bbcag.combatupdate.client.ElytraOrientation;
+import ch.bbcag.combatupdate.client.ExobladeAutoSwing;
 import ch.bbcag.combatupdate.client.GipfaeliSight;
 import ch.bbcag.combatupdate.client.GipfaeliSoldierRenderer;
 import ch.bbcag.combatupdate.client.ScarletSpearRenderer;
@@ -157,6 +158,10 @@ public final class CombatUpdateClient {
             event.getToolTip().add(Component.translatable("item.combatupdate.exoblade.beam")
                     .withStyle(ChatFormatting.DARK_GRAY));
             event.getToolTip().add(Component.translatable("item.combatupdate.exoblade.dash")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            event.getToolTip().add(Component.translatable("item.combatupdate.exoblade.slash")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            event.getToolTip().add(Component.translatable("item.combatupdate.exoblade.big_slash")
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
 
@@ -396,5 +401,6 @@ public final class CombatUpdateClient {
     @SubscribeEvent
     static void onClientTick(ClientTickEvent.Post event) {
         TerritoryClient.tick();
+        ExobladeAutoSwing.tick();
     }
 }

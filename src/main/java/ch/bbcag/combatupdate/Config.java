@@ -365,6 +365,10 @@ public final class Config {
             .comment("How far, in blocks, an Exobeam looks for a monster or player to bend towards. 0 makes every beam fly straight")
             .defineInRange("exobeamHomingRange", 16.0, 0.0, 64.0);
 
+    public static final ModConfigSpec.DoubleValue EXOBLADE_SWING_CUT_DAMAGE = BUILDER
+            .comment("How much damage a full-strength swing deals to every other monster and player in the arc in front of you, besides whatever it was aimed at. 0 makes swings hit only what they are aimed at")
+            .defineInRange("exobladeSwingCutDamage", 8.0, 0.0, 100.0);
+
     public static final ModConfigSpec.DoubleValue EXOBEAM_SLASH_DAMAGE = BUILDER
             .comment("How much damage each of the three Exo slashes that follow an Exobeam hit deals. 0 turns the slashes off")
             .defineInRange("exobeamSlashDamage", 3.0, 0.0, 100.0);
