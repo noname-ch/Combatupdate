@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.ClientAvatarEntity;
+import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.entity.TntRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
@@ -47,6 +48,7 @@ import ch.bbcag.combatupdate.client.BookEnchantmentProperty;
 import ch.bbcag.combatupdate.client.ElytraOrientation;
 import ch.bbcag.combatupdate.client.GipfaeliSight;
 import ch.bbcag.combatupdate.client.GipfaeliSoldierRenderer;
+import ch.bbcag.combatupdate.client.ScarletSpearRenderer;
 import ch.bbcag.combatupdate.client.ShortbowPullProperty;
 import ch.bbcag.combatupdate.client.TerritoryClient;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -150,6 +152,22 @@ public final class CombatUpdateClient {
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
 
+        // Neither of the Exoblade's tricks is something a sword is expected to do.
+        if (stack.is(CombatUpdate.EXOBLADE.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.exoblade.beam")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            event.getToolTip().add(Component.translatable("item.combatupdate.exoblade.dash")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        // It looks like a trident, so it has to say it is not one: nothing leaves the hand for good.
+        if (stack.is(CombatUpdate.SCARLET_DEVIL.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.scarlet_devil.throw")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            event.getToolTip().add(Component.translatable("item.combatupdate.scarlet_devil.gungnir")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
         // The explosives say what they do, since the grenade is the first pastry here that goes off
         // on a timer rather than on arrival, and the Ultra is not just a bigger block of the other.
         if (stack.is(CombatUpdate.GIPFAELI_GRENADE.get())) {
@@ -212,6 +230,11 @@ public final class CombatUpdateClient {
         // Lit Gipfaeli TNT is drawn by vanilla's own TNT renderer, which draws whatever block state
         // the entity carries - so the plain and Ultra kinds each come out looking like their block.
         event.registerEntityRenderer(CombatUpdate.GIPFAELI_TNT.get(), TntRenderer::new);
+        // An Exobeam is nothing but the trail it draws for itself (see Exobeam#trail).
+        event.registerEntityRenderer(CombatUpdate.EXOBEAM.get(), NoopRenderer::new);
+        event.registerEntityRenderer(CombatUpdate.SCARLET_SPEAR.get(), ScarletSpearRenderer::new);
+        // Like the Exobeam, a bullet is nothing but its trail (see ScarletBullet#trail).
+        event.registerEntityRenderer(CombatUpdate.SCARLET_BULLET.get(), NoopRenderer::new);
     }
 
     @SubscribeEvent

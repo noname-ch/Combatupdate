@@ -53,12 +53,15 @@ import ch.bbcag.combatupdate.combat.LeatherEnchantColor;
 import ch.bbcag.combatupdate.enchantment.BatteringRam;
 import ch.bbcag.combatupdate.enchantment.ShortbowEnchantmentHandler;
 import ch.bbcag.combatupdate.entity.CombatFireball;
+import ch.bbcag.combatupdate.entity.Exobeam;
 import ch.bbcag.combatupdate.entity.GipfaeliBomb;
 import ch.bbcag.combatupdate.entity.GipfaeliBullet;
 import ch.bbcag.combatupdate.entity.GipfaeliGrenade;
 import ch.bbcag.combatupdate.entity.GipfaeliRocket;
 import ch.bbcag.combatupdate.entity.GipfaeliSoldier;
 import ch.bbcag.combatupdate.entity.GipfaeliTnt;
+import ch.bbcag.combatupdate.entity.ScarletBullet;
+import ch.bbcag.combatupdate.entity.ScarletSpear;
 import ch.bbcag.combatupdate.mixin.PrimedTntAccessor;
 import ch.bbcag.combatupdate.territory.TerritoryBorders;
 import ch.bbcag.combatupdate.territory.TerritoryCommands;
@@ -141,6 +144,34 @@ public final class CombatUpdate {
                     .updateInterval(2)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "gipfaeli_grenade"))));
 
+    // The streak of light a full Exoblade swing throws; see Exobeam for how it picks what to chase
+    public static final DeferredHolder<EntityType<?>, EntityType<Exobeam>> EXOBEAM = ENTITY_TYPES.register("exobeam",
+            () -> EntityType.Builder.<Exobeam>of(Exobeam::new, MobCategory.MISC)
+                    .noLootTable()
+                    .sized(0.5F, 0.5F)
+                    .clientTrackingRange(8)
+                    // Tight, like the rocket's: it homes, so the client has to be told where it turned.
+                    .updateInterval(2)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "exobeam"))));
+
+    // The spear of light a Scarlet Devil throws, and the homing bullets it sheds; see ScarletSpear
+    public static final DeferredHolder<EntityType<?>, EntityType<ScarletSpear>> SCARLET_SPEAR = ENTITY_TYPES.register("scarlet_spear",
+            () -> EntityType.Builder.<ScarletSpear>of(ScarletSpear::new, MobCategory.MISC)
+                    .noLootTable()
+                    .sized(0.5F, 0.5F)
+                    .clientTrackingRange(8)
+                    .updateInterval(2)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "scarlet_spear"))));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<ScarletBullet>> SCARLET_BULLET = ENTITY_TYPES.register("scarlet_bullet",
+            () -> EntityType.Builder.<ScarletBullet>of(ScarletBullet::new, MobCategory.MISC)
+                    .noLootTable()
+                    .sized(0.3F, 0.3F)
+                    .clientTrackingRange(8)
+                    // Tight: it homes, so the client has to be told where it turned.
+                    .updateInterval(2)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "scarlet_bullet"))));
+
     // Lit Gipfaeli TNT of either kind, built the way vanilla builds primed TNT; see GipfaeliTnt
     public static final DeferredHolder<EntityType<?>, EntityType<GipfaeliTnt>> GIPFAELI_TNT = ENTITY_TYPES.register("gipfaeli_tnt",
             () -> EntityType.Builder.<GipfaeliTnt>of(GipfaeliTnt::new, MobCategory.MISC)
@@ -193,6 +224,14 @@ public final class CombatUpdate {
             p -> Shortsword.properties(p, ToolMaterial.IRON));
     public static final DeferredItem<Item> DIAMOND_SHORTSWORD = ITEMS.registerSimpleItem("diamond_shortsword",
             p -> Shortsword.properties(p, ToolMaterial.DIAMOND));
+
+    // An endgame sword that throws homing beams and lunges; see Exoblade.
+    public static final DeferredItem<Item> EXOBLADE = ITEMS.registerSimpleItem("exoblade",
+            Exoblade::properties);
+
+    // An endgame spear, thrown like a trident but never used up; see ScarletDevil.
+    public static final DeferredItem<ScarletDevil> SCARLET_DEVIL = ITEMS.registerItem("scarlet_devil",
+            ScarletDevil::new, ScarletDevil::properties);
 
     // The launcher's ammunition, and a decent breakfast in its own right.
     public static final DeferredItem<Item> GIPFAELI = ITEMS.registerSimpleItem("gipfaeli",
@@ -247,6 +286,7 @@ public final class CombatUpdate {
         NeoForge.EVENT_BUS.register(CombatEnchantmentHandler.class);
         NeoForge.EVENT_BUS.register(GipfaeliLock.class);
         NeoForge.EVENT_BUS.register(GipfaeliLaunchRig.class);
+        NeoForge.EVENT_BUS.register(Exoblade.class);
         NeoForge.EVENT_BUS.register(TerritoryManager.class);
         NeoForge.EVENT_BUS.register(TerritoryBorders.class);
         NeoForge.EVENT_BUS.addListener(TerritoryCommands::register);
@@ -281,6 +321,12 @@ public final class CombatUpdate {
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
             event.accept(IRON_SHORTSWORD);
             event.accept(DIAMOND_SHORTSWORD);
+            if (Config.on(Config.ENABLE_EXOBLADE)) {
+                event.accept(EXOBLADE);
+            }
+            if (Config.on(Config.ENABLE_SCARLET_DEVIL)) {
+                event.accept(SCARLET_DEVIL);
+            }
             // Kept out of the tab while the feature is off, so nobody is handed a launcher that will
             // not fire. The items stay registered either way - pulling them out of the registry would
             // strip them from any world that already had one.
@@ -337,6 +383,7 @@ public final class CombatUpdate {
         ItemStack stack = event.getItemStack();
         if (throwFireballIfHeld(player, stack, event.getLevel())
                 || ElytraBomb.release(player, stack, event.getLevel())
+                || Exoblade.use(player, stack, event.getLevel())
                 || GipfaeliLauncher.use(player, stack, event.getLevel())
                 || GipfaeliLaunchRig.use(player, stack, event.getLevel())
                 || GipfaeliCommandFlag.use(player, stack, event.getLevel())
@@ -352,7 +399,8 @@ public final class CombatUpdate {
     // flag wants that case too, because pointing at something is how the army is aimed.
     @SubscribeEvent
     public void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
-        if (GipfaeliLauncher.use(event.getEntity(), event.getItemStack(), event.getLevel())
+        if (Exoblade.use(event.getEntity(), event.getItemStack(), event.getLevel())
+                || GipfaeliLauncher.use(event.getEntity(), event.getItemStack(), event.getLevel())
                 || GipfaeliLaunchRig.use(event.getEntity(), event.getItemStack(), event.getLevel())
                 || GipfaeliCommandFlag.useOn(event.getEntity(), event.getItemStack(), event.getTarget(), event.getLevel())
                 || GipfaeliHandGrenade.use(event.getEntity(), event.getItemStack(), event.getLevel())
@@ -376,6 +424,7 @@ public final class CombatUpdate {
 
         if (throwFireballIfHeld(player, stack, event.getLevel())
                 || ElytraBomb.release(player, stack, event.getLevel())
+                || Exoblade.use(player, stack, event.getLevel())
                 || GipfaeliLauncher.use(player, stack, event.getLevel())
                 || GipfaeliLaunchRig.use(player, stack, event.getLevel())
                 || GipfaeliCommandFlag.use(player, stack, event.getLevel())
@@ -432,6 +481,7 @@ public final class CombatUpdate {
         GipfaeliLock.tick(event.getEntity());
         GipfaeliLaunchRig.tick(event.getEntity());
         GipfaeliRecoil.tick(event.getEntity());
+        Exoblade.tick(event.getEntity());
     }
 
     // Post rather than Pre: by then the hit has been through armour, resistance and absorption, so

@@ -71,6 +71,14 @@ public final class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_SWORD_BLOCKING = BUILDER
             .comment("Whether holding right-click with a vanilla sword raises it to soak part of a frontal hit, pre-1.9 style. Off leaves swords with no block at all")
             .define("enableSwordBlocking", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_EXOBLADE = BUILDER
+            .comment("Whether the Exoblade throws homing beams on full-strength swings and lunges on right-click. Off leaves it an ordinary (if very sharp) sword and takes it out of the creative tab; the item stays registered, so a world already holding one still loads")
+            .define("enableExoblade", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_SCARLET_DEVIL = BUILDER
+            .comment("Whether the Scarlet Devil can be thrown. Off leaves it a spear that only stabs and takes it out of the creative tab; the item stays registered, so a world already holding one still loads")
+            .define("enableScarletDevil", true);
     // --- Enchantments ---
 
 
@@ -329,6 +337,92 @@ public final class Config {
     public static final ModConfigSpec.IntValue BOMB_COOLDOWN_TICKS = BUILDER
             .comment("How many ticks must pass between dropping one bomb and the next")
             .defineInRange("bombCooldownTicks", 10, 0, 200);
+    static {
+        BUILDER.pop();
+    }
+
+    // Its own page in the config screen: a pushed section renders as a button that
+    // opens a screen showing only what is inside it.
+    static {
+        BUILDER.comment("The Exoblade: how hard its beams hit and how far they look for something to chase, and what its lunge does. Switched on and off on the Features page.").push("exoblade");
+    }
+    // --- Exobeam (thrown by a full-strength swing) ---
+
+
+    public static final ModConfigSpec.DoubleValue EXOBEAM_DAMAGE = BUILDER
+            .comment("How much damage an Exobeam deals to whatever it hits (the blade itself hits for 14)")
+            .defineInRange("exobeamDamage", 8.0, 0.0, 100.0);
+
+    public static final ModConfigSpec.DoubleValue EXOBEAM_SPEED = BUILDER
+            .comment("How fast an Exobeam flies, in blocks per tick, at a constant speed. It gives out after 2 seconds, so this also sets how far it can reach")
+            .defineInRange("exobeamSpeed", 1.2, 0.1, 5.0);
+
+    public static final ModConfigSpec.DoubleValue EXOBEAM_HOMING_RANGE = BUILDER
+            .comment("How far, in blocks, an Exobeam looks for a monster or player to bend towards. 0 makes every beam fly straight")
+            .defineInRange("exobeamHomingRange", 16.0, 0.0, 64.0);
+    // --- Lunge (right-click) ---
+
+
+    public static final ModConfigSpec.DoubleValue EXOBLADE_DASH_SPEED = BUILDER
+            .comment("How fast the right-click lunge carries the player, in blocks per tick. It lasts 6 ticks, so the default covers about 9 blocks")
+            .defineInRange("exobladeDashSpeed", 1.5, 0.1, 5.0);
+
+    public static final ModConfigSpec.DoubleValue EXOBLADE_DASH_DAMAGE = BUILDER
+            .comment("How much damage the first thing a lunge runs into takes before the player bounces back off it")
+            .defineInRange("exobladeDashDamage", 20.0, 0.0, 200.0);
+
+    public static final ModConfigSpec.IntValue EXOBLADE_DASH_COOLDOWN_TICKS = BUILDER
+            .comment("How many ticks must pass between one lunge and the next (20 ticks = 1 second)")
+            .defineInRange("exobladeDashCooldownTicks", 40, 0, 1200);
+    static {
+        BUILDER.pop();
+    }
+
+    // Its own page in the config screen: a pushed section renders as a button that
+    // opens a screen showing only what is inside it.
+    static {
+        BUILDER.comment("The Scarlet Devil: its spear, the Scarlet Blast where the spear lands, the bullets it sheds, and the fully charged Gungnir throw. Switched on and off on the Features page.").push("scarletDevil");
+    }
+    // --- Spear ---
+
+
+    public static final ModConfigSpec.DoubleValue SCARLET_SPEAR_DAMAGE = BUILDER
+            .comment("How much damage the thrown spear deals to each thing it passes through (a Gungnir throw deals double)")
+            .defineInRange("scarletSpearDamage", 14.0, 0.0, 200.0);
+
+    public static final ModConfigSpec.DoubleValue SCARLET_SPEAR_SPEED = BUILDER
+            .comment("How fast the spear flies, in blocks per tick. It gives out after 1.5 seconds, so this also sets how far it can reach")
+            .defineInRange("scarletSpearSpeed", 4.0, 0.5, 8.0);
+
+    public static final ModConfigSpec.IntValue SCARLET_DEVIL_COOLDOWN_TICKS = BUILDER
+            .comment("How many ticks must pass between one throw and the next (20 ticks = 1 second)")
+            .defineInRange("scarletDevilCooldownTicks", 20, 0, 1200);
+    // --- Scarlet Blast ---
+
+
+    public static final ModConfigSpec.DoubleValue SCARLET_BLAST_DAMAGE = BUILDER
+            .comment("How much damage the Scarlet Blast deals to everything caught in it, the thrower and their allies aside. It goes off wherever the spear strikes a creature or a wall")
+            .defineInRange("scarletBlastDamage", 8.0, 0.0, 200.0);
+
+    public static final ModConfigSpec.DoubleValue SCARLET_BLAST_RADIUS = BUILDER
+            .comment("How far, in blocks, the Scarlet Blast reaches (a Gungnir throw's reaches twice as far). It never breaks blocks")
+            .defineInRange("scarletBlastRadius", 3.0, 0.0, 16.0);
+    // --- Scarlet bullets ---
+
+
+    public static final ModConfigSpec.DoubleValue SCARLET_BULLET_DAMAGE = BUILDER
+            .comment("How much damage each of the homing bullets the spear sheds in flight deals. Only monsters and other players are chased or hit by them")
+            .defineInRange("scarletBulletDamage", 3.0, 0.0, 100.0);
+    // --- Gungnir (fully charged throw) ---
+
+
+    public static final ModConfigSpec.IntValue GUNGNIR_CHARGE_TICKS = BUILDER
+            .comment("How long, in ticks, the spear has to be held back before the throw becomes a Gungnir: a bigger spear that hits twice as hard, sheds bullets three times as fast, blasts twice as wide and heals its thrower")
+            .defineInRange("gungnirChargeTicks", 40, 10, 400);
+
+    public static final ModConfigSpec.DoubleValue GUNGNIR_HEAL = BUILDER
+            .comment("How much health (2 = one heart) the thrower gets back for each creature a Gungnir spear strikes")
+            .defineInRange("gungnirHeal", 2.0, 0.0, 40.0);
     static {
         BUILDER.pop();
     }

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "E": "minecraft:echo_shard",
+    "H": "minecraft:heart_of_the_sea",
+    "N": "minecraft:nether_star",
+    "S": "minecraft:netherite_sword"
+  },
+  "pattern": [
+    "EHE",
+    "ENE",
+    " S "
+  ],
+  "result": {
+    "id": "combatupdate:exoblade"
+  }
+}

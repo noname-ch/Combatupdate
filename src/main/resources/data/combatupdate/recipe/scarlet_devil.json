@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "N": "minecraft:nether_star",
+    "R": "minecraft:redstone_block",
+    "T": "minecraft:trident",
+    "W": "minecraft:wither_rose"
+  },
+  "pattern": [
+    " RN",
+    "RTR",
+    "WR "
+  ],
+  "result": {
+    "id": "combatupdate:scarlet_devil"
+  }
+}
