@@ -32,10 +32,13 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 // it covers the same ground in the air as on it. Once on the ground, and as many times in the air
 // as the config allows before landing again.
 //
-// The slide is sneak pressed while sprinting on the ground. The player drops flat, which is the
-// swimming pose's hitbox - low enough to pass under a one-block gap - and keeps going along the way
-// they were running, easing off until they are back to walking pace, sneak is let go, or they jump.
-// A jump out of a slide keeps its speed.
+// The slide is sneak pressed while sprinting. The player drops flat, which is the swimming pose's
+// hitbox - low enough to pass under a one-block gap - and keeps going along the way they were
+// running, easing off until they are back to walking pace, sneak is let go, or they jump. Pressed in
+// the air, it waits for the landing; a jump out of a slide keeps its speed, and with sneak still held
+// the player slides on again as they land. The movement keys do nothing while sliding: the slide
+// goes where the player looks. It follows the ground down a hill, a step at a time, and every block
+// it drops is speed gained.
 //
 // Both are moved on the client, for the reason ElytraBoost gives: a player's own movement is the
 // client's to predict, and pushing it from the server only arrives as a correction. The server is
@@ -54,6 +57,13 @@ public final class Movement {
 
     // A slide ends once it has slowed to this, which is a little over walking pace.
     private static final double SLIDE_END_SPEED = 0.2;
+    // Speed a slide gains for each block it drops, and how many times its configured starting speed
+    // it can build up to that way.
+    private static final double SLIDE_HILL_GAIN = 0.3;
+    private static final double SLIDE_MAX_SPEED_FACTOR = 2.0;
+    // How far a slide can fall and still be sliding: a step or two down a hill, but not a cliff,
+    // and never far enough to hurt.
+    private static final double SLIDE_MAX_DROP = 3.0;
     // How strongly a slide bends towards where the player is looking, per tick: enough to follow a
     // gentle curve, not enough to turn a corner.
     private static final double SLIDE_STEER = 0.08;
@@ -86,6 +96,11 @@ public final class Movement {
         double slideSpeed;
         double slideDecay;
         int slideCooldown;
+        // Where the player stood a tick ago, to tell how far a slide has dropped since.
+        double lastY;
+        // Sneak went down while sprinting, or stayed down through a jump out of a slide, and is still
+        // held: the slide starts as soon as the player is on the ground for it.
+        boolean slideQueued;
 
         boolean wasShiftDown;
         boolean wasSprinting;
@@ -112,6 +127,13 @@ public final class Movement {
         if (direction.lengthSqr() > 1.0E-6) {
             CLIENT.computeIfAbsent(player, p -> new State()).requestedDash = direction.normalize();
         }
+    }
+
+    // Whether the player is sliding, as far as this side knows: for MovementClient to keep the
+    // movement keys out of it, and SlideOffEdgeMixin to let it off the edge of a step.
+    public static boolean isSliding(Player player) {
+        State state = (player.level().isClientSide() ? CLIENT : SERVER).get(player);
+        return state != null && state.sliding;
     }
 
     // Once per player tick on both sides, before the player moves.
@@ -145,13 +167,17 @@ public final class Movement {
         boolean wasSprinting = state.wasSprinting;
         state.wasShiftDown = shiftDown;
         state.wasSprinting = sprinting;
+        state.slideQueued = shiftDown && (state.slideQueued || pressedSneak && wasSprinting);
+        double drop = state.lastY - player.getY();
+        state.lastY = player.getY();
 
         Vec3 requested = state.requestedDash;
         state.requestedDash = null;
         if (requested != null && canDash(player, state)) {
             if (state.sliding) {
-                endSlide(player, state);
+                endSlide(player, state, true);
             }
+            state.slideQueued = false;
 
             state.dashTicks = DASH_TICKS;
             state.dashDirection = requested;
@@ -170,25 +196,24 @@ public final class Movement {
             return;
         }
 
-        if (!state.sliding && pressedSneak && wasSprinting && canSlide(player, state)) {
-            Vec3 motion = horizontal(player.getDeltaMovement());
-            double start = Math.max(Config.SLIDE_SPEED.getAsDouble(), motion.length());
-            state.sliding = true;
-            state.slideTicks = 0;
-            state.slideDirection = motion.lengthSqr() > 1.0E-4 ? motion.normalize() : horizontal(player.getLookAngle());
-            state.slideSpeed = start;
-            // Eases from the starting speed down to walking pace over the configured duration.
-            state.slideDecay = Math.pow(SLIDE_END_SPEED / start, 1.0 / Config.SLIDE_DURATION_TICKS.getAsInt());
-            player.setForcedPose(Pose.SWIMMING);
-            send(new SlidePayload(true));
+        if (!state.sliding && state.slideQueued && player.onGround()) {
+            // Queued in the air and landed, or pressed on the ground just now: either way it starts
+            // now or not at all, so a slide the cooldown held back is not sprung on the player later.
+            state.slideQueued = false;
+            if (canSlide(player, state)) {
+                startSlide(player, state);
+            }
         }
 
         if (state.sliding) {
-            // Off the ground means a jump or a ledge, and either way the slide has done its job:
-            // the speed it had is left on the player for the air.
-            if (!Config.on(Config.ENABLE_SLIDE) || !player.isShiftKeyDown() || !player.onGround()
+            // Up off the ground is a jump, and a long way down is a ledge, not a hill; either way the
+            // slide has done its job and the speed it had is left on the player for the air.
+            boolean leftGround = !player.onGround() && (player.getDeltaMovement().y > 0.0 || player.fallDistance > SLIDE_MAX_DROP);
+            if (!Config.on(Config.ENABLE_SLIDE) || !player.isShiftKeyDown() || leftGround
                     || state.slideSpeed < SLIDE_END_SPEED || player.isInWater() || player.getAbilities().flying) {
-                endSlide(player, state);
+                endSlide(player, state, !leftGround);
+                // Still holding sneak on the way up: slide on from wherever they land.
+                state.slideQueued = leftGround && player.isShiftKeyDown();
                 return;
             }
 
@@ -200,8 +225,33 @@ public final class Movement {
             Vec3 motion = player.getDeltaMovement();
             Vec3 slide = state.slideDirection.scale(state.slideSpeed);
             player.setDeltaMovement(slide.x, motion.y, slide.z);
-            state.slideSpeed *= state.slideDecay;
+            // The first tick's drop is the tail of whatever jump it landed from, not a hill.
+            if (drop > 1.0E-3 && state.slideTicks > 1) {
+                // Downhill: faster, and the slide's full length again from here.
+                double max = Math.max(Config.SLIDE_SPEED.getAsDouble() * SLIDE_MAX_SPEED_FACTOR, state.slideSpeed);
+                state.slideSpeed = Math.min(max, state.slideSpeed + drop * SLIDE_HILL_GAIN);
+                state.slideDecay = slideDecay(state.slideSpeed);
+            } else {
+                state.slideSpeed *= state.slideDecay;
+            }
         }
+    }
+
+    private static void startSlide(Player player, State state) {
+        Vec3 motion = horizontal(player.getDeltaMovement());
+        double start = Math.max(Config.SLIDE_SPEED.getAsDouble(), motion.length());
+        state.sliding = true;
+        state.slideTicks = 0;
+        state.slideDirection = motion.lengthSqr() > 1.0E-4 ? motion.normalize() : horizontal(player.getLookAngle());
+        state.slideSpeed = start;
+        state.slideDecay = slideDecay(start);
+        player.setForcedPose(Pose.SWIMMING);
+        send(new SlidePayload(true));
+    }
+
+    // Eases from the given speed down to walking pace over the configured duration.
+    private static double slideDecay(double speed) {
+        return Math.pow(SLIDE_END_SPEED / speed, 1.0 / Config.SLIDE_DURATION_TICKS.getAsInt());
     }
 
     private static boolean canDash(Player player, State state) {
@@ -225,9 +275,11 @@ public final class Movement {
                 && !player.isPassenger() && !player.isSwimming() && !player.onClimbable();
     }
 
-    private static void endSlide(Player player, State state) {
+    // A slide left by jumping or dropping off an edge sets no cooldown, so the player can slide
+    // again the moment they land.
+    private static void endSlide(Player player, State state, boolean cooldown) {
         state.sliding = false;
-        state.slideCooldown = Config.SLIDE_COOLDOWN_TICKS.getAsInt();
+        state.slideCooldown = cooldown ? Config.SLIDE_COOLDOWN_TICKS.getAsInt() : 0;
         player.setForcedPose(null);
         send(new SlidePayload(false));
     }
@@ -283,6 +335,7 @@ public final class Movement {
         if (start && Config.on(Config.ENABLE_SLIDE)) {
             state.sliding = true;
             state.slideTicks = 0;
+            state.lastY = player.getY();
             player.setForcedPose(Pose.SWIMMING);
             player.causeFoodExhaustion(SLIDE_EXHAUSTION);
             BlockState floor = player.getBlockStateOn();
@@ -315,8 +368,12 @@ public final class Movement {
         }
 
         // A client that never says it stopped - it disconnected, say - is not left lying down: no
-        // slide can outlast its configured length, so one well past it is over.
-        if (++state.slideTicks > Config.SLIDE_DURATION_TICKS.getAsInt() + 20) {
+        // slide can outlast its configured length since it last went downhill, so one well past it
+        // is over.
+        boolean downhill = player.getY() < state.lastY - 1.0E-3;
+        state.lastY = player.getY();
+        state.slideTicks = downhill ? 0 : state.slideTicks + 1;
+        if (state.slideTicks > Config.SLIDE_DURATION_TICKS.getAsInt() + 20) {
             state.sliding = false;
             player.setForcedPose(null);
             return;

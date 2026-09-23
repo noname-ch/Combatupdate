@@ -6,10 +6,12 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.phys.Vec2;
+import net.neoforged.neoforge.client.event.MovementInputUpdateEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import ch.bbcag.combatupdate.Movement;
+import ch.bbcag.combatupdate.mixin.ClientInputMoveAccessor;
 
 // The client's end of the dash and the slide: the dash key, and the line to the server that Movement
 // cannot draw itself. The slide needs no key of its own - it is sneak, read off the player.
@@ -36,6 +38,14 @@ public final class MovementClient {
                 Vec2 move = player.input.getMoveVector();
                 Movement.requestDash(player, move.x, move.y);
             }
+        }
+    }
+
+    // A slide goes where the player looks, not where they walk, so the movement keys are dropped
+    // while it lasts. Jump is left alone: that is how a slide is jumped out of.
+    public static void onMovementInput(MovementInputUpdateEvent event) {
+        if (Movement.isSliding(event.getEntity())) {
+            ((ClientInputMoveAccessor) event.getInput()).combatupdate$setMoveVector(Vec2.ZERO);
         }
     }
 }

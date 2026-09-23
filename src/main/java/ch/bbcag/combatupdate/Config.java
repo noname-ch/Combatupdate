@@ -55,7 +55,7 @@ public final class Config {
             .define("enableDash", true);
 
     public static final ModConfigSpec.BooleanValue ENABLE_SLIDE = BUILDER
-            .comment("Whether pressing sneak while sprinting on the ground drops the player into a slide that keeps their speed and fits under one-block gaps")
+            .comment("Whether pressing sneak while sprinting drops the player into a slide that keeps their speed, gains more downhill and fits under one-block gaps; pressed in the air, it starts on landing")
             .define("enableSlide", true);
     // --- Explosives ---
 

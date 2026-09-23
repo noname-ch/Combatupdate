@@ -55,6 +55,7 @@ import ch.bbcag.combatupdate.client.ShortbowPullProperty;
 import ch.bbcag.combatupdate.client.MovementClient;
 import ch.bbcag.combatupdate.client.TerritoryClient;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.MovementInputUpdateEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
@@ -406,6 +407,11 @@ public final class CombatUpdateClient {
     static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         TerritoryClient.registerKeys(event);
         MovementClient.registerKeys(event);
+    }
+
+    @SubscribeEvent
+    static void onMovementInputUpdate(MovementInputUpdateEvent event) {
+        MovementClient.onMovementInput(event);
     }
 
     // The territory key is read once a tick rather than on the key event, the way vanilla reads
