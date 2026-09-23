@@ -65,6 +65,7 @@ final class SoldierControls {
     private final int bottom;
 
     private Tab tab = Tab.KIT;
+    private boolean commander;
     private int confirmTicks;
 
     SoldierControls(Consumer<AbstractWidget> add, int x, int y, UUID soldier, boolean commander, int posts) {
@@ -155,8 +156,6 @@ final class SoldierControls {
         this.bottom = cursor;
         this.select(Tab.KIT);
     }
-
-    private boolean commander;
 
     private boolean commanderNow() {
         return this.commander;
