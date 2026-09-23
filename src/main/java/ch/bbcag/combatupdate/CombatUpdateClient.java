@@ -52,6 +52,7 @@ import ch.bbcag.combatupdate.client.GipfaeliSoldierRenderer;
 import ch.bbcag.combatupdate.client.ScarletSpearRenderer;
 import ch.bbcag.combatupdate.client.ZenithBladeRenderer;
 import ch.bbcag.combatupdate.client.ShortbowPullProperty;
+import ch.bbcag.combatupdate.client.MovementClient;
 import ch.bbcag.combatupdate.client.TerritoryClient;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -72,6 +73,8 @@ public final class CombatUpdateClient {
 
         // Hands the territory packets to the screen; see TerritoryClient.
         TerritoryClient.wire();
+        // And hands the dash and slide their line to the server; see MovementClient.
+        MovementClient.wire();
     }
 
     @SubscribeEvent
@@ -402,6 +405,7 @@ public final class CombatUpdateClient {
     @SubscribeEvent
     static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         TerritoryClient.registerKeys(event);
+        MovementClient.registerKeys(event);
     }
 
     // The territory key is read once a tick rather than on the key event, the way vanilla reads
@@ -409,6 +413,7 @@ public final class CombatUpdateClient {
     @SubscribeEvent
     static void onClientTick(ClientTickEvent.Post event) {
         TerritoryClient.tick();
+        MovementClient.tick();
         ExobladeAutoSwing.tick();
     }
 }

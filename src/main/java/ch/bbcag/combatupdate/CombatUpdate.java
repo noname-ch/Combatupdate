@@ -329,6 +329,8 @@ public final class CombatUpdate {
         modEventBus.addListener(TerritoryNetwork::register);
         // And the one the screen sends the army; see GipfaeliArmyNetwork.
         modEventBus.addListener(GipfaeliArmyNetwork::register);
+        // And the dash and slide's; see Movement.
+        modEventBus.addListener(Movement::register);
         NeoForge.EVENT_BUS.register(GipfaeliArmy.class);
 
         // Register the item to a creative tab
@@ -517,6 +519,7 @@ public final class CombatUpdate {
     @SubscribeEvent
     public void onPlayerTick(PlayerTickEvent.Pre event) {
         ElytraBoost.tick(event.getEntity());
+        Movement.tick(event.getEntity());
         BatteringRam.tick(event.getEntity());
         LeatherEnchantColor.tick(event.getEntity());
         GipfaeliLock.tick(event.getEntity());
