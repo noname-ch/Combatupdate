@@ -1,25 +1,47 @@
+# CombatUpdate
 
-Installation information
-=======
+A NeoForge mod for Minecraft Java 26.3 that reworks combat: sword blocking, dashing and sliding,
+elytra flight and bombing, new enchantments, the Gipfäli arsenal and army, territory claims, and more.
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+**Homepage with every feature, control and command:** https://noname-ch.github.io/Combatupdate/
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+## Install
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+1. Install [NeoForge](https://neoforged.net/) `26.3.0.7-beta` for Minecraft 26.3 (pick *Install client*).
+2. Drop `combatupdate-<version>.jar` into `.minecraft/mods`. Servers need it in their own `mods` folder too.
+3. Launch the NeoForge profile. CombatUpdate shows up under *Mods*, with its config one click away.
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
+## Build and run
+
+Requires JDK 25.
+
+```sh
+./gradlew build          # jar lands in build/libs
+./gradlew runClient      # start a dev client
+./gradlew runServer      # start a dev server
+```
+
+If your IDE is missing libraries, run `./gradlew --refresh-dependencies`. `./gradlew clean` resets
+the build without touching your code.
+
+LAN test server: `10.100.60.79:25565`
+
+## Repository layout
+
+| Path | What's there |
+|------|--------------|
+| `src/main/java/ch/bbcag/combatupdate/` | Mod code. Feature classes live at the top level, with subpackages for `client`, `combat`, `enchantment`, `entity`, `mixin` and `territory` |
+| `src/main/resources/` | Assets (models, textures, sounds, lang) and data (recipes, loot, enchantments, tags) |
+| `docs/` | The GitHub Pages homepage. `docs/shots/` holds its screenshots |
+| `notes/` | Design notes on how individual features work and why they're tuned the way they are |
+| `tools/` | Helper scripts, such as `soldier_skins.py` for generating soldier textures |
+
+## Mappings
+
+The MDK uses Mojang's official mapping names, which are covered by their own license:
 https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+## Resources
+
+- NeoForge docs: https://docs.neoforged.net/
+- NeoForged Discord: https://discord.neoforged.net/
