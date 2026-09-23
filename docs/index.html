@@ -165,12 +165,12 @@ td.n.hl{color:var(--gold)}
 .blockcard p{font-size:.93rem;color:var(--muted);max-width:30ch;margin:6px auto 0}
 
 /* ---------- army ---------- */
-.kits{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:24px}
+.kits{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr));gap:24px}
 .kit{border-top:2px solid var(--ink);padding-top:14px}
 .kit img{width:64px;height:64px}
 .kit h3{font-size:1.4rem;margin-top:8px}
 .kit p{font-size:.92rem;color:var(--muted);margin-top:4px}
-.formations{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:10px}
+.formations{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:10px}
 .formation{background:var(--surface);border:1px solid var(--line);padding:10px 8px 8px;text-align:center}
 .formation svg{width:100%;height:auto;display:block}
 .formation span{font-family:var(--pixel);font-size:1.15rem}
@@ -234,8 +234,8 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     </div>
     <div class="stats">
       <div class="stat">10<small>new enchantments</small></div>
-      <div class="stat">5<small>soldier kits</small></div>
-      <div class="stat">19<small>features, each with an off switch</small></div>
+      <div class="stat">6<small>soldier kits</small></div>
+      <div class="stat">22<small>features, each with an off switch</small></div>
     </div>
   </div>
   <div class="hero-art">
@@ -300,14 +300,14 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     <div class="feat">
       <img class="px" src="img/mod/exoblade.png" alt="">
       <h3>Exoblade</h3>
-      <p>A full-strength swing throws a homing Exobeam whether it connects or not, so time the meter and the blade fights at range too. Right-click to lunge: the first thing you hit takes a heavy blow and you bounce back off it, briefly invulnerable.</p>
-      <div class="chips"><span class="chip">Beam <b>on full swings</b></span><span class="chip">Lunge <b>right-click</b></span></div>
+      <p>A big blade: it outreaches every other sword, and a full-strength swing cuts everything in the arc in front of you, not just what you aimed at. Every full swing also throws a homing Exobeam, and whatever a beam hits is cut by a flurry of Exo slashes. Hold attack and it keeps swinging, a full swing each time the meter fills. Right-click to lunge: the first thing you hit takes a heavy blow and you bounce back off it, briefly invulnerable. Swing straight after a lunge lands for the big slash: a huge arc that throws three beams at once. Lunge in, bounce out, swing.</p>
+      <div class="chips"><span class="chip">Reach <b>4.5</b></span><span class="chip">Blade <b>14</b></span><span class="chip">Beam <b>8</b></span><span class="chip">Lunge <b>20</b></span><span class="chip">Big slash <b>24</b></span></div>
     </div>
     <div class="feat">
       <img class="px" src="img/mod/scarlet_devil.png" alt="">
       <h3>Scarlet Devil</h3>
-      <p>Hold and release like a trident, but it never leaves your hand: what flies is a piercing spear of red light that sheds homing bullets and bursts into a Scarlet Blast on every hit. Hold until it chimes and it goes out as a Gungnir: twice as strong, and it heals you for everything it strikes.</p>
-      <div class="chips"><span class="chip">Charged <b>Gungnir ×2</b></span><span class="chip">Never <b>used up</b></span></div>
+      <p>Right-click to throw, and hold it to keep throwing. It never leaves your hand: what flies is a piercing spear of red light that sheds homing bullets and bursts into a Scarlet Blast on every hit. Go two seconds without throwing and it chimes: the next throw is a Gungnir, Calamity's stealth strike. It hits twice as hard, blasts twice as wide and heals you for everything it strikes.</p>
+      <div class="chips"><span class="chip">Spear <b>14</b></span><span class="chip">Throws <b>every 0.6 s</b></span><span class="chip">Stealth strike <b>Gungnir ×2</b></span><span class="chip">Never <b>used up</b></span></div>
     </div>
   </div>
 
@@ -526,20 +526,36 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
 <section class="chapter" id="army">
   <div class="chapter-head">
     <img class="px" src="img/mod/gipfaeli_command_flag.png" alt="">
-    <div><h2>The Gipfäli Army</h2><p class="thesis">Recruit soldiers out of your own pack, hand them a gun, and point. They follow, hold formation, guard what you tell them to, and lead their shots.</p></div>
+    <div><h2>The Gipfäli Army</h2><p class="thesis">Raise a squad under a commander, kit it out of your own pack, and point. They follow, hold formation, stand on parade, guard what you tell them to, and lead their shots.</p></div>
   </div>
 
   <div class="features">
     <div class="feat">
       <img class="px" src="img/mod/gipfaeli_command_flag.png" alt="">
       <h3>Command Flag</h3>
-      <p>The one item the army runs from. Right-click the air to sign on a recruit, armed from your inventory. Right-click a target to send the squad after it. <kbd>Sneak</kbd> + right-click lists everything on the map worth attacking.</p>
-      <div class="chips"><span class="chip">Squad <b>8</b></span><span class="chip">Rations <b>2 Gipfäli</b></span><span class="chip">March <b>192 blocks</b></span></div>
+      <p>The one item the army runs from. Right-click the air to raise a new squad: its commander appears. Click the commander to fill the ranks: +1, +5, +10 or all 40. Right-click a target to send the squad after it, or one of your own soldiers to have it hold there or fall back in. <kbd>Sneak</kbd> + right-click opens the army menu: orders, formations, colours, and everything on the map worth attacking.</p>
+      <div class="chips"><span class="chip">Squad <b>40 + commander</b></span><span class="chip">Army <b>200</b></span><span class="chip">Recruit <b>2 Gipfäli</b></span><span class="chip">March <b>192 blocks</b></span></div>
+    </div>
+    <div class="feat">
+      <img class="iso" src="img/block/white_wool.png" alt="">
+      <h3>Squads &amp; commanders</h3>
+      <p>A squad is a colour: paint a soldier blue and it's in the blue squad. Sixteen dye colours, plus camouflage for the reserve, each uniform with the army's red-and-white armband. Promote one soldier per squad to commander: it changes into a black dress uniform with the squad colour on lapels, cap and stripes. Click it for the whole squad's orders.</p>
+    </div>
+    <div class="feat">
+      <img class="px" src="img/mc/iron_chestplate.png" alt="">
+      <h3>Kit &amp; armour</h3>
+      <p>Recruits come unarmed. Click a soldier for its own menu: kit, armour, colour, rank, posts. The gun in its hand is its role, so hand it a different one and it changes role on the spot. Armour is vanilla armour, leather to netherite, and it protects like it does on you. The commander's menu kits out the whole squad at once. Kit and armour come out of your pack. Or skip the menu and right-click a soldier with a gun, a helmet or a dye; a Gipfäli heals it.</p>
+    </div>
+    <div class="feat">
+      <img class="px" src="img/mod/gipfaeli_war_banner.png" alt="">
+      <h3>Parade</h3>
+      <p><b>Stand</b> puts the army on parade where you're standing, facing the way you face: each squad a block of ranks, commanders out in front. They stand at attention and fire at nothing unless fired on. <b>Stand follow</b> marches the same ranks after you, and <b>Attack</b> sends them back into the field.</p>
+      <div class="chips"><span class="chip">Block <b>5 × 8</b></span></div>
     </div>
     <div class="feat">
       <img class="iso" src="img/block/gipfaeli_guard_post.png" alt="">
       <h3>Guard Post</h3>
-      <p>Set it down wherever there's something to defend, click it, and station soldiers there. You set how wide they watch and how touchy they are. Break the post and the guard is gone.</p>
+      <p>Set it down wherever there's something to defend, click it, and station soldiers there. Posts are numbered as you place them, and a soldier's own menu can send it to one to walk a beat. You set how wide they watch and how touchy they are: <b>Defend</b> takes on monsters, <b>Aggressive</b> strangers too, <b>Passive</b> only what hits them. Break the post and the guard is gone.</p>
     </div>
     <div class="feat">
       <img class="px" src="img/mc/iron_ingot.png" alt="">
@@ -548,29 +564,31 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
       <div class="chips"><span class="chip">Headshot <b>×2</b></span></div>
     </div>
     <div class="feat">
-      <img class="iso" src="img/block/white_wool.png" alt="">
-      <h3>Uniforms &amp; manual</h3>
-      <p>Squads wear one of sixteen dye colours. Your first recruit comes with a written field manual. Every order is also a command: <code>/gipfaeliarmy</code>.</p>
+      <img class="px" src="img/mod/gipfaeli.png" alt="">
+      <h3>Field manual &amp; commands</h3>
+      <p>Your first recruit comes with a written field manual, and the army menu hands you another. Every order is also a command: <code>/gipfaeliarmy</code>. Operators get two more: <code>parade</code> raises a parade ground of soldiers out of nothing, and <code>fortress</code> throws up stone-brick walls around you, a tower on each corner, a gate, and a guard post at every corner and the gate with its guards already stationed.</p>
     </div>
   </div>
 
-  <h3 style="margin-top:56px;margin-bottom:18px">Kits</h3>
+  <h3 style="margin-top:56px;margin-bottom:6px">Kits</h3>
+  <p style="color:var(--muted);margin-bottom:18px;max-width:60ch">What a soldier holds is what it does.</p>
   <div class="kits">
-    <div class="kit"><img class="px" src="img/mod/letony_mate_ak47.png" alt=""><h3>Letony-Mate-AK47</h3><p>A three-round burst and decent reach. What most of the squad carries.</p></div>
-    <div class="kit"><img class="px" src="img/mod/gipfaeli_shotgun.png" alt=""><h3>Gipfäli Shotgun</h3><p>A fistful of crumbs at once, and nothing at all past a dozen blocks.</p></div>
-    <div class="kit"><img class="px" src="img/mod/gipfaeli_marksman.png" alt=""><h3>Marksman Rifle</h3><p>One crumb, hard, from further off than anything else here.</p></div>
-    <div class="kit"><img class="px" src="img/mod/gipfaeli_heavy_mg.png" alt=""><h3>Heavy MG</h3><p>Off a tank mount. Endless fire, and the weight to match.</p></div>
-    <div class="kit"><img class="px" src="img/mod/gipfaeli_war_banner.png" alt=""><h3>War Banner</h3><p>No gun. The marcher carrying it rallies everyone around it.</p></div>
+    <div class="kit"><img class="px" src="img/mod/letony_mate_ak47.png" alt=""><h3>Letony-Mate-AK47</h3><p><b>Rifleman.</b> A three-round burst and decent reach. The standard.</p></div>
+    <div class="kit"><img class="px" src="img/mod/gipfaeli_shotgun.png" alt=""><h3>Gipfäli Shotgun</h3><p><b>Assault.</b> A fistful of crumbs at once, and nothing at all past a dozen blocks. Walks right in and takes a beating.</p></div>
+    <div class="kit"><img class="px" src="img/mod/gipfaeli_marksman.png" alt=""><h3>Marksman Rifle</h3><p><b>Marksman.</b> One crumb, hard, from further off than anything else here. Hangs back.</p></div>
+    <div class="kit"><img class="px" src="img/mod/gipfaeli_launcher.png" alt=""><h3>Gipfäli Launcher</h3><p><b>Bomber.</b> Homing Gipfäli, the same launcher you carry. Won't fire point blank.</p></div>
+    <div class="kit"><img class="px" src="img/mod/gipfaeli_heavy_mg.png" alt=""><h3>Heavy MG</h3><p><b>Panzer.</b> Off a tank mount. Endless fire, and the armour and weight to match.</p></div>
+    <div class="kit"><img class="px" src="img/mod/gipfaeli_war_banner.png" alt=""><h3>War Banner</h3><p><b>Marcher.</b> No gun. Everyone within ten blocks of it is faster, hits harder and takes more.</p></div>
   </div>
 
   <div class="split">
     <div>
       <h3>Formations</h3>
-      <p style="margin-top:8px;color:var(--muted)">Worked out fresh from where you stand and which way you face, so the shape walks and turns with you.</p>
+      <p style="margin-top:8px;color:var(--muted)">Worked out fresh from where you stand and which way you face, so the shape walks and turns with you. A fight breaks formation; they re-form after. Parade is the one that stays put: each squad its own block of ranks, side by side.</p>
       <div class="formations" id="formations"></div>
     </div>
     <figure class="shot" data-shot="army-formation">
-      <div class="frame"><div class="ph"><span class="tag">screenshot · army-formation</span><p>A full squad of 8 in wedge formation marching across a field, mixed kits, matching uniform colour.</p></div></div>
+      <div class="frame"><div class="ph"><span class="tag">screenshot · army-formation</span><p>A squad in wedge formation marching across a field, mixed kits, matching uniform colour. Or the whole army drawn up on parade, commanders out in front.</p></div></div>
     </figure>
   </div>
   <div class="split" style="margin-top:24px">
@@ -637,21 +655,39 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
 <section class="chapter" id="extras">
   <div class="chapter-head">
     <img class="iso" src="img/block/meat_obelisk.png" alt="">
-    <div><h2>Extras</h2><p class="thesis">Floating damage numbers, a config screen with a switch for everything, and a block of ham.</p></div>
+    <div><h2>Extras</h2><p class="thesis">Floating damage numbers, a training dummy to read them off, a config screen with a switch for everything, and a block of ham.</p></div>
   </div>
 
   <div class="split" style="margin-top:0">
     <div>
       <h3>Damage numbers</h3>
       <p style="margin:8px 0 16px;color:var(--muted)">Every hit you land floats its number up beside whatever you hit. Every player nearby sees it, and nothing extra is needed on the client.</p>
-      <button class="dmg" id="dmg" type="button" aria-label="Hit the armor stand to see a damage number">
+      <button class="dmg" id="dmg" type="button" aria-label="Hit the training dummy to see a damage number">
         <span class="hint">click to hit</span>
-        <img class="px" src="img/mc/armor_stand.png" alt="">
+        <img class="px" src="img/mod/training_dummy.png" alt="">
       </button>
     </div>
     <figure class="shot" data-shot="damage-numbers">
       <div class="frame"><div class="ph"><span class="tag">screenshot · damage-numbers</span><p>Mid-fight with a sword against 2–3 mobs, several damage numbers hanging in the air.</p></div></div>
     </figure>
+  </div>
+
+  <div class="split">
+    <figure class="shot" data-shot="training-dummy">
+      <div class="frame"><div class="ph"><span class="tag">screenshot · training-dummy</span><p>A row of training dummies in different armour, one mid-wobble with a damage number floating off it.</p></div></div>
+    </figure>
+    <div>
+      <div class="feat" style="margin-bottom:20px">
+        <img class="px" src="img/mod/training_dummy.png" alt="">
+        <h3>Training dummy</h3>
+        <p>A sack of straw on a post, for trying a weapon out on. Every hit goes through armour, enchantments and all, exactly as it would on a mob, then its health is put back, so the damage number shows what that hit really did. It never dies and never moves: not for knockback, explosions, the Battering Ram or the Exoblade's lunge. It counts as a monster, so homing weapons and the army go after it, but iron golems leave it alone.</p>
+        <p style="margin-top:8px">Right-click it with armour to dress it and try the same weapon against a different suit. <kbd>Sneak</kbd> + right-click with an empty hand picks it back up, armour and all.</p>
+        <div class="chips"><span class="chip">Stacks <b>16</b></span><span class="chip">Removed by <b>/kill</b></span></div>
+      </div>
+      <div class="recipes" style="margin-top:0">
+        <div class="recipe-wrap"><span class="recipe" data-recipe="training_dummy"></span></div>
+      </div>
+    </div>
   </div>
 
   <div class="obelisk">
@@ -682,6 +718,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
         <li>Combat enchantments</li><li>Shortbow</li><li>Leather enchant colours</li><li>Enchanted book textures</li><li>Thrown fireballs</li>
         <li>TNT blast retuning</li><li>Weapon reach</li><li>Sword blocking</li><li>Gipfäli Launcher</li><li>Gipfäli Launch Rig</li>
         <li>Gipfäli grenade &amp; TNT</li><li>Gipfäli Army</li><li>Damage numbers</li><li>Territory</li>
+        <li>Exoblade</li><li>Scarlet Devil</li><li>Training dummy</li>
       </ul>
     </div>
     <figure class="shot" data-shot="config-screen">
@@ -712,8 +749,12 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
           <tr><td>Right-click TNT gliding</td><td>Drop it as a bomb</td></tr>
           <tr><td>Hold right-click, sword</td><td>Block</td></tr>
           <tr><td>Right-click fire charge</td><td>Throw a fireball</td></tr>
+          <tr><td>Hold attack · right-click, Exoblade</td><td>Keep swinging · lunge</td></tr>
+          <tr><td>Hold right-click, Scarlet Devil</td><td>Keep throwing</td></tr>
           <tr><td><kbd>Sneak</kbd> + right-click launcher</td><td>Lock on / let go</td></tr>
-          <tr><td><kbd>Sneak</kbd> + right-click flag</td><td>Army target menu</td></tr>
+          <tr><td>Right-click the air, flag</td><td>Raise a new squad</td></tr>
+          <tr><td><kbd>Sneak</kbd> + right-click flag</td><td>Army menu</td></tr>
+          <tr><td><kbd>Sneak</kbd> + right-click dummy</td><td>Pick it back up</td></tr>
           <tr><td><kbd>M</kbd></td><td>Territory map</td></tr>
         </tbody>
       </table>
@@ -742,7 +783,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     'minecraft:redstone':[V+'redstone.png','Redstone'],'minecraft:copper_ingot':[V+'copper_ingot.png','Copper Ingot'],
     'minecraft:red_wool':[B+'red_wool.png','Red Wool'],'minecraft:white_wool':[B+'white_wool.png','White Wool'],
     '#minecraft:planks':[B+'oak_planks.png','Any planks'],'minecraft:tnt':[B+'tnt.png','TNT'],
-    'minecraft:target':[B+'target.png','Target'],'minecraft:iron_block':[B+'iron_block.png','Block of Iron'],
+    'minecraft:target':[B+'target.png','Target'],'minecraft:hay_block':[B+'hay_block.png','Hay Bale'],'minecraft:iron_block':[B+'iron_block.png','Block of Iron'],
     'minecraft:glass_pane':[V+'glass.png','Glass Pane'],
     'minecraft:echo_shard':[V+'echo_shard.png','Echo Shard'],'minecraft:heart_of_the_sea':[V+'heart_of_the_sea.png','Heart of the Sea'],
     'minecraft:nether_star':[V+'nether_star.png','Nether Star'],'minecraft:netherite_sword':[V+'netherite_sword.png','Netherite Sword'],
@@ -757,7 +798,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     gipfaeli_launcher:'Gipfäli Launcher',gipfaeli_launch_rig:'Gipfäli Launch Rig',gipfaeli_command_flag:'Command Flag',gipfaeli_guard_post:'Guard Post',
     letony_mate_ak47:'Letony-Mate-AK47',gipfaeli_shotgun:'Gipfäli Shotgun',gipfaeli_marksman:'Marksman Rifle',gipfaeli_heavy_mg:'Heavy MG',
     gipfaeli_war_banner:'War Banner',iron_shortsword:'Iron Shortsword',diamond_shortsword:'Diamond Shortsword',meat_obelisk:'Meat Obelisk',
-    elytra_chestplate:'Elytra Chestplate (any chestplate + elytra)',exoblade:'Exoblade',scarlet_devil:'Scarlet Devil'};
+    elytra_chestplate:'Elytra Chestplate (any chestplate + elytra)',exoblade:'Exoblade',scarlet_devil:'Scarlet Devil',training_dummy:'Training Dummy'};
   const shaped=(p,k,out,n)=>({p,k,out,n});
   const shapeless=(ings,out,n)=>({ings,out,n});
   const R={
@@ -779,6 +820,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     gipfaeli_war_banner:shaped(['RGR','RRR','S  '],{R:'minecraft:red_wool',G:'combatupdate:gipfaeli',S:'minecraft:stick'},'combatupdate:gipfaeli_war_banner'),
     exoblade:shaped(['EHE','ENE',' S '],{E:'minecraft:echo_shard',H:'minecraft:heart_of_the_sea',N:'minecraft:nether_star',S:'minecraft:netherite_sword'},'combatupdate:exoblade'),
     scarlet_devil:shaped([' RN','RTR','WR '],{N:'minecraft:nether_star',R:'minecraft:redstone_block',T:'minecraft:trident',W:'minecraft:wither_rose'},'combatupdate:scarlet_devil'),
+    training_dummy:shaped([' H ','STS',' S '],{H:'minecraft:hay_block',S:'minecraft:stick',T:'minecraft:target'},'combatupdate:training_dummy'),
     meat_obelisk:shaped(['###','###','###'],{'#':'minecraft:porkchop'},'combatupdate:meat_obelisk'),
   };
   const img=(id)=>{const [src,alt]=icon(id);const i=new Image();i.src=src;i.alt=alt||'';i.title=alt||'';i.className=src.startsWith(B)?'iso':'px';return i;};
@@ -820,6 +862,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     WEDGE:[[-8,-10],[8,-10],[-16,-2],[16,-2],[-24,6],[24,6],[-32,14],[32,14]].map(([x,y])=>[x,y-8]),
     COLUMN:[[-6,8],[6,8],[-6,16],[6,16],[-6,24],[6,24],[-6,32],[6,32]].map(([x,y])=>[x,y-4]),
     CIRCLE:[...Array(8)].map((_,i)=>[Math.cos(i*Math.PI/4)*24,Math.sin(i*Math.PI/4)*24]),
+    PARADE:[-1,1].flatMap(b=>[0,1,2].flatMap(r=>[0,1,2].map(c=>[b*17+(c-1)*9,16+r*9]))),
   };
   const fwrap=document.getElementById('formations');
   Object.entries(F).forEach(([name,pts])=>{
