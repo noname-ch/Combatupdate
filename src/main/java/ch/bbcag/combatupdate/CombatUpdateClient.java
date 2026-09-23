@@ -37,6 +37,7 @@ import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -89,114 +90,20 @@ public final class CombatUpdateClient {
 
     // Vanilla lists an enchantment by name and level and stops there, which is fine for Sharpness
     // and no use at all for one whose whole behaviour is this mod's invention. Every enchantment of
-    // ours gets a line under the name saying what it actually does.
+    // ours gets a line under the name saying what it actually does, and so does every item and
+    // block of ours whose use is not obvious from looking at it.
     //
-    // Driven off the namespace rather than a list of keys, so a new enchantment only has to add its
-    // .desc line to the language file to be described here; and off whether that line exists, so one
-    // that hasn't got round to it shows nothing rather than a raw translation key.
+    // Driven off the language file rather than a list of things: an item's lines are its own
+    // description key with .desc on the end, or .desc.1, .desc.2 and so on for one that needs
+    // several, and they are read off in order until one is missing. So a new item only has to add
+    // its lines to the language file to be described here, and one that hasn't got round to it
+    // shows nothing rather than a raw translation key.
     @SubscribeEvent
     static void onItemTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
-        // The launcher has two actions on the one button and no way to guess at either, so it says so.
-        if (stack.is(CombatUpdate.GIPFAELI_LAUNCHER.get())) {
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launcher.sight")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launcher.fire")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        // And the rig has three presses in an order, which is less guessable still.
-        if (stack.is(CombatUpdate.GIPFAELI_LAUNCH_RIG.get())) {
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launch_rig.call")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launch_rig.place")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_launch_rig.reaim")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        // The flag has three orders on the one button and no way to guess at any of them.
-        if (stack.is(CombatUpdate.GIPFAELI_COMMAND_FLAG.get())) {
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_command_flag.recruit")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_command_flag.attack")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_command_flag.menu")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        // And a gun says what it is for, since what separates the three of them is entirely in how
-        // they shoot rather than in anything you can see on them.
-        if (stack.is(CombatUpdate.LETONY_MATE_AK47.get())) {
-            event.getToolTip().add(Component.translatable("item.combatupdate.letony_mate_ak47.desc")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        if (stack.is(CombatUpdate.GIPFAELI_SHOTGUN.get())) {
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_shotgun.desc")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        if (stack.is(CombatUpdate.GIPFAELI_MARKSMAN.get())) {
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_marksman.desc")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        if (stack.is(CombatUpdate.GIPFAELI_HEAVY_MG.get())) {
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_heavy_mg.desc")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        if (stack.is(CombatUpdate.GIPFAELI_GUARD_POST_ITEM.get())) {
-            event.getToolTip().add(Component.translatable("block.combatupdate.gipfaeli_guard_post.desc")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        if (stack.is(CombatUpdate.GIPFAELI_WAR_BANNER.get())) {
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_war_banner.desc")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        // Neither of the Exoblade's tricks is something a sword is expected to do.
-        if (stack.is(CombatUpdate.EXOBLADE.get())) {
-            event.getToolTip().add(Component.translatable("item.combatupdate.exoblade.beam")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-            event.getToolTip().add(Component.translatable("item.combatupdate.exoblade.dash")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        // It looks like a trident, so it has to say it is not one: nothing leaves the hand for good.
-        if (stack.is(CombatUpdate.SCARLET_DEVIL.get())) {
-            event.getToolTip().add(Component.translatable("item.combatupdate.scarlet_devil.throw")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-            event.getToolTip().add(Component.translatable("item.combatupdate.scarlet_devil.gungnir")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        // The explosives say what they do, since the grenade is the first pastry here that goes off
-        // on a timer rather than on arrival, and the Ultra is not just a bigger block of the other.
-        if (stack.is(CombatUpdate.GIPFAELI_GRENADE.get())) {
-            event.getToolTip().add(Component.translatable("item.combatupdate.gipfaeli_grenade.desc")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        if (stack.is(CombatUpdate.GIPFAELI_TNT_ITEM.get())) {
-            event.getToolTip().add(Component.translatable("block.combatupdate.gipfaeli_tnt.desc")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        if (stack.is(CombatUpdate.GIPFAELI_ULTRA_TNT_ITEM.get())) {
-            event.getToolTip().add(Component.translatable("block.combatupdate.gipfaeli_ultra_tnt.desc")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-
-        // The obelisk's is a whole speech, far too long for one line, so the language file holds it
-        // a line to a key and this reads them off in order until it runs out.
-        if (stack.is(CombatUpdate.MEAT_OBELISK_ITEM.get())) {
-            for (int line = 1; Language.getInstance().has("block.combatupdate.meat_obelisk.desc." + line); line++) {
-                event.getToolTip().add(Component.translatable("block.combatupdate.meat_obelisk.desc." + line)
-                        .withStyle(ChatFormatting.DARK_GRAY));
-            }
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        if (id.getNamespace().equals(CombatUpdate.MODID)) {
+            describe(event, stack.getItem().getDescriptionId() + ".desc");
         }
 
         describeAll(event, stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY));
@@ -205,15 +112,25 @@ public final class CombatUpdateClient {
         describeAll(event, stack.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY));
     }
 
+    // Adds the one line under a key, or the numbered run of them, whichever the language file has.
+    private static void describe(ItemTooltipEvent event, String key) {
+        Language language = Language.getInstance();
+        if (language.has(key)) {
+            event.getToolTip().add(Component.translatable(key).withStyle(ChatFormatting.DARK_GRAY));
+            return;
+        }
+
+        for (int line = 1; language.has(key + "." + line); line++) {
+            event.getToolTip().add(Component.translatable(key + "." + line).withStyle(ChatFormatting.DARK_GRAY));
+        }
+    }
+
     private static void describeAll(ItemTooltipEvent event, ItemEnchantments enchantments) {
         for (Holder<Enchantment> enchantment : enchantments.keySet()) {
             enchantment.unwrapKey()
                     .map(key -> key.identifier())
                     .filter(id -> id.getNamespace().equals(CombatUpdate.MODID))
-                    .map(id -> "enchantment." + CombatUpdate.MODID + "." + id.getPath() + ".desc")
-                    .filter(Language.getInstance()::has)
-                    .ifPresent(line -> event.getToolTip()
-                            .add(Component.translatable(line).withStyle(ChatFormatting.DARK_GRAY)));
+                    .ifPresent(id -> describe(event, "enchantment." + CombatUpdate.MODID + "." + id.getPath() + ".desc"));
         }
     }
 
