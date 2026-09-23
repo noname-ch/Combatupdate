@@ -50,6 +50,10 @@ public class CombatEnchantmentHandler {
 
     @SubscribeEvent
     public static void onLivingDamagePre(LivingDamageEvent.Pre event) {
+        if (!Config.on(Config.ENABLE_ENCHANTMENTS)) {
+            return;
+        }
+
         DamageSource source = event.getSource();
         LivingEntity target = event.getEntity();
 
@@ -75,6 +79,10 @@ public class CombatEnchantmentHandler {
 
     @SubscribeEvent
     public static void onLivingDamagePost(LivingDamageEvent.Post event) {
+        if (!Config.on(Config.ENABLE_ENCHANTMENTS)) {
+            return;
+        }
+
         float healthDamage = event.getHealthDamage();
         if (healthDamage <= 0) {
             return;
@@ -109,6 +117,13 @@ public class CombatEnchantmentHandler {
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
         if (PENDING_REGULARITY_HITS.isEmpty()) {
+            return;
+        }
+
+        // Dropped rather than left queued: switching the enchantments off should not land a second hit
+        // a tick later from a swing that happened while they were still on.
+        if (!Config.on(Config.ENABLE_ENCHANTMENTS)) {
+            PENDING_REGULARITY_HITS.clear();
             return;
         }
 

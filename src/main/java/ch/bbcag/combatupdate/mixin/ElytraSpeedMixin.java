@@ -24,6 +24,10 @@ public abstract class ElytraSpeedMixin {
 
     @Inject(method = "updateFallFlyingMovement", at = @At("RETURN"), cancellable = true)
     private void combatupdate$applySpeedMultiplier(Vec3 movement, CallbackInfoReturnable<Vec3> cir) {
+        if (!Config.on(Config.ENABLE_SPEED_TUNING)) {
+            return;
+        }
+
         // An elytra fused into a chestplate flies worse than the real thing, by however much that
         // chestplate weighs; it folds in here because it is the same knob, only applied per wearer.
         double multiplier = Config.ELYTRA_SPEED_MULTIPLIER.getAsDouble()

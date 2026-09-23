@@ -51,6 +51,10 @@ public final class SwordBlocking {
     }
 
     public static void modifyDefaultComponents(ModifyDefaultComponentsEvent event) {
+        if (!Config.on(Config.ENABLE_SWORD_BLOCKING)) {
+            return;
+        }
+
         for (Item sword : SWORDS) {
             event.modify(sword, (components, context, item) -> components.set(
                     DataComponents.BLOCKS_ATTACKS,

@@ -14,6 +14,13 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public final class Config {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
+    // Deliberately left at the root instead of pushed into a section, so it sits on the front page of
+    // the config screen rather than behind a button. It is the switch that turns the mod off; it
+    // should be the first thing anyone looking for that finds.
+    public static final ModConfigSpec.BooleanValue MOD_ENABLED = BUILDER
+            .comment("Master switch. Turn this off and every change below goes with it, leaving vanilla behaviour behind. The mod's own items and enchantments stay registered either way, so worlds already holding them still load")
+            .define("modEnabled", true);
+
     // Its own page in the config screen: a pushed section renders as a button that
     // opens a screen showing only what is inside it.
     static {
@@ -21,6 +28,18 @@ public final class Config {
     }
     // --- Elytra ---
 
+
+    public static final ModConfigSpec.BooleanValue ENABLE_FREE_LOOK = BUILDER
+            .comment("Whether gliding steers through a full 3D orientation - roll and pitch on the movement keys, no 90-degree limit looking up or down. Off leaves vanilla's yaw/pitch aiming alone")
+            .define("enableFreeLook", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_SPEED_TUNING = BUILDER
+            .comment("Whether glide speed is retuned at all. Off restores vanilla's speed and also drops the penalty a fused chestplate carries, since both are the same adjustment")
+            .define("enableSpeedTuning", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_BOOST = BUILDER
+            .comment("Whether holding shift while gliding burns firework rockets straight out of the inventory for a continuous boost")
+            .define("enableBoost", true);
 
     public static final ModConfigSpec.IntValue ROLL_SPEED = BUILDER
             .comment("How many degrees per second holding A/D rolls the player while gliding with an elytra")
@@ -66,6 +85,10 @@ public final class Config {
     }
     // --- Battering Ram enchantment ---
 
+
+    public static final ModConfigSpec.BooleanValue ENABLE_BATTERING_RAM = BUILDER
+            .comment("Whether the Battering Ram enchantment does anything. Off also hands walls back their fly-into-wall damage and stops the helmet rendering flattened, since all three read the same enchantment level")
+            .define("enableBatteringRam", true);
 
     public static final ModConfigSpec.DoubleValue RAM_MIN_SPEED = BUILDER
             .comment("How fast the player has to be gliding, in blocks per tick, before Battering Ram triggers at all (a rocket-boosted dive runs at roughly 1.5)")
@@ -119,8 +142,19 @@ public final class Config {
     static {
         BUILDER.comment("The mod's other enchantments.").push("enchantments");
     }
+    public static final ModConfigSpec.BooleanValue ENABLE_ENCHANTMENTS = BUILDER
+            .comment("Whether the combat perk enchantments do anything - Regularity, Singularity, Armageddon, Lifesteal, Combo: Perun, Gamble and Mirror. Off leaves them enchantable and inert")
+            .define("enableEnchantments", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_LEATHER_ENCHANT_COLORS = BUILDER
+            .comment("Whether leather leggings and boots are recoloured to show which combat enchantment they carry. Off leaves whatever dye is already on them; it does not put back a colour this has overwritten")
+            .define("enableLeatherEnchantColors", true);
     // --- Shortbow enchantment ---
 
+
+    public static final ModConfigSpec.BooleanValue ENABLE_SHORTBOW = BUILDER
+            .comment("Whether the Shortbow enchantment does anything")
+            .define("enableShortbow", true);
 
     public static final ModConfigSpec.IntValue SHORTBOW_COOLDOWN_TICKS = BUILDER
             .comment("Cooldown, in ticks, before a bow enchanted with Shortbow can instant-fire again (20 ticks = 1 second)")
@@ -189,6 +223,10 @@ public final class Config {
     // --- Fireball (thrown fire charge) ---
 
 
+    public static final ModConfigSpec.BooleanValue ENABLE_FIREBALL = BUILDER
+            .comment("Whether right-clicking a fire charge throws it as an exploding fireball. Off puts it back to placing fire on a block")
+            .define("enableFireball", true);
+
     public static final ModConfigSpec.IntValue FIREBALL_COOLDOWN_TICKS = BUILDER
             .comment("How many ticks a player must wait between throwing fire charges as fireballs (10 ticks = 0.5 seconds)")
             .defineInRange("fireballCooldownTicks", 10, 0, 1200);
@@ -203,11 +241,19 @@ public final class Config {
     // --- TNT ---
 
 
+    public static final ModConfigSpec.BooleanValue ENABLE_TNT_TUNING = BUILDER
+            .comment("Whether primed TNT is retuned to the blast radius below. Off leaves every TNT at whatever power it was spawned with")
+            .define("enableTntTuning", true);
+
     public static final ModConfigSpec.DoubleValue TNT_BLAST_RADIUS = BUILDER
             .comment("Explosion power of primed TNT, vanilla and modded alike (this is what vanilla calls explosion power; default 4.0)")
             .defineInRange("tntBlastRadius", 4.0, 0.0, 128.0);
 
     // --- TNT dropped as a bomb while gliding ---
+
+    public static final ModConfigSpec.BooleanValue ENABLE_ELYTRA_BOMB = BUILDER
+            .comment("Whether right-clicking TNT while gliding releases it as a bomb. Off puts it back to placing the block, gliding or not")
+            .define("enableElytraBomb", true);
 
     public static final ModConfigSpec.DoubleValue BOMB_MOMENTUM_TRANSFER = BUILDER
             .comment("How much of the player's own velocity a bomb dropped from an elytra keeps (1.0 is all of it, 0.0 drops it straight down). Vanilla air drag bleeds this off at 2% a tick from there, so a fast run throws the bomb a long way forward")
@@ -259,7 +305,97 @@ public final class Config {
         BUILDER.pop();
     }
 
+    // Its own page in the config screen: a pushed section renders as a button that
+    // opens a screen showing only what is inside it.
+    static {
+        BUILDER.comment("What the mod changes about vanilla melee weapons.").push("melee");
+    }
+    // --- Vanilla melee weapon retuning ---
+
+
+    public static final ModConfigSpec.BooleanValue ENABLE_WEAPON_REACH = BUILDER
+            .comment("Whether tridents reach further and axes reach less far than the other melee weapons. Off puts every vanilla weapon back on the player's own 3-block interaction range")
+            .define("enableWeaponReach", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_SWORD_BLOCKING = BUILDER
+            .comment("Whether holding right-click with a vanilla sword raises it to soak part of a frontal hit, pre-1.9 style. Off leaves swords with no block at all")
+            .define("enableSwordBlocking", true);
+    static {
+        BUILDER.pop();
+    }
+
+    // Its own page in the config screen: a pushed section renders as a button that
+    // opens a screen showing only what is inside it.
+    static {
+        BUILDER.comment("The Gipfaeli launcher: what it fires, how hard it lands, and how far it can lock on.").push("gipfaeli");
+    }
+    // --- Gipfaeli launcher ---
+
+
+    public static final ModConfigSpec.BooleanValue ENABLE_GIPFAELI = BUILDER
+            .comment("Whether the Gipfaeli launcher fires at all. Off also takes it and its ammo out of the creative tab; both items stay registered, so a world already holding one still loads")
+            .define("enableGipfaeli", true);
+
+    public static final ModConfigSpec.BooleanValue GIPFAELI_CONSUMES_AMMO = BUILDER
+            .comment("Whether firing spends a Gipfaeli out of the inventory. Off makes the launcher fire on its own, with nothing to bake")
+            .define("gipfaeliConsumesAmmo", true);
+
+    public static final ModConfigSpec.IntValue GIPFAELI_COOLDOWN_TICKS = BUILDER
+            .comment("How many ticks must pass between shots (20 ticks = 1 second)")
+            .defineInRange("gipfaeliCooldownTicks", 30, 0, 1200);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_SPEED = BUILDER
+            .comment("How fast a launched Gipfaeli travels, in blocks per tick, at a constant speed (no acceleration)")
+            .defineInRange("gipfaeliSpeed", 1.2, 0.1, 10.0);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_DAMAGE = BUILDER
+            .comment("Damage a Gipfaeli deals to whatever it hits directly, on top of its blast")
+            .defineInRange("gipfaeliDamage", 6.0, 0.0, 100.0);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_EXPLOSION_POWER = BUILDER
+            .comment("Explosion power of a Gipfaeli on impact (TNT is 4.0); 0 turns the blast off and leaves only the direct hit")
+            .defineInRange("gipfaeliExplosionPower", 2.0, 0.0, 10.0);
+
+    public static final ModConfigSpec.BooleanValue GIPFAELI_BREAKS_BLOCKS = BUILDER
+            .comment("Whether a Gipfaeli blast breaks terrain, rather than only dealing damage and knockback")
+            .define("gipfaeliBreaksBlocks", false);
+    // --- Lock-on sight ---
+
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_LOCK_RANGE = BUILDER
+            .comment("How far away, in blocks, a player or animal can be sighted and locked on to")
+            .defineInRange("gipfaeliLockRange", 48.0, 4.0, 192.0);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_LOCK_CONE_DEGREES = BUILDER
+            .comment("How far off the centre of the view something may sit and still be sighted, in degrees. Wider is easier to lock on to a distant target with, and easier to lock on to the wrong one with")
+            .defineInRange("gipfaeliLockConeDegrees", 12.0, 1.0, 60.0);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_TURN_RATE = BUILDER
+            .comment("How sharply a Gipfaeli in flight can steer towards the target it was locked on to, in degrees per tick. Low enough and a target that breaks hard to one side can throw it off; 0 turns homing off and leaves the launcher firing straight")
+            .defineInRange("gipfaeliTurnRate", 9.0, 0.0, 90.0);
+
+    public static final ModConfigSpec.BooleanValue GIPFAELI_LOCK_NEEDS_LINE_OF_SIGHT = BUILDER
+            .comment("Whether a target has to be in plain view to be locked on to. Off lets a lock be taken through walls")
+            .define("gipfaeliLockNeedsLineOfSight", true);
+    static {
+        BUILDER.pop();
+    }
+
     static final ModConfigSpec SPEC = BUILDER.build();
+
+    // Every feature gate is read through here, so the master switch covers all of them and no caller
+    // has to remember to check it as well.
+    //
+    // The unloaded case is not defensive padding: weapon reach and sword blocking are applied while
+    // the game is still starting up, and a ModConfigSpec value throws outright rather than falling
+    // back to its default when it is read before the file has been loaded.
+    public static boolean on(ModConfigSpec.BooleanValue feature) {
+        if (!SPEC.isLoaded()) {
+            return feature.getDefault();
+        }
+
+        return MOD_ENABLED.get() && feature.get();
+    }
 
     private Config() {
     }

@@ -15,6 +15,10 @@ import ch.bbcag.combatupdate.enchantment.ModEnchantments;
 // Regularity pants go "rage" colored, Singularity pants go blue, Armageddon boots go dark red.
 public class LeatherEnchantColor {
     public static void tick(Player player) {
+        if (!Config.on(Config.ENABLE_LEATHER_ENCHANT_COLORS)) {
+            return;
+        }
+
         colorIfNeeded(player.getItemBySlot(EquipmentSlot.LEGS), Items.LEATHER_LEGGINGS, legsColor(player));
         colorIfNeeded(player.getItemBySlot(EquipmentSlot.FEET), Items.LEATHER_BOOTS, feetColor(player));
     }

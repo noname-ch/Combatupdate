@@ -41,8 +41,10 @@ public final class ElytraBoost {
             return;
         }
 
+        // Switching the feature off counts as having stopped boosting, so a player who was mid-boost
+        // when it happened is cleared out of the map rather than left in it for good.
         Map<UUID, Integer> boostTicks = clientSide ? CLIENT_BOOST_TICKS : SERVER_BOOST_TICKS;
-        if (!player.isFallFlying() || !player.isShiftKeyDown()) {
+        if (!Config.on(Config.ENABLE_BOOST) || !player.isFallFlying() || !player.isShiftKeyDown()) {
             boostTicks.remove(player.getUUID());
             return;
         }

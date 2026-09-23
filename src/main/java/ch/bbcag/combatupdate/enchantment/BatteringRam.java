@@ -176,7 +176,10 @@ public final class BatteringRam {
     // Split out so the client can also ask a bare helmet stack whether it should render flattened,
     // without needing a player to read it off of (see BatteringRamHelmetModel).
     public static int ramLevel(ItemStack helmet, Level level) {
-        if (helmet.isEmpty()) {
+        // The single gate for the whole enchantment. Everything it does is downstream of this level -
+        // the impact, the wall mixin's cancellation of vanilla's fly-into-wall damage, and the
+        // flattened helmet model - so reporting it unenchanted switches off all three at once.
+        if (helmet.isEmpty() || !Config.on(Config.ENABLE_BATTERING_RAM)) {
             return 0;
         }
 

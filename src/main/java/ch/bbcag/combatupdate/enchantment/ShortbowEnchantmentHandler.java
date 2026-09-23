@@ -23,7 +23,7 @@ public final class ShortbowEnchantmentHandler {
         ItemStack bow = event.getBow();
         Level level = event.getLevel();
 
-        if (getShortbowLevel(bow, level) <= 0) {
+        if (!Config.on(Config.ENABLE_SHORTBOW) || getShortbowLevel(bow, level) <= 0) {
             return;
         }
 

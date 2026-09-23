@@ -29,7 +29,10 @@ public final class ElytraBomb {
     }
 
     public static boolean release(Player player, ItemStack stack, Level level) {
-        if (!stack.is(Items.TNT) || !player.isFallFlying() || player.getCooldowns().isOnCooldown(stack)) {
+        if (!Config.on(Config.ENABLE_ELYTRA_BOMB)
+                || !stack.is(Items.TNT)
+                || !player.isFallFlying()
+                || player.getCooldowns().isOnCooldown(stack)) {
             return false;
         }
 

@@ -29,6 +29,10 @@ public final class WeaponReach {
     }
 
     public static void modifyDefaultComponents(ModifyDefaultComponentsEvent event) {
+        if (!Config.on(Config.ENABLE_WEAPON_REACH)) {
+            return;
+        }
+
         event.modify(Items.TRIDENT, (components, context, item) -> components.set(DataComponents.ATTACK_RANGE, reach(TRIDENT_REACH)));
 
         for (Item axe : AXES) {

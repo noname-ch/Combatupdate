@@ -95,6 +95,8 @@ public final class CombatUpdateClient {
     static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         // Renders it the same way vanilla renders a Ghast fireball: a spinning icon of its held item (the fire charge).
         event.registerEntityRenderer(CombatUpdate.COMBAT_FIREBALL.get(), context -> new ThrownItemRenderer<>(context, 3.0F, true));
+        // At its own size and lit by the world, unlike the fireball: a pastry does not glow in the dark.
+        event.registerEntityRenderer(CombatUpdate.GIPFAELI_ROCKET.get(), context -> new ThrownItemRenderer<>(context, 1.0F, false));
     }
 
     @SubscribeEvent
@@ -122,7 +124,9 @@ public final class CombatUpdateClient {
             return;
         }
 
-        if (!player.isFallFlying()) {
+        // Switching free look off mid-glide goes through stop() rather than straight out, so the
+        // orientation is let go of and the camera drops back to level instead of holding its last bank.
+        if (!Config.on(Config.ENABLE_FREE_LOOK) || !player.isFallFlying()) {
             ElytraOrientation.stop();
             return;
         }
@@ -155,7 +159,9 @@ public final class CombatUpdateClient {
         event.registerAvatarEntityModifier(new AvatarRenderStateModifier() {
             @Override
             public <T extends Avatar & ClientAvatarEntity> void accept(T avatar, AvatarRenderState renderState) {
-                boolean banking = avatar == Minecraft.getInstance().player && avatar.isFallFlying();
+                boolean banking = Config.on(Config.ENABLE_FREE_LOOK)
+                        && avatar == Minecraft.getInstance().player
+                        && avatar.isFallFlying();
                 renderState.setRenderData(ElytraOrientation.RENDER_ROLL, banking ? ElytraOrientation.roll() : null);
                 if (!banking) {
                     return;

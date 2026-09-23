@@ -47,7 +47,7 @@ public final class DamageNumbers {
     }
 
     public static void spawn(LivingEntity victim, float amount) {
-        if (!Config.DAMAGE_NUMBERS.get() || amount < Config.DAMAGE_NUMBER_MINIMUM.getAsDouble()) {
+        if (!Config.on(Config.DAMAGE_NUMBERS) || amount < Config.DAMAGE_NUMBER_MINIMUM.getAsDouble()) {
             return;
         }
 

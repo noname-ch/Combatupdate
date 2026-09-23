@@ -50,6 +50,7 @@ import ch.bbcag.combatupdate.combat.LeatherEnchantColor;
 import ch.bbcag.combatupdate.enchantment.BatteringRam;
 import ch.bbcag.combatupdate.enchantment.ShortbowEnchantmentHandler;
 import ch.bbcag.combatupdate.entity.CombatFireball;
+import ch.bbcag.combatupdate.entity.GipfaeliRocket;
 import ch.bbcag.combatupdate.mixin.PrimedTntAccessor;
 
 //i want to push this shit asap
@@ -78,6 +79,17 @@ public final class CombatUpdate {
                     .updateInterval(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "combat_fireball"))));
 
+    // The pastry the launcher throws; see GipfaeliRocket for what it does on arrival
+    public static final DeferredHolder<EntityType<?>, EntityType<GipfaeliRocket>> GIPFAELI_ROCKET = ENTITY_TYPES.register("gipfaeli_rocket",
+            () -> EntityType.Builder.<GipfaeliRocket>of(GipfaeliRocket::new, MobCategory.MISC)
+                    .noLootTable()
+                    .sized(0.5F, 0.5F)
+                    .clientTrackingRange(8)
+                    // Tighter than the fireball's 10, because this one can turn: the client has to be
+                    // told where it actually went rather than left extrapolating a straight line.
+                    .updateInterval(2)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "gipfaeli_rocket"))));
+
     // Creates a new Block with the id "combatupdate:example_block", combining the namespace and path
     public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", p -> p.mapColor(MapColor.STONE));
     // Creates a new BlockItem with the id "combatupdate:example_block", combining the namespace and path
@@ -92,6 +104,14 @@ public final class CombatUpdate {
             p -> Shortsword.properties(p, ToolMaterial.IRON));
     public static final DeferredItem<Item> DIAMOND_SHORTSWORD = ITEMS.registerSimpleItem("diamond_shortsword",
             p -> Shortsword.properties(p, ToolMaterial.DIAMOND));
+
+    // The launcher's ammunition, and a decent breakfast in its own right.
+    public static final DeferredItem<Item> GIPFAELI = ITEMS.registerSimpleItem("gipfaeli",
+            p -> p.food(new FoodProperties.Builder().nutrition(5).saturationModifier(0.6F).build()));
+
+    // Fires the above; see GipfaeliLauncher for the sight and the trigger.
+    public static final DeferredItem<Item> GIPFAELI_LAUNCHER = ITEMS.registerSimpleItem("gipfaeli_launcher",
+            p -> p.stacksTo(1));
 
     // Creates a creative tab with the id "combatupdate:example_tab" for the example item, that is placed after the combat tab
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
@@ -118,6 +138,7 @@ public final class CombatUpdate {
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.register(ShortbowEnchantmentHandler.class);
         NeoForge.EVENT_BUS.register(CombatEnchantmentHandler.class);
+        NeoForge.EVENT_BUS.register(GipfaeliLock.class);
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
@@ -140,6 +161,15 @@ public final class CombatUpdate {
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
             event.accept(IRON_SHORTSWORD);
             event.accept(DIAMOND_SHORTSWORD);
+            // Kept out of the tab while the feature is off, so nobody is handed a launcher that will
+            // not fire. The items stay registered either way - pulling them out of the registry would
+            // strip them from any world that already had one.
+            if (Config.on(Config.ENABLE_GIPFAELI)) {
+                event.accept(GIPFAELI_LAUNCHER);
+            }
+        }
+        if (event.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS && Config.on(Config.ENABLE_GIPFAELI)) {
+            event.accept(GIPFAELI);
         }
     }
 
@@ -148,7 +178,18 @@ public final class CombatUpdate {
         Player player = event.getEntity();
         ItemStack stack = event.getItemStack();
         if (throwFireballIfHeld(player, stack, event.getLevel())
-                || ElytraBomb.release(player, stack, event.getLevel())) {
+                || ElytraBomb.release(player, stack, event.getLevel())
+                || GipfaeliLauncher.use(player, stack, event.getLevel())) {
+            event.setCanceled(true);
+            event.setCancellationResult(InteractionResult.SUCCESS);
+        }
+    }
+
+    // Sighting something means right-clicking while pointing at it, which is the one case the two
+    // events above never see: a click that lands on an entity arrives here instead.
+    @SubscribeEvent
+    public void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
+        if (GipfaeliLauncher.use(event.getEntity(), event.getItemStack(), event.getLevel())) {
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.SUCCESS);
         }
@@ -161,14 +202,17 @@ public final class CombatUpdate {
         Player player = event.getEntity();
         ItemStack stack = event.getItemStack();
         if (throwFireballIfHeld(player, stack, event.getLevel())
-                || ElytraBomb.release(player, stack, event.getLevel())) {
+                || ElytraBomb.release(player, stack, event.getLevel())
+                || GipfaeliLauncher.use(player, stack, event.getLevel())) {
             event.setCanceled(true);
             event.setCancellationResult(InteractionResult.SUCCESS);
         }
     }
 
     private boolean throwFireballIfHeld(Player player, ItemStack stack, Level level) {
-        if (!stack.is(Items.FIRE_CHARGE) || player.getCooldowns().isOnCooldown(stack)) {
+        if (!Config.on(Config.ENABLE_FIREBALL)
+                || !stack.is(Items.FIRE_CHARGE)
+                || player.getCooldowns().isOnCooldown(stack)) {
             return false;
         }
 
@@ -192,6 +236,10 @@ public final class CombatUpdate {
     // so this overwrites it (via PrimedTntAccessor) as soon as the entity joins the level.
     @SubscribeEvent
     public void onEntityJoinLevel(EntityJoinLevelEvent event) {
+        if (!Config.on(Config.ENABLE_TNT_TUNING)) {
+            return;
+        }
+
         if (!event.getLevel().isClientSide() && event.getEntity() instanceof PrimedTnt tnt) {
             ((PrimedTntAccessor) tnt).setExplosionPower((float) Config.TNT_BLAST_RADIUS.getAsDouble());
         }
@@ -202,6 +250,7 @@ public final class CombatUpdate {
         ElytraBoost.tick(event.getEntity());
         BatteringRam.tick(event.getEntity());
         LeatherEnchantColor.tick(event.getEntity());
+        GipfaeliLock.tick(event.getEntity());
     }
 
     // Post rather than Pre: by then the hit has been through armour, resistance and absorption, so

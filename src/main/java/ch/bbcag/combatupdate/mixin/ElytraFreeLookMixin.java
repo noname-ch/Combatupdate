@@ -5,6 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import ch.bbcag.combatupdate.Config;
 import ch.bbcag.combatupdate.client.ElytraOrientation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
@@ -24,7 +25,10 @@ public abstract class ElytraFreeLookMixin {
     private void combatupdate$freeLookWhileGliding(double xo, double yo, CallbackInfo ci) {
         Entity self = (Entity) (Object) this;
 
-        if (self != Minecraft.getInstance().player || !(self instanceof LivingEntity living) || !living.isFallFlying()) {
+        if (!Config.on(Config.ENABLE_FREE_LOOK)
+                || self != Minecraft.getInstance().player
+                || !(self instanceof LivingEntity living)
+                || !living.isFallFlying()) {
             return;
         }
 
