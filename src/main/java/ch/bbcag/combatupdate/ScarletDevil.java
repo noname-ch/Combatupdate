@@ -1,7 +1,9 @@
 package ch.bbcag.combatupdate;
 
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -44,6 +46,9 @@ public final class ScarletDevil extends Item {
     // How close to the head the spear leaves the hand, in blocks along the look direction.
     private static final double RELEASE_OFFSET = 0.8;
 
+    // How far out the red light the spear draws in while it charges starts from, in blocks.
+    private static final double CHARGE_REACH = 1.8;
+
     public ScarletDevil(Item.Properties properties) {
         super(properties);
     }
@@ -83,17 +88,42 @@ public final class ScarletDevil extends Item {
         return InteractionResult.CONSUME;
     }
 
-    // The chime that says a Gungnir is ready, on the one tick the hold crosses the line.
+    // While it charges, red light is drawn in to the spear, faster the nearer it is to a Gungnir. The
+    // tick the hold crosses the line it chimes and flares; after that it keeps a pulsing halo, so
+    // there is no doubt what is about to be thrown.
     @Override
     public void onUseTick(Level level, LivingEntity user, ItemStack stack, int ticksRemaining) {
-        if (level instanceof ServerLevel serverLevel
-                && Config.on(Config.ENABLE_SCARLET_DEVIL)
-                && heldFor(stack, user, ticksRemaining) == Config.GUNGNIR_CHARGE_TICKS.getAsInt()) {
+        if (!(level instanceof ServerLevel serverLevel) || !Config.on(Config.ENABLE_SCARLET_DEVIL)) {
+            return;
+        }
+
+        int held = heldFor(stack, user, ticksRemaining);
+        int charge = Config.GUNGNIR_CHARGE_TICKS.getAsInt();
+        Vec3 look = user.getLookAngle();
+        Vec3 tip = user.getEyePosition().add(look.scale(RELEASE_OFFSET));
+        if (held == charge) {
             serverLevel.playSound(null, user.getX(), user.getY(), user.getZ(),
                     SoundEvents.TRIDENT_RETURN, SoundSource.PLAYERS, 1.0F, 0.6F);
-            Vec3 hand = user.getEyePosition().add(user.getLookAngle().scale(RELEASE_OFFSET));
+            serverLevel.playSound(null, user.getX(), user.getY(), user.getZ(),
+                    SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundSource.PLAYERS, 0.8F, 1.3F);
             serverLevel.sendParticles(new DustParticleOptions(ScarletSpear.SCARLET, 1.5F),
-                    hand.x, hand.y, hand.z, 20, 0.3, 0.3, 0.3, 0.0);
+                    tip.x, tip.y, tip.z, 20, 0.3, 0.3, 0.3, 0.0);
+            ParticleStreaks.ring(serverLevel, tip, look, 1.6, 20, 5, ParticleStreaks.solid(ScarletSpear.SCARLET));
+        } else if (held < charge) {
+            if (held % 2 == 0) {
+                int streaks = 1 + 3 * held / charge;
+                for (int i = 0; i < streaks; i++) {
+                    Vec3 out = new Vec3(user.getRandom().nextGaussian(), user.getRandom().nextGaussian(),
+                            user.getRandom().nextGaussian());
+                    if (out.lengthSqr() > 1.0E-6) {
+                        ParticleStreaks.send(serverLevel, tip.add(out.normalize().scale(CHARGE_REACH)), tip,
+                                ScarletSpear.SCARLET, 6);
+                    }
+                }
+            }
+        } else if ((held - charge) % 6 == 0) {
+            ParticleStreaks.ring(serverLevel, tip, look, 0.7, 12, 4, ParticleStreaks.solid(ScarletSpear.SCARLET));
+            serverLevel.sendParticles(ParticleTypes.CRIMSON_SPORE, tip.x, tip.y, tip.z, 3, 0.2, 0.2, 0.2, 0.0);
         }
     }
 
@@ -117,7 +147,12 @@ public final class ScarletDevil extends Item {
 
             serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.0F, gungnir ? 0.6F : 1.1F);
+            // A ring of red thrown off square to the throw, like the air parting in front of it.
+            ParticleStreaks.ring(serverLevel, from, look, gungnir ? 2.5 : 1.2, gungnir ? 24 : 12, 5,
+                    ParticleStreaks.solid(ScarletSpear.SCARLET));
             if (gungnir) {
+                serverLevel.sendParticles(ColorParticleOption.create(ParticleTypes.FLASH, ScarletSpear.SCARLET),
+                        from.x, from.y, from.z, 1, 0.0, 0.0, 0.0, 0.0);
                 serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 0.6F, 1.4F);
             }

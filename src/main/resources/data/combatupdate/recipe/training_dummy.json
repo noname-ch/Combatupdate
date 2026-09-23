@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "H": "minecraft:hay_block",
+    "S": "minecraft:stick",
+    "T": "minecraft:target"
+  },
+  "pattern": [
+    " H ",
+    "STS",
+    " S "
+  ],
+  "result": {
+    "id": "combatupdate:training_dummy"
+  }
+}

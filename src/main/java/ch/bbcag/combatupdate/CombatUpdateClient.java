@@ -51,6 +51,7 @@ import ch.bbcag.combatupdate.client.GipfaeliSoldierRenderer;
 import ch.bbcag.combatupdate.client.ScarletSpearRenderer;
 import ch.bbcag.combatupdate.client.ShortbowPullProperty;
 import ch.bbcag.combatupdate.client.TerritoryClient;
+import ch.bbcag.combatupdate.client.TrainingDummyRenderer;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 
@@ -158,6 +159,10 @@ public final class CombatUpdateClient {
                     .withStyle(ChatFormatting.DARK_GRAY));
             event.getToolTip().add(Component.translatable("item.combatupdate.exoblade.dash")
                     .withStyle(ChatFormatting.DARK_GRAY));
+            event.getToolTip().add(Component.translatable("item.combatupdate.exoblade.slash")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            event.getToolTip().add(Component.translatable("item.combatupdate.exoblade.big_slash")
+                    .withStyle(ChatFormatting.DARK_GRAY));
         }
 
         // It looks like a trident, so it has to say it is not one: nothing leaves the hand for good.
@@ -165,6 +170,14 @@ public final class CombatUpdateClient {
             event.getToolTip().add(Component.translatable("item.combatupdate.scarlet_devil.throw")
                     .withStyle(ChatFormatting.DARK_GRAY));
             event.getToolTip().add(Component.translatable("item.combatupdate.scarlet_devil.gungnir")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        // Nothing about a dummy says how to get it back, or that it will wear armour.
+        if (stack.is(CombatUpdate.TRAINING_DUMMY_ITEM.get())) {
+            event.getToolTip().add(Component.translatable("item.combatupdate.training_dummy.desc")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            event.getToolTip().add(Component.translatable("item.combatupdate.training_dummy.use")
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
 
@@ -235,6 +248,7 @@ public final class CombatUpdateClient {
         event.registerEntityRenderer(CombatUpdate.SCARLET_SPEAR.get(), ScarletSpearRenderer::new);
         // Like the Exobeam, a bullet is nothing but its trail (see ScarletBullet#trail).
         event.registerEntityRenderer(CombatUpdate.SCARLET_BULLET.get(), NoopRenderer::new);
+        event.registerEntityRenderer(CombatUpdate.TRAINING_DUMMY.get(), TrainingDummyRenderer::new);
     }
 
     @SubscribeEvent

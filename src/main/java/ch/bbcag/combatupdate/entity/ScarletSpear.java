@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
+import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -33,6 +34,7 @@ import net.minecraft.world.phys.Vec3;
 
 import ch.bbcag.combatupdate.CombatUpdate;
 import ch.bbcag.combatupdate.Config;
+import ch.bbcag.combatupdate.ParticleStreaks;
 
 // The spear the Scarlet Devil throws: a streak of red light, much faster than a trident and dead
 // straight, that runs through everything in its way.
@@ -47,6 +49,9 @@ import ch.bbcag.combatupdate.Config;
 public final class ScarletSpear extends AbstractHurtingProjectile {
     // The one red the spear, its bullets and its blasts are all drawn in.
     public static final int SCARLET = 0xE0142E;
+
+    // A paler red for the strands wound round the spear's streak.
+    private static final int SPIRAL = 0xFF7080;
 
     private static final EntityDataAccessor<Boolean> DATA_GUNGNIR =
             SynchedEntityData.defineId(ScarletSpear.class, EntityDataSerializers.BOOLEAN);
@@ -186,6 +191,24 @@ public final class ScarletSpear extends AbstractHurtingProjectile {
             this.level().addParticle(dust, at.x, at.y, at.z, 0.0, 0.0, 0.0);
         }
 
+        // A paler strand wound round the streak - two for a Gungnir, wider - so it reads as a spear
+        // spinning through the air rather than a line drawn on it.
+        if (step.lengthSqr() > EPSILON) {
+            Vec3 a = ParticleStreaks.perpendicular(step);
+            Vec3 b = step.normalize().cross(a);
+            int strands = gungnir ? 2 : 1;
+            double radius = gungnir ? 0.6 : 0.3;
+            ParticleOptions strand = new DustParticleOptions(SPIRAL, gungnir ? 1.2F : 0.8F);
+            for (int i = 0; i < points; i++) {
+                Vec3 at = from.add(step.scale(i / (double) points));
+                for (int s = 0; s < strands; s++) {
+                    double angle = (this.tickCount * points + i) * 0.6 + s * Math.PI;
+                    Vec3 around = at.add(a.scale(Math.cos(angle) * radius)).add(b.scale(Math.sin(angle) * radius));
+                    this.level().addParticle(strand, around.x, around.y, around.z, 0.0, 0.0, 0.0);
+                }
+            }
+        }
+
         if (gungnir || this.tickCount % 2 == 0) {
             this.level().addParticle(ParticleTypes.CRIMSON_SPORE, this.getX(), this.getY(), this.getZ(), 0.0, 0.0, 0.0);
         }
@@ -209,6 +232,8 @@ public final class ScarletSpear extends AbstractHurtingProjectile {
                 EnchantmentHelper.doPostAttackEffects(serverLevel, target, damageSource);
                 if (this.isGungnir() && owner != null && target instanceof LivingEntity) {
                     owner.heal((float) Config.GUNGNIR_HEAL.getAsDouble());
+                    serverLevel.sendParticles(ParticleTypes.HEART, owner.getX(), owner.getY() + owner.getBbHeight() + 0.3,
+                            owner.getZ(), 2, 0.3, 0.1, 0.3, 0.0);
                 }
             }
         }
@@ -250,6 +275,14 @@ public final class ScarletSpear extends AbstractHurtingProjectile {
         level.sendParticles(new DustParticleOptions(SCARLET, 2.0F), at.x, at.y, at.z, count, spread, spread, spread, 0.0);
         level.sendParticles(ParticleTypes.CRIMSON_SPORE, at.x, at.y, at.z, count / 2, spread, spread, spread, 0.05);
         level.sendParticles(ParticleTypes.EXPLOSION, at.x, at.y, at.z, 1, 0.0, 0.0, 0.0, 0.0);
+        // A shockwave that runs out along the ground to the edge of the blast, so its reach can be seen.
+        if (radius > 0.0) {
+            ParticleStreaks.ring(level, at, new Vec3(0.0, 1.0, 0.0), radius, (int) Math.clamp(radius * 6, 16, 40), 6,
+                    ParticleStreaks.solid(SCARLET));
+        }
+        if (this.isGungnir()) {
+            level.sendParticles(ColorParticleOption.create(ParticleTypes.FLASH, SCARLET), at.x, at.y, at.z, 1, 0.0, 0.0, 0.0, 0.0);
+        }
         level.playSound(null, at.x, at.y, at.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS,
                 this.isGungnir() ? 1.2F : 0.7F, this.isGungnir() ? 1.0F : 1.5F);
     }

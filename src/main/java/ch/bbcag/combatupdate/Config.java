@@ -79,6 +79,10 @@ public final class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_SCARLET_DEVIL = BUILDER
             .comment("Whether the Scarlet Devil can be thrown. Off leaves it a spear that only stabs and takes it out of the creative tab; the item stays registered, so a world already holding one still loads")
             .define("enableScarletDevil", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_TRAINING_DUMMY = BUILDER
+            .comment("Whether a training dummy can be set down. Off also takes it out of the creative tab; dummies already standing stay where they are, and the item stays registered, so a world already holding one still loads")
+            .define("enableTrainingDummy", true);
     // --- Enchantments ---
 
 
@@ -360,6 +364,10 @@ public final class Config {
     public static final ModConfigSpec.DoubleValue EXOBEAM_HOMING_RANGE = BUILDER
             .comment("How far, in blocks, an Exobeam looks for a monster or player to bend towards. 0 makes every beam fly straight")
             .defineInRange("exobeamHomingRange", 16.0, 0.0, 64.0);
+
+    public static final ModConfigSpec.DoubleValue EXOBEAM_SLASH_DAMAGE = BUILDER
+            .comment("How much damage each of the three Exo slashes that follow an Exobeam hit deals. 0 turns the slashes off")
+            .defineInRange("exobeamSlashDamage", 3.0, 0.0, 100.0);
     // --- Lunge (right-click) ---
 
 
@@ -374,6 +382,16 @@ public final class Config {
     public static final ModConfigSpec.IntValue EXOBLADE_DASH_COOLDOWN_TICKS = BUILDER
             .comment("How many ticks must pass between one lunge and the next (20 ticks = 1 second)")
             .defineInRange("exobladeDashCooldownTicks", 40, 0, 1200);
+    // --- Big slash (the first swing after a lunge lands) ---
+
+
+    public static final ModConfigSpec.DoubleValue EXOBLADE_BIG_SLASH_DAMAGE = BUILDER
+            .comment("How much damage the big slash deals to every monster and player in the arc in front of you. It also throws three Exobeams")
+            .defineInRange("exobladeBigSlashDamage", 24.0, 0.0, 200.0);
+
+    public static final ModConfigSpec.IntValue EXOBLADE_BIG_SLASH_WINDOW_TICKS = BUILDER
+            .comment("How many ticks after a lunge lands the next swing stays a big slash (20 ticks = 1 second). 0 turns the big slash off")
+            .defineInRange("exobladeBigSlashWindowTicks", 40, 0, 400);
     static {
         BUILDER.pop();
     }
