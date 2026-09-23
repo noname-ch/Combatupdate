@@ -22,6 +22,7 @@
   --gold-soft:#E9B45C;
   --tnt:#B3261E;
   --ham:#D9827F;
+  --straw:#7A6610;
   --on-gold:#FFF8EC;
   --hatch:rgba(26,29,33,.06);
   --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
@@ -34,13 +35,13 @@
   :root:not([data-theme="light"]){
     color-scheme:dark;
     --ground:#121519;--surface:#1B1F24;--sunk:#0C0E11;--ink:#ECEEF0;--muted:#9CA4AE;--line:#2C323A;
-    --gold:#E8A548;--gold-soft:#8A5A1C;--tnt:#EF5A4C;--ham:#E8A3A0;--on-gold:#1A1206;--hatch:rgba(236,238,240,.05);
+    --gold:#E8A548;--gold-soft:#8A5A1C;--tnt:#EF5A4C;--ham:#E8A3A0;--straw:#D9C25B;--on-gold:#1A1206;--hatch:rgba(236,238,240,.05);
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
   --ground:#121519;--surface:#1B1F24;--sunk:#0C0E11;--ink:#ECEEF0;--muted:#9CA4AE;--line:#2C323A;
-  --gold:#E8A548;--gold-soft:#8A5A1C;--tnt:#EF5A4C;--ham:#E8A3A0;--on-gold:#1A1206;--hatch:rgba(236,238,240,.05);
+  --gold:#E8A548;--gold-soft:#8A5A1C;--tnt:#EF5A4C;--ham:#E8A3A0;--straw:#D9C25B;--on-gold:#1A1206;--hatch:rgba(236,238,240,.05);
 }
 
 *{box-sizing:border-box}
@@ -122,6 +123,21 @@ thead th{font-family:var(--display);text-transform:uppercase;font-weight:800;fon
 td.n{font-family:var(--pixel);font-size:1.25rem;font-variant-numeric:tabular-nums}
 td.n.hl{color:var(--gold)}
 
+/* ---------- commands ---------- */
+.cmds{margin-top:40px}
+.cmds>summary{list-style:none;width:max-content;max-width:100%}
+.cmds>summary::-webkit-details-marker{display:none}
+.cmds>summary::before{content:"▸";font-family:var(--pixel)}
+.cmds[open]>summary::before{content:"▾"}
+.cmds .opened,.cmds[open] .closed{display:none}
+.cmds[open] .opened{display:inline}
+.cmds-body{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr));gap:36px 40px;margin-top:28px}
+.cmd-group h3{font-size:1.5rem}
+.cmd-group>p{color:var(--muted);font-size:.92rem;margin:2px 0 10px}
+.cmd-group td:first-child{width:52%}
+.cmd-group code{white-space:normal;background:transparent;padding:0;color:var(--gold)}
+.cmd-group code i{font-style:normal;color:var(--muted)}
+
 /* ---------- crafting ---------- */
 .recipes{display:flex;flex-wrap:wrap;gap:28px 36px;margin-top:40px;padding:24px;background:var(--sunk)}
 .recipes>h3{flex-basis:100%;font-size:1.3rem}
@@ -182,6 +198,16 @@ kbd{font-family:var(--pixel);font-size:1.1rem;line-height:1;padding:0 .35em;bord
 /* ---------- obelisk ---------- */
 .obelisk{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(24px,4vw,48px);align-items:center;margin-top:56px;padding:clamp(20px,3vw,36px);background:var(--surface);border:2px solid var(--ham)}
 .obelisk .cube{--s:120px}
+.dummy{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(24px,4vw,48px);align-items:center;margin-top:56px;padding:clamp(20px,3vw,36px);background:var(--surface);border:2px solid var(--straw)}
+.dummy .dmg{height:300px;border:2px solid var(--straw);padding-bottom:24px}
+.dummy .dmg img{width:176px;height:176px;transform-origin:50% 100%}
+.dummy .dmg img.hit{animation:wobble .6s ease-out}
+@keyframes wobble{0%{transform:rotate(0)}20%{transform:rotate(-9deg)}45%{transform:rotate(6deg)}70%{transform:rotate(-3deg)}100%{transform:rotate(0)}}
+@media (prefers-reduced-motion:reduce){.dummy .dmg img.hit{animation:none}}
+.rules{display:grid;gap:12px;margin:0}
+.rules>div{border-left:4px solid var(--straw);padding:2px 0 2px 14px}
+.rules dt{font-family:var(--display);font-weight:700;font-size:1.35rem;text-transform:uppercase;letter-spacing:.02em;line-height:1.2}
+.rules dd{margin:2px 0 0;color:var(--muted);font-size:.95rem}
 .obelisk .cube-stage{height:230px}
 .mc-tip{font-family:var(--pixel);font-size:1.2rem;line-height:1.08;background:rgba(16,0,16,.96);color:#8C8C8C;padding:10px 12px;border:2px solid;border-image:linear-gradient(#5000FF,#28007F) 1;box-shadow:0 0 0 2px #100010;max-width:100%;overflow-x:auto}
 .mc-tip .t{color:#fff;font-size:1.3rem;margin-bottom:4px}
@@ -212,7 +238,7 @@ code{font-family:var(--pixel);font-size:1.15em;background:var(--sunk);padding:.0
 footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);display:flex;flex-wrap:wrap;gap:12px 32px;justify-content:space-between;font-size:.88rem;color:var(--muted)}
 
 @media (max-width:820px){
-  .hero,.split,.obelisk{grid-template-columns:minmax(0,1fr)}
+  .hero,.split,.obelisk,.dummy{grid-template-columns:minmax(0,1fr)}
   .hero-art{margin-top:8px}
   .hero-art .launcher{right:-4px;top:-12%;width:96px}
   .formations{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -661,32 +687,33 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
   <div class="split" style="margin-top:0">
     <div>
       <h3>Damage numbers</h3>
-      <p style="margin:8px 0 16px;color:var(--muted)">Every hit you land floats its number up beside whatever you hit. Every player nearby sees it, and nothing extra is needed on the client.</p>
+      <p style="margin:8px 0 16px;color:var(--muted)">Every hit you land floats its number up beside whatever you hit. Every player nearby sees it, and nothing extra is needed on the client. Want to read them in peace? That's what the dummy below is for.</p>
+    </div>
+    <figure class="shot" data-shot="damage-numbers">
+      <div class="frame"><div class="ph"><span class="tag">screenshot · damage-numbers</span><p>Mid-fight with a sword against 2–3 mobs, or a training dummy taking hits, several damage numbers hanging in the air.</p></div></div>
+    </figure>
+  </div>
+
+  <div class="dummy">
+    <div>
       <button class="dmg" id="dmg" type="button" aria-label="Hit the training dummy to see a damage number">
         <span class="hint">click to hit</span>
         <img class="px" src="img/mod/training_dummy.png" alt="">
       </button>
-    </div>
-    <figure class="shot" data-shot="damage-numbers">
-      <div class="frame"><div class="ph"><span class="tag">screenshot · damage-numbers</span><p>Mid-fight with a sword against 2–3 mobs, several damage numbers hanging in the air.</p></div></div>
-    </figure>
-  </div>
-
-  <div class="split">
-    <figure class="shot" data-shot="training-dummy">
-      <div class="frame"><div class="ph"><span class="tag">screenshot · training-dummy</span><p>A row of training dummies in different armour, one mid-wobble with a damage number floating off it.</p></div></div>
-    </figure>
-    <div>
-      <div class="feat" style="margin-bottom:20px">
-        <img class="px" src="img/mod/training_dummy.png" alt="">
-        <h3>Training dummy</h3>
-        <p>A sack of straw on a post, for trying a weapon out on. Every hit goes through armour, enchantments and all, exactly as it would on a mob, then its health is put back, so the damage number shows what that hit really did. It never dies and never moves: not for knockback, explosions, the Battering Ram or the Exoblade's lunge. It counts as a monster, so homing weapons and the army go after it, but iron golems leave it alone.</p>
-        <p style="margin-top:8px">Right-click it with armour to dress it and try the same weapon against a different suit. <kbd>Sneak</kbd> + right-click with an empty hand picks it back up, armour and all.</p>
-        <div class="chips"><span class="chip">Stacks <b>16</b></span><span class="chip">Removed by <b>/kill</b></span></div>
-      </div>
-      <div class="recipes" style="margin-top:0">
+      <div class="recipes" style="margin-top:12px;justify-content:center;background:transparent;padding:0">
         <div class="recipe-wrap"><span class="recipe" data-recipe="training_dummy"></span></div>
       </div>
+    </div>
+    <div>
+      <div class="eyebrow" style="color:var(--straw)">Placeable · stacks to 16</div>
+      <h3 style="font-size:clamp(2.4rem,5vw,3.6rem);margin:4px 0 12px">Training Dummy</h3>
+      <p style="margin-bottom:18px">A sack of straw on a post, arms out like a scarecrow. Set it down, try a weapon on it, and read what every hit did off the damage numbers. Hit it and it wobbles on its post the way an armour stand does.</p>
+      <dl class="rules">
+        <div><dt>Never dies</dt><dd>Every hit goes through armour, enchantments and damage events exactly as it would on a mob. Only then is its health put back, so the number you see is what that hit really did. Only <code>/kill</code> and the void remove it.</dd></div>
+        <div><dt>Never moves</dt><dd>Not for knockback, explosions, water, the Battering Ram or the Exoblade's lunge. It can still fall, so it never hangs in the air over a mined-out block.</dd></div>
+        <div><dt>Counts as a monster</dt><dd>So Exobeams, Scarlet bullets, the launcher's lock and the army's target menu all go after it. Iron golems are kept off it, so one in a village isn't punched forever.</dd></div>
+        <div><dt>Dress it</dt><dd>Right-click it with armour to put that piece on, and get back whatever it replaced. Try the same weapon against leather, then netherite. <kbd>Sneak</kbd> + right-click with an empty hand picks it up, armour and all.</dd></div>
+      </dl>
     </div>
   </div>
 
@@ -760,6 +787,108 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
       </table>
     </div>
   </div>
+
+  <details class="cmds">
+    <summary class="btn"><span class="closed">Show all commands</span><span class="opened">Hide commands</span></summary>
+    <div class="cmds-body">
+      <div class="cmd-group">
+        <h3>Army</h3>
+        <p>Anyone with a flag. Typed with no order, it opens the army menu.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Command</th><th>Does</th></tr></thead>
+          <tbody>
+            <tr><td><code>/gipfaeliarmy</code></td><td>Open the army menu: orders, formations, colours, targets</td></tr>
+            <tr><td><code>/gipfaeliarmy menu · targets</code></td><td>The same menu</td></tr>
+            <tr><td><code>/gipfaeliarmy status</code></td><td>How many soldiers you have and what they're doing, in chat</td></tr>
+            <tr><td><code>/gipfaeliarmy raise</code></td><td>Raise a new squad: its commander appears (what the flag does)</td></tr>
+            <tr><td><code>/gipfaeliarmy manual</code></td><td>Put a copy of the field manual in your pack</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="cmd-group">
+        <h3>Orders</h3>
+        <p>Each of these works on the whole army after <code>/gipfaeliarmy</code> or <code>/soldats</code>, or on one squad after <code>/gipfaeliarmy squad <i>&lt;squad&gt;</i></code> or <code>/soldats-<i>&lt;colour&gt;</i></code>.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Command</th><th>Does</th></tr></thead>
+          <tbody>
+            <tr><td><code>follow</code></td><td>Break off and fall back in</td></tr>
+            <tr><td><code>hold</code></td><td>Stay put, and still shoot whatever comes at them</td></tr>
+            <tr><td><code>standdown</code></td><td>Stop shooting and stay where they were put</td></tr>
+            <tr><td><code>dismiss</code></td><td>Send them home; kit and armour come back to you</td></tr>
+            <tr><td><code>attack <i>&lt;player&gt;</i></code></td><td>Send them after a player</td></tr>
+            <tr><td><code>attacksighted</code></td><td>Attack whatever is under your crosshair, out to the launcher's sighting range</td></tr>
+            <tr><td><code>stance attack · stand · standfollow</code></td><td>Back into the field, on parade here, or on parade marching after you</td></tr>
+            <tr><td><code>formation <i>&lt;shape&gt;</i></code></td><td>loose · line · wedge · column · circle · parade</td></tr>
+            <tr><td><code>colour <i>&lt;colour&gt;</i></code></td><td>Repaint them: any of the 16 dye colours, or camo</td></tr>
+            <tr><td><code>kit <i>&lt;role&gt;</i></code></td><td>Hand each one a kit from your pack: rifleman · assault · marksman · bomber · panzer · marcher</td></tr>
+            <tr><td><code>armour <i>&lt;armour&gt;</i></code></td><td>Dress them from your pack: leather · chainmail · iron · golden · diamond · netherite</td></tr>
+            <tr><td><code>disarm · strip</code></td><td>Take their kit, or their armour, back</td></tr>
+            <tr><td><code>fill <i>&lt;count&gt;</i></code></td><td>Fill the squad with unarmed recruits, 2 Gipfäli each</td></tr>
+            <tr><td><code>enlist <i>[role]</i></code></td><td>Sign on one recruit, unarmed, or with that role's kit from your pack</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="cmd-group">
+        <h3>Squads</h3>
+        <p>A squad is named by its colour: <code>all</code>, <code>camo</code> (the reserve), or a dye colour like <code>red</code> or <code>light_blue</code>.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Command</th><th>Does</th></tr></thead>
+          <tbody>
+            <tr><td><code>/gipfaeliarmy squad <i>&lt;squad&gt;</i></code></td><td>Open that squad's menu, or add an order after it</td></tr>
+            <tr><td><code>/soldats <i>[order]</i></code></td><td>Short for <code>/gipfaeliarmy</code>, for the whole army</td></tr>
+            <tr><td><code>/soldats-<i>&lt;colour&gt;</i> <i>[order]</i></code></td><td>Short form for one squad: <code>/soldats-red hold</code></td></tr>
+            <tr><td><code>/soldats-camo <i>[order]</i></code></td><td>Short form for the reserve</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="cmd-group">
+        <h3>Soldiers &amp; guard posts</h3>
+        <p>What the buttons in a soldier's menu and a post's menu run. A soldier is named by its UUID and a post by its position, so these are easier clicked than typed.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Command</th><th>Does</th></tr></thead>
+          <tbody>
+            <tr><td><code>/gipfaeliarmy soldier <i>&lt;uuid&gt;</i></code></td><td>Open that soldier's menu</td></tr>
+            <tr><td><code>… kit <i>&lt;role&gt;</i> · armour <i>&lt;armour&gt;</i> · colour <i>&lt;colour&gt;</i></code></td><td>Arm, dress or repaint that one soldier</td></tr>
+            <tr><td><code>… disarm · strip</code></td><td>Take its kit or its armour back</td></tr>
+            <tr><td><code>… promote · demote</code></td><td>Make it its squad's commander, or put it back in the ranks</td></tr>
+            <tr><td><code>… post <i>&lt;number&gt;</i></code></td><td>Send it to guard post number N to walk a beat</td></tr>
+            <tr><td><code>/gipfaeliarmy post <i>&lt;x y z&gt;</i></code></td><td>Open that guard post's menu</td></tr>
+            <tr><td><code>… station <i>&lt;count&gt;</i></code></td><td>Station 1–64 of your soldiers there</td></tr>
+            <tr><td><code>… recall</code></td><td>Every guard there falls back in with you</td></tr>
+            <tr><td><code>… mode defend · aggressive · passive</code></td><td>Monsters only; strangers too; or only what hits them</td></tr>
+            <tr><td><code>… radius <i>&lt;blocks&gt;</i></code></td><td>How far out they watch, 1–64</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="cmd-group">
+        <h3>Operators only</h3>
+        <p>Need operator rights (permission level 2).</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Command</th><th>Does</th></tr></thead>
+          <tbody>
+            <tr><td><code>/gipfaeliarmy recruit <i>&lt;role&gt;</i> <i>[count]</i></code></td><td>Up to 16 armed soldiers out of nothing, free</td></tr>
+            <tr><td><code>/gipfaeliarmy parade <i>&lt;role&gt;</i> <i>[count]</i> <i>[ahead · behind]</i></code></td><td>A parade ground out of nothing: one block of 40 by default, past the army limit</td></tr>
+            <tr><td><code>/gipfaeliarmy fortress <i>[radius]</i></code></td><td>Stone-brick walls around you, 6–40 blocks out (12 by default), with towers, a gate and garrisoned guard posts</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="cmd-group">
+        <h3>Territory</h3>
+        <p>For the chunk you're standing in. The <kbd>M</kbd> map does the same for any chunk.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Command</th><th>Does</th></tr></thead>
+          <tbody>
+            <tr><td><code>/territory · /territory info</code></td><td>Who holds the chunk you're standing in</td></tr>
+            <tr><td><code>/territory claim</code></td><td>Claim it</td></tr>
+            <tr><td><code>/territory unclaim</code></td><td>Give it up</td></tr>
+            <tr><td><code>/territory capture</code></td><td>Start taking it off whoever holds it</td></tr>
+            <tr><td><code>/territory cancel</code></td><td>Call off a capture</td></tr>
+            <tr><td><code>/territory list</code></td><td>Everything you hold</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </details>
 </section>
 
 <footer>
@@ -890,8 +1019,10 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     const n=document.createElement('span');n.className='num';
     n.textContent=(Math.round((3+Math.random()*5)*10)/10).toFixed(1);
     const r=dmg.getBoundingClientRect();
-    n.style.left=(r.width/2-20+(Math.random()-.5)*60)+'px';n.style.top=(r.height-120+(Math.random()-.5)*20)+'px';
+    const head=dmg.querySelector('img').offsetTop;
+    n.style.left=(r.width/2-20+(Math.random()-.5)*90)+'px';n.style.top=(head+(Math.random()-.5)*24)+'px';
     dmg.appendChild(n);setTimeout(()=>n.remove(),1100);
+    const d=dmg.querySelector('img');d.classList.remove('hit');void d.offsetWidth;d.classList.add('hit');
   });
 
   // ---- highlight the section in view ----
