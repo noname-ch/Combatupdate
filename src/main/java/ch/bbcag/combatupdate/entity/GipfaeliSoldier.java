@@ -320,6 +320,66 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
 
     public void setUniform(@Nullable DyeColor color) {
         this.entityData.set(DATA_UNIFORM, color == null ? CAMO : color.getId());
+        // The armour changes with the coat: whatever it is wearing is re-liveried in the new colour.
+        if (!this.level().isClientSide()) {
+            for (EquipmentSlot slot : ch.bbcag.combatupdate.GipfaeliArmour.SLOTS) {
+                ItemStack piece = this.getItemBySlot(slot);
+                if (!piece.isEmpty()) {
+                    this.setItemSlot(slot, this.livery(piece.copy()));
+                }
+            }
+        }
+    }
+
+    // Puts the squad's colour on a piece of armour: dye, on anything that takes it; a trim in the
+    // nearest material otherwise, so an iron squad in red and one in blue can be told apart at a
+    // glance across a field. Camouflage takes the trim off and dyes leather field-green.
+    private ItemStack livery(ItemStack piece) {
+        DyeColor colour = this.uniform();
+        // Leather is the one vanilla armour that takes a dye; what takes a dye is a data tag now,
+        // and the suit is the plainer thing to ask.
+        if (ch.bbcag.combatupdate.GipfaeliArmour.of(piece.getItem()) == ch.bbcag.combatupdate.GipfaeliArmour.LEATHER) {
+            piece.set(DataComponents.DYED_COLOR, new net.minecraft.world.item.component.DyedItemColor(
+                    colour == null ? CAMO_LEATHER : colour.getTextureDiffuseColor()));
+            return piece;
+        }
+
+        if (piece.get(DataComponents.EQUIPPABLE) == null) {
+            return piece;
+        }
+
+        if (colour == null) {
+            piece.remove(DataComponents.TRIM);
+            return piece;
+        }
+
+        var materials = this.level().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.TRIM_MATERIAL);
+        var patterns = this.level().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.TRIM_PATTERN);
+        var material = materials.get(trimFor(colour)).orElse(null);
+        var pattern = patterns.get(net.minecraft.world.item.equipment.trim.TrimPatterns.SENTRY).orElse(null);
+        if (material != null && pattern != null) {
+            piece.set(DataComponents.TRIM, new net.minecraft.world.item.equipment.trim.ArmorTrim(material, pattern));
+        }
+
+        return piece;
+    }
+
+    private static final int CAMO_LEATHER = 0x5E6A44;
+
+    // The trim material nearest each dye, since a trim only comes in the colours the materials do.
+    private static net.minecraft.resources.ResourceKey<net.minecraft.world.item.equipment.trim.TrimMaterial> trimFor(DyeColor colour) {
+        return switch (colour) {
+            case RED -> net.minecraft.world.item.equipment.trim.TrimMaterials.REDSTONE;
+            case BLUE -> net.minecraft.world.item.equipment.trim.TrimMaterials.LAPIS;
+            case LIGHT_BLUE, CYAN -> net.minecraft.world.item.equipment.trim.TrimMaterials.DIAMOND;
+            case GREEN, LIME -> net.minecraft.world.item.equipment.trim.TrimMaterials.EMERALD;
+            case YELLOW -> net.minecraft.world.item.equipment.trim.TrimMaterials.GOLD;
+            case ORANGE, BROWN -> net.minecraft.world.item.equipment.trim.TrimMaterials.COPPER;
+            case PURPLE, MAGENTA, PINK -> net.minecraft.world.item.equipment.trim.TrimMaterials.AMETHYST;
+            case WHITE, LIGHT_GRAY -> net.minecraft.world.item.equipment.trim.TrimMaterials.QUARTZ;
+            case GRAY -> net.minecraft.world.item.equipment.trim.TrimMaterials.IRON;
+            case BLACK -> net.minecraft.world.item.equipment.trim.TrimMaterials.NETHERITE;
+        };
     }
 
     public boolean commander() {
@@ -375,7 +435,7 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     // Puts a piece of armour on, and hands back whatever was in that slot before.
     public ItemStack equip(EquipmentSlot slot, ItemStack piece) {
         ItemStack previous = this.getItemBySlot(slot).copy();
-        this.setItemSlot(slot, piece.copyWithCount(1));
+        this.setItemSlot(slot, piece.isEmpty() ? ItemStack.EMPTY : this.livery(piece.copyWithCount(1)));
         return previous;
     }
 

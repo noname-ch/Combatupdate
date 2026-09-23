@@ -44,6 +44,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 
+import ch.bbcag.combatupdate.client.ArmyClient;
 import ch.bbcag.combatupdate.client.BatteringRamHelmetModel;
 import ch.bbcag.combatupdate.client.BookEnchantmentProperty;
 import ch.bbcag.combatupdate.client.ElytraOrientation;
@@ -51,6 +52,7 @@ import ch.bbcag.combatupdate.client.HeadingItemRenderer;
 import ch.bbcag.combatupdate.client.GipfaeliGunPose;
 import ch.bbcag.combatupdate.client.GipfaeliSight;
 import ch.bbcag.combatupdate.client.GipfaeliSoldierRenderer;
+import ch.bbcag.combatupdate.client.GipfaeliSoldierScreen;
 import ch.bbcag.combatupdate.client.ScarletSpearRenderer;
 import ch.bbcag.combatupdate.client.ShortbowPullProperty;
 import ch.bbcag.combatupdate.client.TerritoryClient;
@@ -59,6 +61,7 @@ import ch.bbcag.combatupdate.entity.GipfaeliBullet;
 import ch.bbcag.combatupdate.entity.GipfaeliRocket;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
 @Mod(value = CombatUpdate.MODID, dist = Dist.CLIENT)
@@ -76,6 +79,8 @@ public final class CombatUpdateClient {
 
         // Hands the territory packets to the screen; see TerritoryClient.
         TerritoryClient.wire();
+        // And the army's, to the roster and kit screens; see ArmyClient.
+        ArmyClient.wire();
     }
 
     @SubscribeEvent
@@ -319,8 +324,14 @@ public final class CombatUpdateClient {
     }
 
     @SubscribeEvent
+    static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
+        event.register(GipfaeliSoldierMenu.TYPE.get(), GipfaeliSoldierScreen::new);
+    }
+
+    @SubscribeEvent
     static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         TerritoryClient.registerKeys(event);
+        ArmyClient.registerKeys(event);
     }
 
     // The territory key is read once a tick rather than on the key event, the way vanilla reads
@@ -328,5 +339,6 @@ public final class CombatUpdateClient {
     @SubscribeEvent
     static void onClientTick(ClientTickEvent.Post event) {
         TerritoryClient.tick();
+        ArmyClient.tick();
     }
 }
