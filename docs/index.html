@@ -49,6 +49,7 @@ html{scroll-behavior:smooth}
 body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;padding-inline:var(--gutter);padding-block:0}
 .wrap{max-width:var(--maxw);margin-inline:auto}
 img.px{image-rendering:pixelated;image-rendering:crisp-edges}
+img.iso{image-rendering:auto}
 a{color:inherit}
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 h1,h2,h3{font-family:var(--display);text-transform:uppercase;line-height:.92;margin:0;text-wrap:balance;letter-spacing:.01em}
@@ -254,7 +255,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     <li><a href="#gipfaeli"><img class="px" src="img/mod/gipfaeli.png" alt="">Gipfäli</a></li>
     <li><a href="#army"><img class="px" src="img/mod/gipfaeli_command_flag.png" alt="">Army</a></li>
     <li><a href="#territory"><img class="px" src="img/mod/gipfaeli_war_banner.png" alt="">Territory</a></li>
-    <li><a href="#extras"><img class="px" src="img/mod/meat_obelisk_side.png" alt="">Extras</a></li>
+    <li><a href="#extras"><img class="iso" src="img/block/meat_obelisk.png" alt="">Extras</a></li>
     <li><a href="#install"><img class="px" src="img/mc/iron_ingot.png" alt="">Install</a></li>
   </ul>
 </nav>
@@ -363,7 +364,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
       <div class="chips"><span class="chip">Gold <b>−5%</b></span><span class="chip">Most <b>−10%</b></span><span class="chip">Diamond · Netherite <b>−20%</b></span></div>
     </div>
     <div class="feat">
-      <img class="px" src="img/mc/tnt_side.png" alt="">
+      <img class="iso" src="img/block/tnt.png" alt="">
       <h3>Elytra bombing</h3>
       <p>Right-click TNT while gliding and it drops as a bomb carrying your momentum. It arcs forward and slows the way a real bomb does. On the ground, TNT places as normal.</p>
       <div class="chips"><span class="chip">Fuse <b>3 s</b></span><span class="chip">Cooldown <b>0.5 s</b></span></div>
@@ -533,7 +534,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
       <div class="chips"><span class="chip">Squad <b>8</b></span><span class="chip">Rations <b>2 Gipfäli</b></span><span class="chip">March <b>192 blocks</b></span></div>
     </div>
     <div class="feat">
-      <img class="px" src="img/mod/gipfaeli_guard_post_side.png" alt="">
+      <img class="iso" src="img/block/gipfaeli_guard_post.png" alt="">
       <h3>Guard Post</h3>
       <p>Set it down wherever there's something to defend, click it, and station soldiers there. You set how wide they watch and how touchy they are. Break the post and the guard is gone.</p>
     </div>
@@ -544,7 +545,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
       <div class="chips"><span class="chip">Headshot <b>×2</b></span></div>
     </div>
     <div class="feat">
-      <img class="px" src="img/mc/white_wool.png" alt="">
+      <img class="iso" src="img/block/white_wool.png" alt="">
       <h3>Uniforms &amp; manual</h3>
       <p>Squads wear one of sixteen dye colours. Your first recruit comes with a written field manual. Every order is also a command: <code>/gipfaeliarmy</code>.</p>
     </div>
@@ -597,24 +598,24 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
   </div>
   <div class="features">
     <div class="feat">
-      <img class="px" src="img/mc/oak_planks.png" alt="">
+      <img class="iso" src="img/block/oak_planks.png" alt="">
       <h3>Claim</h3>
       <p>Press <kbd>M</kbd> for a map of the chunks around you with every claim coloured in. Claiming the chunk you stand in is free and instant.</p>
       <div class="chips"><span class="chip">Limit <b>8 chunks</b></span><span class="chip">= <b>2,048</b> blocks</span></div>
     </div>
     <div class="feat">
-      <img class="px" src="img/mc/iron_block.png" alt="">
+      <img class="iso" src="img/block/iron_block.png" alt="">
       <h3>Protect</h3>
       <p>Inside your land nobody else breaks or places blocks, opens your chests, doors or switches, or blows anything up.</p>
     </div>
     <div class="feat">
-      <img class="px" src="img/mc/red_wool.png" alt="">
+      <img class="iso" src="img/block/red_wool.png" alt="">
       <h3>Capture</h3>
       <p>Stand in someone else's chunk to take it. The owner gets your name and the chunk. Leave, die or log out and the capture lapses. Players who are offline get the news when they next log in.</p>
       <div class="chips"><span class="chip">Capture <b>30 s</b></span></div>
     </div>
     <div class="feat">
-      <img class="px" src="img/mc/target_side.png" alt="">
+      <img class="iso" src="img/block/target.png" alt="">
       <h3>See the borders</h3>
       <p>A low wall of dust marks every claim edge near you: green for yours, red for theirs, orange while a chunk is being taken. Send your army to march on a chunk straight from the map.</p>
     </div>
@@ -632,7 +633,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
 <!-- ============ EXTRAS ============ -->
 <section class="chapter" id="extras">
   <div class="chapter-head">
-    <img class="px" src="img/mod/meat_obelisk_side.png" alt="">
+    <img class="iso" src="img/block/meat_obelisk.png" alt="">
     <div><h2>Extras</h2><p class="thesis">Floating damage numbers, a config screen with a switch for everything, and a block of ham.</p></div>
   </div>
 
@@ -727,7 +728,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
 <script>
 (function(){
   // ---- item icons for the crafting grids ----
-  const M='img/mod/', V='img/mc/';
+  const M='img/mod/', V='img/mc/', B='img/block/';
   const ICON={
     'minecraft:porkchop':[V+'porkchop.png','Raw Porkchop'],'minecraft:gunpowder':[V+'gunpowder.png','Gunpowder'],
     'minecraft:iron_ingot':[V+'iron_ingot.png','Iron Ingot'],'#minecraft:iron_tool_materials':[V+'iron_ingot.png','Iron Ingot'],
@@ -736,14 +737,16 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     '#minecraft:chest_armor':[V+'iron_chestplate.png','Any chestplate'],'minecraft:iron_nugget':[V+'iron_nugget.png','Iron Nugget'],
     'minecraft:wheat':[V+'wheat.png','Wheat'],'minecraft:egg':[V+'egg.png','Egg'],'minecraft:sugar':[V+'sugar.png','Sugar'],
     'minecraft:redstone':[V+'redstone.png','Redstone'],'minecraft:copper_ingot':[V+'copper_ingot.png','Copper Ingot'],
-    'minecraft:red_wool':[V+'red_wool.png','Red Wool'],'minecraft:white_wool':[V+'white_wool.png','White Wool'],
-    '#minecraft:planks':[V+'oak_planks.png','Any planks'],'minecraft:tnt':[V+'tnt_side.png','TNT'],
-    'minecraft:target':[V+'target_side.png','Target'],'minecraft:iron_block':[V+'iron_block.png','Block of Iron'],
+    'minecraft:red_wool':[B+'red_wool.png','Red Wool'],'minecraft:white_wool':[B+'white_wool.png','White Wool'],
+    '#minecraft:planks':[B+'oak_planks.png','Any planks'],'minecraft:tnt':[B+'tnt.png','TNT'],
+    'minecraft:target':[B+'target.png','Target'],'minecraft:iron_block':[B+'iron_block.png','Block of Iron'],
     'minecraft:glass_pane':[V+'glass.png','Glass Pane'],
     'minecraft:echo_shard':[V+'echo_shard.png','Echo Shard'],'minecraft:heart_of_the_sea':[V+'heart_of_the_sea.png','Heart of the Sea'],
     'minecraft:nether_star':[V+'nether_star.png','Nether Star'],'minecraft:netherite_sword':[V+'netherite_sword.png','Netherite Sword'],
-    'minecraft:trident':[V+'trident.png','Trident'],'minecraft:redstone_block':[V+'redstone_block.png','Block of Redstone'],
+    'minecraft:trident':[V+'trident.png','Trident'],'minecraft:redstone_block':[B+'redstone_block.png','Block of Redstone'],
     'minecraft:wither_rose':[V+'wither_rose.png','Wither Rose'],
+    'combatupdate:gipfaeli_tnt':[B+'gipfaeli_tnt.png','Gipfäli TNT'],'combatupdate:gipfaeli_ultra_tnt':[B+'gipfaeli_ultra_tnt.png','Gipfäli Ultra TNT'],
+    'combatupdate:gipfaeli_guard_post':[B+'gipfaeli_guard_post.png','Guard Post'],'combatupdate:meat_obelisk':[B+'meat_obelisk.png','Meat Obelisk'],
   };
   const mod=id=>[M+id.split(':')[1]+'.png',null];
   const icon=id=>ICON[id]||mod(id);
@@ -762,10 +765,10 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     gipfaeli_launcher:shaped(['III','RTS'],{I:'minecraft:iron_ingot',R:'minecraft:redstone',T:'minecraft:tnt',S:'minecraft:stick'},'combatupdate:gipfaeli_launcher'),
     gipfaeli_launch_rig:shaped([' T ','IAI','III'],{I:'minecraft:iron_ingot',T:'minecraft:tnt',A:'minecraft:target'},'combatupdate:gipfaeli_launch_rig'),
     gipfaeli_grenade:shapeless(['combatupdate:gipfaeli','minecraft:gunpowder','minecraft:iron_nugget'],'combatupdate:gipfaeli_grenade',2),
-    gipfaeli_tnt:shaped(['GPG','PGP','GPG'],{G:'minecraft:gunpowder',P:'combatupdate:gipfaeli'},'combatupdate:gipfaeli_tnt_side'),
-    gipfaeli_ultra_tnt:shaped(['THT','HBH','THT'],{T:'combatupdate:gipfaeli_tnt_side',H:'combatupdate:gipfaeli_grenade',B:'minecraft:blaze_powder'},'combatupdate:gipfaeli_ultra_tnt_side'),
+    gipfaeli_tnt:shaped(['GPG','PGP','GPG'],{G:'minecraft:gunpowder',P:'combatupdate:gipfaeli'},'combatupdate:gipfaeli_tnt'),
+    gipfaeli_ultra_tnt:shaped(['THT','HBH','THT'],{T:'combatupdate:gipfaeli_tnt',H:'combatupdate:gipfaeli_grenade',B:'minecraft:blaze_powder'},'combatupdate:gipfaeli_ultra_tnt'),
     gipfaeli_command_flag:shaped(['RWR','RRR','S  '],{R:'minecraft:red_wool',W:'minecraft:white_wool',S:'minecraft:stick'},'combatupdate:gipfaeli_command_flag'),
-    gipfaeli_guard_post:shaped(['PWP','PGP','PPP'],{P:'#minecraft:planks',W:'minecraft:red_wool',G:'combatupdate:gipfaeli'},'combatupdate:gipfaeli_guard_post_side'),
+    gipfaeli_guard_post:shaped(['PWP','PGP','PPP'],{P:'#minecraft:planks',W:'minecraft:red_wool',G:'combatupdate:gipfaeli'},'combatupdate:gipfaeli_guard_post'),
     letony_mate_ak47:shaped(['III','GSS'],{I:'minecraft:iron_ingot',G:'combatupdate:gipfaeli',S:'minecraft:stick'},'combatupdate:letony_mate_ak47'),
     gipfaeli_shotgun:shaped(['CCC','GSS'],{C:'minecraft:copper_ingot',G:'combatupdate:gipfaeli',S:'minecraft:stick'},'combatupdate:gipfaeli_shotgun'),
     gipfaeli_marksman:shaped(['IIP','GSI'],{I:'minecraft:iron_ingot',P:'minecraft:glass_pane',G:'combatupdate:gipfaeli',S:'minecraft:stick'},'combatupdate:gipfaeli_marksman'),
@@ -773,9 +776,9 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     gipfaeli_war_banner:shaped(['RGR','RRR','S  '],{R:'minecraft:red_wool',G:'combatupdate:gipfaeli',S:'minecraft:stick'},'combatupdate:gipfaeli_war_banner'),
     exoblade:shaped(['EHE','ENE',' S '],{E:'minecraft:echo_shard',H:'minecraft:heart_of_the_sea',N:'minecraft:nether_star',S:'minecraft:netherite_sword'},'combatupdate:exoblade'),
     scarlet_devil:shaped([' RN','RTR','WR '],{N:'minecraft:nether_star',R:'minecraft:redstone_block',T:'minecraft:trident',W:'minecraft:wither_rose'},'combatupdate:scarlet_devil'),
-    meat_obelisk:shaped(['###','###','###'],{'#':'minecraft:porkchop'},'combatupdate:meat_obelisk_side'),
+    meat_obelisk:shaped(['###','###','###'],{'#':'minecraft:porkchop'},'combatupdate:meat_obelisk'),
   };
-  const img=(id)=>{const [src,alt]=icon(id);const i=new Image();i.src=src;i.alt=alt||'';i.title=alt||'';i.className='px';return i;};
+  const img=(id)=>{const [src,alt]=icon(id);const i=new Image();i.src=src;i.alt=alt||'';i.title=alt||'';i.className=src.startsWith(B)?'iso':'px';return i;};
   document.querySelectorAll('.recipe').forEach(el=>{
     const key=el.dataset.recipe, r=R[key]; if(!r) return;
     const grid=document.createElement('div'); grid.className='grid3';
