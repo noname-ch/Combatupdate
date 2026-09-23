@@ -9,6 +9,12 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 // and no further: the point is to open Elytra and see the elytra settings, not to go hunting
 // through nested groups for them.
 //
+// The first of those pages is Features, and it is the odd one out: every other page holds the
+// numbers behind one part of the mod, while Features holds nothing but the on/off switch for each
+// part of it. Someone who wants free look but not sword blocking has one list to read rather than
+// seven pages to open, and the numbers stay where they are worth reading - next to each other,
+// where a change to one can be weighed against the rest.
+//
 // Sections are what the config file is divided into as well, so moving an entry between them
 // moves it between tables in combatupdate-common.toml and an existing file loses that value.
 public final class Config {
@@ -21,10 +27,11 @@ public final class Config {
             .comment("Master switch. Turn this off and every change below goes with it, leaving vanilla behaviour behind. The mod's own items and enchantments stay registered either way, so worlds already holding them still load")
             .define("modEnabled", true);
 
-    // Its own page in the config screen: a pushed section renders as a button that
-    // opens a screen showing only what is inside it.
+    // Its own page in the config screen, and the first one: every switch that turns a single part of
+    // the mod on or off, in one list. Read Config.on for what "off" costs a feature - the master
+    // switch above is folded into the same check, so nothing here has to repeat it.
     static {
-        BUILDER.comment("Elytra flight: how it steers, how fast it goes, and what fusing one into a chestplate costs.").push("elytra");
+        BUILDER.comment("Every part of the mod, switched on or off one at a time. Turn one off and it leaves vanilla behaviour behind; the numbers that tune it stay on its own page, waiting for it to come back.").push("features");
     }
     // --- Elytra ---
 
@@ -40,6 +47,71 @@ public final class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_BOOST = BUILDER
             .comment("Whether holding shift while gliding burns firework rockets straight out of the inventory for a continuous boost")
             .define("enableBoost", true);
+    // --- Explosives ---
+
+
+    public static final ModConfigSpec.BooleanValue ENABLE_FIREBALL = BUILDER
+            .comment("Whether right-clicking a fire charge throws it as an exploding fireball. Off puts it back to placing fire on a block")
+            .define("enableFireball", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_ELYTRA_BOMB = BUILDER
+            .comment("Whether right-clicking TNT while gliding releases it as a bomb. Off puts it back to placing the block, gliding or not")
+            .define("enableElytraBomb", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_TNT_TUNING = BUILDER
+            .comment("Whether primed TNT is retuned to the blast radius on the Explosives page. Off leaves every TNT at whatever power it was spawned with")
+            .define("enableTntTuning", true);
+    // --- Melee ---
+
+
+    public static final ModConfigSpec.BooleanValue ENABLE_WEAPON_REACH = BUILDER
+            .comment("Whether tridents reach further and axes reach less far than the other melee weapons. Off puts every vanilla weapon back on the player's own 3-block interaction range")
+            .define("enableWeaponReach", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_SWORD_BLOCKING = BUILDER
+            .comment("Whether holding right-click with a vanilla sword raises it to soak part of a frontal hit, pre-1.9 style. Off leaves swords with no block at all")
+            .define("enableSwordBlocking", true);
+    // --- Enchantments ---
+
+
+    public static final ModConfigSpec.BooleanValue ENABLE_BATTERING_RAM = BUILDER
+            .comment("Whether the Battering Ram enchantment does anything. Off also hands walls back their fly-into-wall damage and stops the helmet rendering flattened, since all three read the same enchantment level")
+            .define("enableBatteringRam", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_ENCHANTMENTS = BUILDER
+            .comment("Whether the combat perk enchantments do anything - Regularity, Singularity, Armageddon, Lifesteal, Combo: Perun, Gamble and Mirror. Off leaves them enchantable and inert")
+            .define("enableEnchantments", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_SHORTBOW = BUILDER
+            .comment("Whether the Shortbow enchantment does anything")
+            .define("enableShortbow", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_LEATHER_ENCHANT_COLORS = BUILDER
+            .comment("Whether leather leggings and boots are recoloured to show which combat enchantment they carry. Off leaves whatever dye is already on them; it does not put back a colour this has overwritten")
+            .define("enableLeatherEnchantColors", true);
+    // --- Gipfaeli launcher ---
+
+
+    public static final ModConfigSpec.BooleanValue ENABLE_GIPFAELI = BUILDER
+            .comment("Whether the Gipfaeli launcher fires at all. Off also takes it and its ammo out of the creative tab; both items stay registered, so a world already holding one still loads")
+            .define("enableGipfaeli", true);
+    // --- Floating damage numbers ---
+
+
+    public static final ModConfigSpec.BooleanValue ENABLE_DAMAGE_NUMBERS = BUILDER
+            .comment("Whether damage a player deals is shown as a number floating beside whatever they hit")
+            .define("enableDamageNumbers", true);
+    static {
+        BUILDER.pop();
+    }
+
+    // Its own page in the config screen: a pushed section renders as a button that
+    // opens a screen showing only what is inside it.
+    static {
+        BUILDER.comment("Elytra flight: how it steers, how fast it goes, and what fusing one into a chestplate costs. Switched on and off on the Features page.").push("elytra");
+    }
+    // --- Elytra ---
+
 
     public static final ModConfigSpec.IntValue ROLL_SPEED = BUILDER
             .comment("How many degrees per second holding A/D rolls the player while gliding with an elytra")
@@ -81,14 +153,10 @@ public final class Config {
     // Its own page in the config screen: a pushed section renders as a button that
     // opens a screen showing only what is inside it.
     static {
-        BUILDER.comment("The Battering Ram helmet enchantment: what an impact does, and what it costs the wearer.").push("batteringRam");
+        BUILDER.comment("The Battering Ram helmet enchantment: what an impact does, and what it costs the wearer. Switched on and off on the Features page.").push("batteringRam");
     }
     // --- Battering Ram enchantment ---
 
-
-    public static final ModConfigSpec.BooleanValue ENABLE_BATTERING_RAM = BUILDER
-            .comment("Whether the Battering Ram enchantment does anything. Off also hands walls back their fly-into-wall damage and stops the helmet rendering flattened, since all three read the same enchantment level")
-            .define("enableBatteringRam", true);
 
     public static final ModConfigSpec.DoubleValue RAM_MIN_SPEED = BUILDER
             .comment("How fast the player has to be gliding, in blocks per tick, before Battering Ram triggers at all (a rocket-boosted dive runs at roughly 1.5)")
@@ -140,21 +208,10 @@ public final class Config {
     // Its own page in the config screen: a pushed section renders as a button that
     // opens a screen showing only what is inside it.
     static {
-        BUILDER.comment("The mod's other enchantments.").push("enchantments");
+        BUILDER.comment("The mod's other enchantments. Switched on and off on the Features page.").push("enchantments");
     }
-    public static final ModConfigSpec.BooleanValue ENABLE_ENCHANTMENTS = BUILDER
-            .comment("Whether the combat perk enchantments do anything - Regularity, Singularity, Armageddon, Lifesteal, Combo: Perun, Gamble and Mirror. Off leaves them enchantable and inert")
-            .define("enableEnchantments", true);
-
-    public static final ModConfigSpec.BooleanValue ENABLE_LEATHER_ENCHANT_COLORS = BUILDER
-            .comment("Whether leather leggings and boots are recoloured to show which combat enchantment they carry. Off leaves whatever dye is already on them; it does not put back a colour this has overwritten")
-            .define("enableLeatherEnchantColors", true);
     // --- Shortbow enchantment ---
 
-
-    public static final ModConfigSpec.BooleanValue ENABLE_SHORTBOW = BUILDER
-            .comment("Whether the Shortbow enchantment does anything")
-            .define("enableShortbow", true);
 
     public static final ModConfigSpec.IntValue SHORTBOW_COOLDOWN_TICKS = BUILDER
             .comment("Cooldown, in ticks, before a bow enchanted with Shortbow can instant-fire again (20 ticks = 1 second)")
@@ -218,14 +275,10 @@ public final class Config {
     // Its own page in the config screen: a pushed section renders as a button that
     // opens a screen showing only what is inside it.
     static {
-        BUILDER.comment("Thrown fire charges and TNT.").push("explosives");
+        BUILDER.comment("Thrown fire charges and TNT. Switched on and off on the Features page.").push("explosives");
     }
     // --- Fireball (thrown fire charge) ---
 
-
-    public static final ModConfigSpec.BooleanValue ENABLE_FIREBALL = BUILDER
-            .comment("Whether right-clicking a fire charge throws it as an exploding fireball. Off puts it back to placing fire on a block")
-            .define("enableFireball", true);
 
     public static final ModConfigSpec.IntValue FIREBALL_COOLDOWN_TICKS = BUILDER
             .comment("How many ticks a player must wait between throwing fire charges as fireballs (10 ticks = 0.5 seconds)")
@@ -241,19 +294,11 @@ public final class Config {
     // --- TNT ---
 
 
-    public static final ModConfigSpec.BooleanValue ENABLE_TNT_TUNING = BUILDER
-            .comment("Whether primed TNT is retuned to the blast radius below. Off leaves every TNT at whatever power it was spawned with")
-            .define("enableTntTuning", true);
-
     public static final ModConfigSpec.DoubleValue TNT_BLAST_RADIUS = BUILDER
             .comment("Explosion power of primed TNT, vanilla and modded alike (this is what vanilla calls explosion power; default 4.0)")
             .defineInRange("tntBlastRadius", 4.0, 0.0, 128.0);
 
     // --- TNT dropped as a bomb while gliding ---
-
-    public static final ModConfigSpec.BooleanValue ENABLE_ELYTRA_BOMB = BUILDER
-            .comment("Whether right-clicking TNT while gliding releases it as a bomb. Off puts it back to placing the block, gliding or not")
-            .define("enableElytraBomb", true);
 
     public static final ModConfigSpec.DoubleValue BOMB_MOMENTUM_TRANSFER = BUILDER
             .comment("How much of the player's own velocity a bomb dropped from an elytra keeps (1.0 is all of it, 0.0 drops it straight down). Vanilla air drag bleeds this off at 2% a tick from there, so a fast run throws the bomb a long way forward")
@@ -273,14 +318,10 @@ public final class Config {
     // Its own page in the config screen: a pushed section renders as a button that
     // opens a screen showing only what is inside it.
     static {
-        BUILDER.comment("The numbers that float up off whatever a player hits.").push("damageNumbers");
+        BUILDER.comment("The numbers that float up off whatever a player hits. Switched on and off on the Features page.").push("damageNumbers");
     }
     // --- Floating damage numbers ---
 
-
-    public static final ModConfigSpec.BooleanValue DAMAGE_NUMBERS = BUILDER
-            .comment("Whether damage a player deals is shown as a number floating beside whatever they hit")
-            .define("damageNumbers", true);
 
     public static final ModConfigSpec.DoubleValue DAMAGE_NUMBER_MINIMUM = BUILDER
             .comment("Hits costing less health than this are not worth a number")
@@ -308,33 +349,10 @@ public final class Config {
     // Its own page in the config screen: a pushed section renders as a button that
     // opens a screen showing only what is inside it.
     static {
-        BUILDER.comment("What the mod changes about vanilla melee weapons.").push("melee");
-    }
-    // --- Vanilla melee weapon retuning ---
-
-
-    public static final ModConfigSpec.BooleanValue ENABLE_WEAPON_REACH = BUILDER
-            .comment("Whether tridents reach further and axes reach less far than the other melee weapons. Off puts every vanilla weapon back on the player's own 3-block interaction range")
-            .define("enableWeaponReach", true);
-
-    public static final ModConfigSpec.BooleanValue ENABLE_SWORD_BLOCKING = BUILDER
-            .comment("Whether holding right-click with a vanilla sword raises it to soak part of a frontal hit, pre-1.9 style. Off leaves swords with no block at all")
-            .define("enableSwordBlocking", true);
-    static {
-        BUILDER.pop();
-    }
-
-    // Its own page in the config screen: a pushed section renders as a button that
-    // opens a screen showing only what is inside it.
-    static {
-        BUILDER.comment("The Gipfaeli launcher: what it fires, how hard it lands, and how far it can lock on.").push("gipfaeli");
+        BUILDER.comment("The Gipfaeli launcher: what it fires, how hard it lands, and how far it can lock on. Switched on and off on the Features page.").push("gipfaeli");
     }
     // --- Gipfaeli launcher ---
 
-
-    public static final ModConfigSpec.BooleanValue ENABLE_GIPFAELI = BUILDER
-            .comment("Whether the Gipfaeli launcher fires at all. Off also takes it and its ammo out of the creative tab; both items stay registered, so a world already holding one still loads")
-            .define("enableGipfaeli", true);
 
     public static final ModConfigSpec.BooleanValue GIPFAELI_CONSUMES_AMMO = BUILDER
             .comment("Whether firing spends a Gipfaeli out of the inventory. Off makes the launcher fire on its own, with nothing to bake")

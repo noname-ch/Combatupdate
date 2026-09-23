@@ -26,6 +26,7 @@
   "combatupdate.gipfaeli.empty": "Out of Gipfäli",
 
   "combatupdate.configuration.title": "CombatUpdate Configs",
+  "combatupdate.configuration.features": "Features",
   "combatupdate.configuration.elytra": "Elytra",
   "combatupdate.configuration.batteringRam": "Battering Ram",
   "combatupdate.configuration.enchantments": "Enchantments",
@@ -99,7 +100,7 @@
   "combatupdate.configuration.ragePantsColor": "Regularity Leggings Color",
   "combatupdate.configuration.singularityPantsColor": "Singularity Leggings Color",
   "combatupdate.configuration.armageddonBootsColor": "Armageddon Boots Color",
-  "combatupdate.configuration.damageNumbers": "Show Floating Damage Numbers",
+  "combatupdate.configuration.enableDamageNumbers": "Show Floating Damage Numbers",
   "combatupdate.configuration.damageNumberMinimum": "Damage Number Minimum",
   "combatupdate.configuration.damageNumberLifetimeTicks": "Damage Number Lifetime (ticks)",
   "combatupdate.configuration.damageNumberRise": "Damage Number Rise (blocks/tick)",
