@@ -310,6 +310,38 @@ public final class GipfaeliArmy {
     // How far around its commander a squad's new soldiers are set down.
     private static final double MUSTER_SPREAD = 2.5;
 
+    // The colour the next squad raised would wear, or null when every colour has a commander.
+    public static @Nullable DyeColor nextSquadColour(ServerPlayer commander) {
+        for (DyeColor candidate : SQUAD_COLOURS) {
+            if (leaderOf(squad(commander, Scope.of(candidate))) == null) {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    // One soldier, made where it is wanted with the kit it is wanted with, for whatever builds an
+    // army by hand rather than through the flag (see GipfaeliFortress).
+    public static GipfaeliSoldier muster(ServerPlayer commander, Vec3 at, @Nullable GipfaeliWeapon role, @Nullable DyeColor uniform) {
+        ServerLevel level = commander.level();
+        GipfaeliSoldier soldier = new GipfaeliSoldier(CombatUpdate.GIPFAELI_SOLDIER.get(), level);
+        soldier.setPos(at);
+        soldier.setYRot(commander.getYRot());
+        soldier.setOwner(commander);
+        soldier.setTame(true, false);
+        soldier.setUniform(uniform);
+        soldier.arm(role == null ? ItemStack.EMPTY : role.stack());
+        soldier.setHealth(soldier.getMaxHealth());
+        level.addFreshEntity(soldier);
+        return soldier;
+    }
+
+    // Stations one soldier at a post block, wherever it came from.
+    public static void post(ServerPlayer commander, GipfaeliSoldier soldier, BlockPos pos, int radius) {
+        postSoldier(commander, soldier, pos, radius);
+    }
+
     // Raises a new squad: the flag's own action. What appears is the squad's commander, in black
     // with the first colour nobody has taken, and the squad is filled by clicking it. Costs the
     // same rations a soldier does.
@@ -321,14 +353,7 @@ public final class GipfaeliArmy {
             return true;
         }
 
-        DyeColor colour = null;
-        for (DyeColor candidate : SQUAD_COLOURS) {
-            if (leaderOf(squad(commander, Scope.of(candidate))) == null) {
-                colour = candidate;
-                break;
-            }
-        }
-
+        DyeColor colour = nextSquadColour(commander);
         if (colour == null) {
             refuse(commander, Component.translatable("combatupdate.army.squads_full"));
             return true;
@@ -1082,7 +1107,7 @@ public final class GipfaeliArmy {
                 : Component.translatable("combatupdate.army.squad.painted", scope.name(), colourName(colour)));
     }
 
-    private static Component colourName(@Nullable DyeColor colour) {
+    public static Component colourName(@Nullable DyeColor colour) {
         return colour == null
                 ? Component.translatable("combatupdate.army.menu.camo")
                 : Component.translatable("color.minecraft." + colour.getName());

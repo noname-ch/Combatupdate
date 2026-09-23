@@ -62,6 +62,21 @@ public final class GipfaeliArmyCommand {
     }
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        // Short forms for typing: /soldats attack Steve for the whole army, /soldats-red hold for
+        // one squad, /soldats-camo follow for the reserve. Every order the long form takes.
+        dispatcher.register(orders(Commands.literal("soldats"), context -> Scope.ALL)
+                .requires(CommandSourceStack::isPlayer)
+                .executes(context -> run(context, GipfaeliArmy::menu)));
+        dispatcher.register(orders(Commands.literal("soldats-camo"), context -> Scope.RESERVE)
+                .requires(CommandSourceStack::isPlayer)
+                .executes(context -> scoped(context, c -> Scope.RESERVE, GipfaeliArmy::squadMenu)));
+        for (DyeColor colour : DyeColor.values()) {
+            Scope scope = Scope.of(colour);
+            dispatcher.register(orders(Commands.literal("soldats-" + colour.getName()), context -> scope)
+                    .requires(CommandSourceStack::isPlayer)
+                    .executes(context -> scoped(context, c -> scope, GipfaeliArmy::squadMenu)));
+        }
+
         dispatcher.register(orders(Commands.literal("gipfaeliarmy"), context -> Scope.ALL)
                 .requires(CommandSourceStack::isPlayer)
                 .executes(context -> run(context, GipfaeliArmy::menu))
@@ -177,6 +192,14 @@ public final class GipfaeliArmyCommand {
                                                 .executes(context -> parade(context, IntegerArgumentType.getInteger(context, "count"), true)))
                                         .then(Commands.literal("behind")
                                                 .executes(context -> parade(context, IntegerArgumentType.getInteger(context, "count"), false))))))
+                // A fortress with its garrison, around whoever asks: operator-only, since it lays
+                // a few hundred blocks of wall across whatever was there.
+                .then(Commands.literal("fortress")
+                        .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                        .executes(context -> run(context, commander -> GipfaeliFortress.build(commander, GipfaeliFortress.defaultRadius(null))))
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(6, 40))
+                                .executes(context -> run(context, commander -> GipfaeliFortress.build(
+                                        commander, IntegerArgumentType.getInteger(context, "radius"))))))
                 .then(Commands.literal("recruit")
                         .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                         .then(Commands.argument("role", StringArgumentType.word())

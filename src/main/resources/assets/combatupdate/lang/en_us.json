@@ -219,6 +219,7 @@
   "combatupdate.army.squad.armour.hover": "Dresses every soldier in the squad in this suit, as far as your pack stretches (whole suits in creative)",
   "combatupdate.army.squad.dressed": "%s pieces of %s armour put on across %s soldiers",
   "combatupdate.army.squad.stripped": "%s soldiers handed their armour back",
+  "combatupdate.army.fortress.built": "Fortress raised: %s blocks square, %s guard posts, %s guards — squad %s, commander in the yard",
   "combatupdate.army.scope.all": "Whole army",
   "combatupdate.army.soldier.rank": "RANK",
   "combatupdate.army.formation.parade": "Parade",
