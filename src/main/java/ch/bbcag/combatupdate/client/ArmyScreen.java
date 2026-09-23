@@ -107,6 +107,8 @@ public final class ArmyScreen extends Screen {
     private final List<AbstractWidget> armourWidgets = new ArrayList<>();
     private final Button[] squadTabs = new Button[3];
     private int squadTab;
+    private SoldierControls.Tab controlsTab = SoldierControls.Tab.KIT;
+    private boolean requested;
 
     // The scope tabs and the word each stands for, for the swatch drawn on each.
     private final Map<Button, String> tabs = new LinkedHashMap<>();
@@ -129,7 +131,7 @@ public final class ArmyScreen extends Screen {
         int x = MARGIN;
         if (Config.on(Config.ENABLE_TERRITORY)) {
             this.addRenderableWidget(Button.builder(Component.translatable("combatupdate.army.screen.button.map"),
-                    button -> this.minecraft.gui.setScreen(new TerritoryScreen()))
+                    button -> this.minecraft.gui.setScreen(new TerritoryScreen(this.target)))
                     .bounds(x, y, 60, 20).build());
             x += 64;
         }
@@ -152,7 +154,10 @@ public final class ArmyScreen extends Screen {
         }
 
         this.clampScroll();
-        ArmyClient.request();
+        if (!this.requested) {
+            this.requested = true;
+            ArmyClient.request();
+        }
     }
 
     @Override
@@ -181,13 +186,37 @@ public final class ArmyScreen extends Screen {
 
     // ---- What the server sends ----
 
+    // A roster that changes only numbers - health, who is where - is drawn from directly; one
+    // that changes what there are buttons for (a squad gone, a post built, the picked soldier
+    // promoted or dismissed) has the widgets built again. Rebuilding on every roster would pull
+    // the tabs and the buttons out from under the mouse every two seconds.
     public void onRoster(Roster payload) {
+        String before = this.signature();
         this.roster = payload;
         if (this.selected != null && this.entry(this.selected) == null) {
             this.selected = null;
         }
 
-        this.rebuildWidgets();
+        this.rebuildShown();
+        if (!before.equals(this.signature())) {
+            this.rebuildWidgets();
+            return;
+        }
+
+        Map<String, Integer> counts = this.counts();
+        for (Map.Entry<Button, String> tab : this.tabs.entrySet()) {
+            tab.getKey().setMessage(tabLabel(tab.getValue(), counts.getOrDefault(tab.getValue(), 0)));
+        }
+        this.clampScroll();
+    }
+
+    private String signature() {
+        Roster.Entry picked = this.selectedEntry();
+        return String.join("|", this.counts().keySet())
+                + "|" + (this.roster == null ? -1 : this.roster.posts().size())
+                + "|" + (this.roster == null ? "" : this.roster.free() + "/" + this.roster.rations() + "/" + this.roster.squadSize())
+                + "|" + this.selected
+                + "|" + (picked != null && picked.commander());
     }
 
     private void rebuildShown() {
@@ -239,31 +268,7 @@ public final class ArmyScreen extends Screen {
     // One tab for the whole army, one per squad that has anyone in it, and one for the reserve;
     // returns how many rows they took.
     private int buildTabs() {
-        Map<String, Integer> counts = new LinkedHashMap<>();
-        counts.put(Scope.ALL.token(), this.roster == null ? 0 : this.roster.soldiers().size());
-        if (this.roster != null) {
-            for (DyeColor colour : DyeColor.VALUES) {
-                int count = 0;
-                for (Roster.Entry entry : this.roster.soldiers()) {
-                    if (entry.uniform() == colour.getId()) {
-                        count++;
-                    }
-                }
-                if (count > 0) {
-                    counts.put(colour.getName(), count);
-                }
-            }
-            int camo = 0;
-            for (Roster.Entry entry : this.roster.soldiers()) {
-                if (entry.uniform() < 0) {
-                    camo++;
-                }
-            }
-            if (camo > 0) {
-                counts.put(Scope.RESERVE.token(), camo);
-            }
-        }
-
+        Map<String, Integer> counts = this.counts();
         if (!counts.containsKey(this.scope)) {
             this.scope = Scope.ALL.token();
             this.rebuildShown();
@@ -274,8 +279,7 @@ public final class ArmyScreen extends Screen {
         int index = 0;
         for (Map.Entry<String, Integer> tab : counts.entrySet()) {
             String token = tab.getKey();
-            Component label = Component.literal("  ").append(tabName(token)).append(Component.literal(" " + tab.getValue()));
-            Button button = Button.builder(label, b -> this.selectScope(token))
+            Button button = Button.builder(tabLabel(token, tab.getValue()), b -> this.selectScope(token))
                     .bounds(MARGIN + (index % perRow) * (TAB_WIDTH + 4), TABS_Y + (index / perRow) * (TAB_HEIGHT + 2), TAB_WIDTH, TAB_HEIGHT)
                     .tooltip(Tooltip.create(tabName(token)))
                     .build();
@@ -285,6 +289,45 @@ public final class ArmyScreen extends Screen {
         }
 
         return (counts.size() + perRow - 1) / perRow;
+    }
+
+    // How many soldiers each tab would show, in tab order: the whole army, each colour that has
+    // anyone in it, then the reserve.
+    private Map<String, Integer> counts() {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        counts.put(Scope.ALL.token(), this.roster == null ? 0 : this.roster.soldiers().size());
+        if (this.roster == null) {
+            return counts;
+        }
+
+        for (DyeColor colour : DyeColor.VALUES) {
+            int count = 0;
+            for (Roster.Entry entry : this.roster.soldiers()) {
+                if (entry.uniform() == colour.getId()) {
+                    count++;
+                }
+            }
+            if (count > 0) {
+                counts.put(colour.getName(), count);
+            }
+        }
+
+        int camo = 0;
+        for (Roster.Entry entry : this.roster.soldiers()) {
+            if (entry.uniform() < 0) {
+                camo++;
+            }
+        }
+        if (camo > 0) {
+            counts.put(Scope.RESERVE.token(), camo);
+        }
+
+        return counts;
+    }
+
+    // Room for the swatch first, then the name and the count.
+    private static Component tabLabel(String token, int count) {
+        return Component.literal("  ").append(tabName(token)).append(Component.literal(" " + count));
     }
 
     private static Component tabName(String token) {
@@ -306,6 +349,7 @@ public final class ArmyScreen extends Screen {
     // ---- The squad pane ----
 
     private void buildSquadPane() {
+        this.rememberControlsTab();
         this.controls = null;
         this.bagButton = null;
         this.orderWidgets.clear();
@@ -373,7 +417,8 @@ public final class ArmyScreen extends Screen {
         this.orderWidgets.add(this.addRenderableWidget(this.sendButton));
         cursor += STEP;
 
-        this.dismissButton = Button.builder(Component.translatable("combatupdate.army.order.dismiss"), b -> this.onDismissSquad())
+        this.dismissButton = Button.builder(Component.translatable(this.confirmTicks > 0
+                        ? "combatupdate.army.screen.dismiss.confirm" : "combatupdate.army.order.dismiss"), b -> this.onDismissSquad())
                 .bounds(x, cursor, PANE_WIDTH, BUTTON)
                 .tooltip(Tooltip.create(Component.translatable("combatupdate.army.screen.squad.dismiss.hover")))
                 .build();
@@ -403,6 +448,13 @@ public final class ArmyScreen extends Screen {
                 Component.translatable("combatupdate.army.soldier.strip"), SquadAction.STRIP, "", null));
 
         this.selectSquadTab(this.squadTab);
+    }
+
+    // The controls are built afresh with the pane; which tab they were on is kept here across it.
+    private void rememberControlsTab() {
+        if (this.controls != null) {
+            this.controlsTab = this.controls.tab();
+        }
     }
 
     private static Component recruitHint(int count, int rations, boolean free) {
@@ -489,6 +541,7 @@ public final class ArmyScreen extends Screen {
     // ---- The soldier pane ----
 
     private void buildSoldierPane() {
+        this.rememberControlsTab();
         Roster.Entry entry = this.selectedEntry();
         if (entry == null || this.roster == null) {
             this.selected = null;
@@ -499,8 +552,10 @@ public final class ArmyScreen extends Screen {
         this.orderWidgets.clear();
         this.kitWidgets.clear();
         this.armourWidgets.clear();
+        java.util.Arrays.fill(this.squadTabs, null);
         this.dismissButton = null;
         this.sendButton = null;
+        this.confirmTicks = 0;
 
         int x = this.paneX;
         int y = this.listTop + 4 * LINE + 4;
@@ -513,7 +568,7 @@ public final class ArmyScreen extends Screen {
         this.bagButton.active = this.near(entry);
         y += STEP + 2;
 
-        this.controls = new SoldierControls(this::addRenderableWidget, x, y, entry.id(), entry.commander(), this.roster.posts().size());
+        this.controls = new SoldierControls(this::addRenderableWidget, x, y, entry.id(), entry.commander(), this.roster.posts().size(), this.controlsTab);
         y = this.controls.bottom() + 2;
 
         this.addRenderableWidget(Button.builder(Component.translatable("combatupdate.army.screen.button.back"), b -> {

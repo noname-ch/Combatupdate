@@ -90,6 +90,15 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     // A commander is built a little sturdier than the soldiers it leads.
     private static final double COMMANDER_TOUGHNESS = 1.5;
 
+    // A training dummy: nobody's soldier, stood up to be shot at. On the client for its name.
+    private static final EntityDataAccessor<Boolean> DATA_TRAINING =
+            SynchedEntityData.defineId(GipfaeliSoldier.class, EntityDataSerializers.BOOLEAN);
+
+    // How long a dummy stands before it packs itself up, so a training ground does not fill with
+    // forgotten ones (20 ticks = 1 second).
+    private static final int TRAINING_LIFETIME_TICKS = 20 * 60 * 10;
+    private int trainingTicks;
+
     // What the squad is doing as a whole. ATTACK is a squad in the field - it engages, it follows
     // orders, it keeps whatever shape it was given. STAND is a squad on parade: in ranks, at
     // attention, shooting nothing unless shot at.
@@ -210,6 +219,7 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         entityData.define(DATA_UNIFORM, CAMO);
         entityData.define(DATA_STANCE, (byte) Stance.ATTACK.ordinal());
         entityData.define(DATA_COMMANDER, false);
+        entityData.define(DATA_TRAINING, false);
     }
 
     @Override
@@ -386,6 +396,19 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         return this.entityData.get(DATA_COMMANDER);
     }
 
+    public boolean training() {
+        return this.entityData.get(DATA_TRAINING);
+    }
+
+    // Makes this a training dummy: no owner, no side, stood where it is to be shot at. An unarmed
+    // one never hits back; one handed a gun shoots whoever shoots it, which is the drill.
+    public void setTraining(boolean training) {
+        this.entityData.set(DATA_TRAINING, training);
+        if (training) {
+            this.holdPosition(true);
+        }
+    }
+
     // Makes or unmakes a commander. The frame is rebuilt from the kit, because a commander stands
     // in a sturdier one; which squad it commands is simply its colour.
     public void setCommander(boolean commander) {
@@ -424,6 +447,10 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     // and the nameplate all show.
     @Override
     protected Component getTypeName() {
+        if (this.training()) {
+            return Component.translatable("combatupdate.army.soldier.training");
+        }
+
         if (this.commander()) {
             return Component.translatable("combatupdate.army.soldier.commander");
         }
@@ -599,6 +626,11 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
             this.rally(level);
         }
 
+        if (this.training() && ++this.trainingTicks > TRAINING_LIFETIME_TICKS) {
+            this.discard();
+            return;
+        }
+
         if (this.post != null && this.tickCount % 20 == 0 && this.guardPost() == null) {
             this.post = null;
             this.station = null;
@@ -752,6 +784,11 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     // first time they hit one of their own by accident.
     @Override
     public boolean canAttack(LivingEntity target) {
+        // An unarmed dummy takes its beating; only one with a gun answers.
+        if (this.training() && this.weapon() == null) {
+            return false;
+        }
+
         return !GipfaeliArmy.sameSide(this, target) && super.canAttack(target);
     }
 
@@ -809,6 +846,8 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
 
         output.putBoolean("Holding", this.holding);
         output.putBoolean("Commander", this.commander());
+        output.putBoolean("Training", this.training());
+        output.putInt("TrainingTicks", this.trainingTicks);
         output.putInt("Formation", this.formation.ordinal());
         output.putInt("Slot", this.slot);
         output.putInt("Slots", this.slots);
@@ -828,6 +867,8 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         this.paradeYaw = input.getFloatOr("ParadeYaw", 0.0F);
         this.holding = input.getBooleanOr("Holding", false);
         this.entityData.set(DATA_COMMANDER, input.getBooleanOr("Commander", false));
+        this.entityData.set(DATA_TRAINING, input.getBooleanOr("Training", false));
+        this.trainingTicks = input.getIntOr("TrainingTicks", 0);
         this.formation = GipfaeliFormation.byOrdinal(input.getIntOr("Formation", 0));
         this.slot = input.getIntOr("Slot", 0);
         this.slots = Math.max(1, input.getIntOr("Slots", 1));

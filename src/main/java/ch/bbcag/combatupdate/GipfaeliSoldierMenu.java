@@ -55,7 +55,7 @@ public final class GipfaeliSoldierMenu extends AbstractContainerMenu {
     // Where the slots sit on the screen, in the screen's own coordinates (see GipfaeliSoldierScreen).
     public static final int SLOT_X = 8;
     public static final int SLOT_Y = 8;
-    public static final int INVENTORY_Y = 106;
+    public static final int INVENTORY_Y = 114;
 
     private static final Identifier[] EMPTY_ICONS = {
             InventoryMenu.EMPTY_ARMOR_SLOT_HELMET, InventoryMenu.EMPTY_ARMOR_SLOT_CHESTPLATE,

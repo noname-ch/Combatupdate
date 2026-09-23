@@ -32,7 +32,7 @@ public final class GipfaeliSoldierScreen extends AbstractContainerScreen<Gipfael
     private static final Identifier SLOT_SPRITE = Identifier.withDefaultNamespace("container/slot");
 
     private static final int WIDTH = 284;
-    private static final int HEIGHT = 188;
+    private static final int HEIGHT = 196;
     private static final int PANEL_X = 178;
     private static final int STATUS_X = 86;
     private static final int STATUS_WIDTH = 86;
@@ -41,7 +41,7 @@ public final class GipfaeliSoldierScreen extends AbstractContainerScreen<Gipfael
     private static final int ENTITY_X0 = 30;
     private static final int ENTITY_Y0 = 8;
     private static final int ENTITY_X1 = 80;
-    private static final int ENTITY_Y1 = 96;
+    private static final int ENTITY_Y1 = 100;
 
     private static final int COLOUR_PANEL = 0xFFC6C6C6;
     private static final int COLOUR_LIGHT = 0xFFFFFFFF;
@@ -70,7 +70,7 @@ public final class GipfaeliSoldierScreen extends AbstractContainerScreen<Gipfael
         }
 
         this.controls = new SoldierControls(this::addRenderableWidget, this.leftPos + PANEL_X, this.topPos + 8,
-                soldier.getUUID(), soldier.commander(), this.menu.posts().size());
+                soldier.getUUID(), soldier.commander(), this.menu.posts().size(), SoldierControls.Tab.KIT);
 
         // The way to the rest of the army: closes the bag properly first, or the server would
         // keep its side of it open.
@@ -78,7 +78,7 @@ public final class GipfaeliSoldierScreen extends AbstractContainerScreen<Gipfael
         this.addRenderableWidget(Button.builder(Component.translatable("combatupdate.army.screen.button.squad"), button -> {
             this.minecraft.player.closeContainer();
             this.minecraft.gui.setScreen(new ArmyScreen(scope, null));
-        }).bounds(this.leftPos + STATUS_X, this.topPos + 82, STATUS_WIDTH, SoldierControls.HEIGHT).build());
+        }).bounds(this.leftPos + STATUS_X, this.topPos + 84, STATUS_WIDTH, SoldierControls.HEIGHT).build());
     }
 
     @Override

@@ -88,6 +88,17 @@ public final class GipfaeliArmyCommand {
                         .executes(context -> run(context, GipfaeliArmy::menu)))
                 .then(Commands.literal("manual")
                         .executes(context -> run(context, GipfaeliArmy::manual)))
+                // Something to shoot at: dummies in front of the player, armed or not, and gone again.
+                .then(Commands.literal("training")
+                        .executes(context -> run(context, commander -> GipfaeliArmy.training(commander, 5, false)))
+                        .then(Commands.literal("clear")
+                                .executes(context -> run(context, GipfaeliArmy::clearTraining)))
+                        .then(Commands.argument("count", IntegerArgumentType.integer(1, 30))
+                                .executes(context -> run(context, commander -> GipfaeliArmy.training(
+                                        commander, IntegerArgumentType.getInteger(context, "count"), false)))
+                                .then(Commands.literal("armed")
+                                        .executes(context -> run(context, commander -> GipfaeliArmy.training(
+                                                commander, IntegerArgumentType.getInteger(context, "count"), true))))))
                 // A new squad: what the flag does.
                 .then(Commands.literal("raise")
                         .executes(context -> run(context, GipfaeliArmy::raiseSquad)))
