@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "R": "minecraft:redstone",
+    "T": "minecraft:tnt",
+    "S": "minecraft:stick"
+  },
+  "pattern": [
+    "III",
+    "RTS"
+  ],
+  "result": {
+    "id": "combatupdate:gipfaeli_launcher"
+  }
+}
