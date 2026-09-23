@@ -433,7 +433,7 @@ public final class TerritoryScreen extends Screen {
     private void drawFooter(GuiGraphicsExtractor graphics, int size) {
         int y = MAP_Y + size + 4;
         if (map != null) {
-            graphics.text(font, text("held", map.ownClaims(), map.maxClaims()), MAP_X, y, COLOUR_MUTED);
+            graphics.text(font, text("held", map.ownBlocks(), map.maxBlocks()), MAP_X, y, COLOUR_MUTED);
         }
         y += LINE;
         graphics.text(font, text("legend"), MAP_X, y, COLOUR_MUTED);

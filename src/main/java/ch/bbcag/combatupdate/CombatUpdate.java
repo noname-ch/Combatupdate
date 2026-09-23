@@ -57,6 +57,7 @@ import ch.bbcag.combatupdate.entity.GipfaeliBullet;
 import ch.bbcag.combatupdate.entity.GipfaeliRocket;
 import ch.bbcag.combatupdate.entity.GipfaeliSoldier;
 import ch.bbcag.combatupdate.mixin.PrimedTntAccessor;
+import ch.bbcag.combatupdate.territory.TerritoryBorders;
 import ch.bbcag.combatupdate.territory.TerritoryCommands;
 import ch.bbcag.combatupdate.territory.TerritoryManager;
 import ch.bbcag.combatupdate.territory.TerritoryNetwork;
@@ -199,6 +200,7 @@ public final class CombatUpdate {
         NeoForge.EVENT_BUS.register(GipfaeliLock.class);
         NeoForge.EVENT_BUS.register(GipfaeliLaunchRig.class);
         NeoForge.EVENT_BUS.register(TerritoryManager.class);
+        NeoForge.EVENT_BUS.register(TerritoryBorders.class);
         NeoForge.EVENT_BUS.addListener(TerritoryCommands::register);
 
         // The packets the territory screen and the server trade; see TerritoryNetwork.

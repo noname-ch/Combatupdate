@@ -526,9 +526,9 @@ public final class Config {
     // --- Territory ---
 
 
-    public static final ModConfigSpec.IntValue TERRITORY_MAX_CLAIMS = BUILDER
-            .comment("How many chunks one player may hold at once, across every dimension")
-            .defineInRange("territoryMaxClaims", 8, 1, 10000);
+    public static final ModConfigSpec.IntValue TERRITORY_MAX_BLOCKS = BUILDER
+            .comment("How much ground one player may hold at once, across every dimension, in blocks of area. Ground is still claimed a whole chunk at a time and every chunk counts as 256 (16 x 16), so this rounds down to a whole number of chunks: 2048 is 8 chunks, 1000 is 3")
+            .defineInRange("territoryMaxBlocks", 2048, 256, 2_560_000);
 
     public static final ModConfigSpec.IntValue TERRITORY_CAPTURE_SECONDS = BUILDER
             .comment("How long, in seconds, a player has to stand in somebody else's chunk to take it off them. The owner is told the moment it starts, so this is the whole window they have to come and do something about it. 0 hands the chunk over on the spot")
@@ -561,6 +561,14 @@ public final class Config {
     public static final ModConfigSpec.BooleanValue TERRITORY_NOTIFY_SOUND = BUILDER
             .comment("Whether a territory notification (a claim taken, a capture started) is played as a sound as well as written in chat")
             .define("territoryNotifySound", true);
+
+    public static final ModConfigSpec.BooleanValue TERRITORY_SHOW_BORDERS = BUILDER
+            .comment("Whether the edge of every claim near a player is drawn into the world as a wall of coloured dust: green for their own land, red for somebody else's, orange for land being captured")
+            .define("territoryShowBorders", true);
+
+    public static final ModConfigSpec.IntValue TERRITORY_BORDER_DISTANCE = BUILDER
+            .comment("How far from a player, in blocks, claim borders are drawn. The game drops ordinary particles further than 32 blocks off, so that is as far as this goes; every block of border in reach is a particle sent to the player twice a second")
+            .defineInRange("territoryBorderDistance", 24, 4, 32);
     static {
         BUILDER.pop();
     }
