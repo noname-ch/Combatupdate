@@ -14,6 +14,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -31,6 +32,12 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 public final class GipfaeliLock {
     private static final Map<UUID, UUID> LOCKS = new ConcurrentHashMap<>();
 
+    // The local player's own lock, mirrored on the client so the sight can draw and zoom the moment
+    // the button goes down instead of a tick later, the same way ElytraBoost predicts its own boost.
+    // Held as an entity id rather than a UUID because that is what a client can look an entity up by.
+    private static final int NO_TARGET = -1;
+    private static int clientLock = NO_TARGET;
+
     // Long enough to outlast the gap between refreshes, short enough that a dropped lock stops showing
     // almost at once.
     private static final int GLOW_DURATION_TICKS = 40;
@@ -44,8 +51,13 @@ public final class GipfaeliLock {
     // Returns whether the sight did anything at all, which is the caller's cue to swallow the click.
     public static boolean sight(Player player) {
         if (!(player.level() instanceof ServerLevel level)) {
-            // The client gets no say in what is locked, but it still has to report the click as
-            // handled so the launcher doesn't also try to fire on the same press.
+            // What the server decides is still the only lock that steers a rocket. This runs the same
+            // search over the same entities to reach the same answer, purely so the sight has
+            // something to draw straightaway.
+            if (player.isLocalPlayer()) {
+                LivingEntity predicted = clientLock != NO_TARGET ? null : findTarget(player.level(), player);
+                clientLock = predicted == null ? NO_TARGET : predicted.getId();
+            }
             return true;
         }
 
@@ -88,11 +100,12 @@ public final class GipfaeliLock {
     // Keeps the lock honest: it lapses when the target dies, wanders out of range, or the launcher goes
     // back in the pack. Driven from the player tick.
     public static void tick(Player player) {
-        if (LOCKS.isEmpty() || !(player.level() instanceof ServerLevel level)) {
+        if (!(player.level() instanceof ServerLevel level)) {
+            tickClientMirror(player);
             return;
         }
 
-        if (!LOCKS.containsKey(player.getUUID())) {
+        if (LOCKS.isEmpty() || !LOCKS.containsKey(player.getUUID())) {
             return;
         }
 
@@ -121,6 +134,32 @@ public final class GipfaeliLock {
         }
     }
 
+    // The same conditions the server drops a lock under, applied to the mirror so the reticle and the
+    // zoom let go at the same moment the real lock does.
+    private static void tickClientMirror(Player player) {
+        if (clientLock == NO_TARGET || !player.isLocalPlayer()) {
+            return;
+        }
+
+        LivingEntity target = clientTarget(player.level());
+        if (target == null
+                || !holdingLauncher(player)
+                || !Config.on(Config.ENABLE_GIPFAELI)
+                || target.distanceTo(player) > Config.GIPFAELI_LOCK_RANGE.getAsDouble()) {
+            clientLock = NO_TARGET;
+        }
+    }
+
+    // What the local player's sight is drawing on. Client-side only; the server steers rockets off
+    // LOCKS instead.
+    public static @Nullable LivingEntity clientTarget(Level level) {
+        if (clientLock == NO_TARGET) {
+            return null;
+        }
+
+        return level.getEntity(clientLock) instanceof LivingEntity target && target.isAlive() ? target : null;
+    }
+
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         LOCKS.remove(event.getEntity().getUUID());
@@ -139,7 +178,7 @@ public final class GipfaeliLock {
     // The living thing nearest the middle of the view, inside the sight's cone and its range. Scored on
     // angle off the centre rather than on distance, so a cow in the foreground doesn't steal a lock
     // meant for the player standing behind it.
-    private static @Nullable LivingEntity findTarget(ServerLevel level, Player player) {
+    private static @Nullable LivingEntity findTarget(Level level, Player player) {
         double range = Config.GIPFAELI_LOCK_RANGE.getAsDouble();
         boolean needsLineOfSight = Config.GIPFAELI_LOCK_NEEDS_LINE_OF_SIGHT.get();
 

@@ -21,6 +21,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterRangeSelectItemModelPropertyEvent;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
@@ -41,6 +42,7 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 import ch.bbcag.combatupdate.client.BatteringRamHelmetModel;
 import ch.bbcag.combatupdate.client.ElytraOrientation;
+import ch.bbcag.combatupdate.client.GipfaeliSight;
 import ch.bbcag.combatupdate.client.ShortbowPullProperty;
 
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
@@ -150,6 +152,17 @@ public final class CombatUpdateClient {
         }
 
         event.setRoll(ElytraOrientation.roll());
+    }
+
+    // The launcher's sight: the view pulls in while something is locked, and the reticle goes over it.
+    @SubscribeEvent
+    static void onComputeFov(ViewportEvent.ComputeFov event) {
+        event.setFOV(GipfaeliSight.computeFov(event.getFOV()));
+    }
+
+    @SubscribeEvent
+    static void onRenderGui(RenderGuiEvent.Post event) {
+        GipfaeliSight.render(event.getGuiGraphics());
     }
 
     // The render events hand over a snapshot of the entity rather than the entity, so the bank angle

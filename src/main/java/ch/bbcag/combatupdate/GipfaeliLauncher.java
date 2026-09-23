@@ -21,6 +21,10 @@ import ch.bbcag.combatupdate.entity.GipfaeliRocket;
 public final class GipfaeliLauncher {
     private static final int NO_AMMO = -1;
 
+    // Long enough to outlast the repeat rate of a held right-click, short enough that sighting and
+    // then firing still feels like two halves of the one motion.
+    private static final int SIGHT_COOLDOWN_TICKS = 10;
+
     private GipfaeliLauncher() {
     }
 
@@ -31,14 +35,22 @@ public final class GipfaeliLauncher {
             return false;
         }
 
-        return player.isShiftKeyDown() ? GipfaeliLock.sight(player) : fire(player, stack, level);
-    }
-
-    private static boolean fire(Player player, ItemStack stack, Level level) {
+        // The game re-runs a held right-click every few ticks, which without this would have the sight
+        // flickering on and off several times a second for as long as the button was down.
         if (player.getCooldowns().isOnCooldown(stack)) {
             return false;
         }
 
+        if (!player.isShiftKeyDown()) {
+            return fire(player, stack, level);
+        }
+
+        boolean sighted = GipfaeliLock.sight(player);
+        player.getCooldowns().addCooldown(stack, SIGHT_COOLDOWN_TICKS);
+        return sighted;
+    }
+
+    private static boolean fire(Player player, ItemStack stack, Level level) {
         // Creative pays for nothing, and neither does anyone who has turned the ammo off.
         boolean free = player.getAbilities().instabuild || !Config.GIPFAELI_CONSUMES_AMMO.get();
         int ammoSlot = free ? NO_AMMO : findAmmoSlot(player);

@@ -377,6 +377,18 @@ public final class Config {
     public static final ModConfigSpec.BooleanValue GIPFAELI_LOCK_NEEDS_LINE_OF_SIGHT = BUILDER
             .comment("Whether a target has to be in plain view to be locked on to. Off lets a lock be taken through walls")
             .define("gipfaeliLockNeedsLineOfSight", true);
+
+    public static final ModConfigSpec.BooleanValue GIPFAELI_SHOW_SIGHT = BUILDER
+            .comment("Whether the sight draws a reticle over the locked target")
+            .define("gipfaeliShowSight", true);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_ZOOM = BUILDER
+            .comment("How far the view pulls in while something is sighted, as a multiple (1.0 is no zoom at all, 4.0 is about a spyglass)")
+            .defineInRange("gipfaeliZoom", 3.0, 1.0, 10.0);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_ZOOM_SECONDS = BUILDER
+            .comment("How long the zoom takes to come in and go back out again, in seconds (0 snaps to it)")
+            .defineInRange("gipfaeliZoomSeconds", 0.25, 0.0, 3.0);
     static {
         BUILDER.pop();
     }
