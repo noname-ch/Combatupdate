@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "combatupdate:armageddon",
+    "combatupdate:battering_ram",
+    "combatupdate:combo_perun",
+    "combatupdate:gamble",
+    "combatupdate:gotta_go_fast",
+    "combatupdate:lifesteal",
+    "combatupdate:regularity",
+    "combatupdate:shortbow",
+    "combatupdate:singularity",
+    "combatupdate:mirror"
+  ]
+}
