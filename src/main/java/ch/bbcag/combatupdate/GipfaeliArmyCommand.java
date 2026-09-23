@@ -246,6 +246,34 @@ public final class GipfaeliArmyCommand {
 
                                     GipfaeliArmy.paint(commander, s, DyeColor.byName(wanted, null));
                                 }))))
+                // The whole squad's kit and armour, from its commander's menu.
+                .then(Commands.literal("kit")
+                        .then(Commands.argument("role", StringArgumentType.word())
+                                .suggests(GipfaeliArmyCommand::roles)
+                                .executes(context -> scoped(context, scope, (commander, s) -> {
+                                    GipfaeliWeapon role = role(context);
+                                    if (role != null) {
+                                        GipfaeliArmy.armSquad(commander, s, role);
+                                    }
+                                }))))
+                .then(Commands.literal("disarm")
+                        .executes(context -> scoped(context, scope, GipfaeliArmy::disarmSquad)))
+                .then(Commands.literal("armour")
+                        .then(Commands.argument("armour", StringArgumentType.word())
+                                .suggests((context, builder) -> SharedSuggestionProvider.suggest(
+                                        Arrays.stream(GipfaeliArmour.values()).map(GipfaeliArmour::token), builder))
+                                .executes(context -> scoped(context, scope, (commander, s) -> {
+                                    String wanted = StringArgumentType.getString(context, "armour");
+                                    GipfaeliArmour armour = GipfaeliArmour.byName(wanted);
+                                    if (armour == null) {
+                                        context.getSource().sendFailure(Component.translatable("combatupdate.army.no_such_armour", wanted));
+                                        return;
+                                    }
+
+                                    GipfaeliArmy.dressSquad(commander, s, armour);
+                                }))))
+                .then(Commands.literal("strip")
+                        .executes(context -> scoped(context, scope, GipfaeliArmy::stripSquad)))
                 // Filling the squad the order is for with unarmed soldiers: what a commander's spawn
                 // buttons run.
                 .then(Commands.literal("fill")

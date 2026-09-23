@@ -50,7 +50,8 @@ public final class GipfaeliManual {
 
                 page(title("RECRUITING"),
                         "\n\nClick a commander: +1, +5, +10 or fill to 40. Soldiers cost rations and come unarmed, in the squad's colour.\n\n",
-                        "Click a soldier (empty hand, or the flag) for its own menu: kit, armour, colour, posts.\n\n",
+                        "The commander's menu also hands the whole squad a kit and a suit of armour at once.\n\n",
+                        "Click a soldier for its own menu: kit, armour, colour, posts.\n\n",
                         "Kit and armour come out of your pack. Creative pays for nothing."),
 
                 page(title("KIT & ARMOUR"),

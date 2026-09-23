@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.DyeColor;
 
 import ch.bbcag.combatupdate.CombatUpdate;
@@ -63,6 +64,14 @@ public final class GipfaeliSoldierRenderer extends HumanoidMobRenderer<GipfaeliS
         state.commander = soldier.commander();
         state.atAttention = soldier.stance() == GipfaeliSoldier.Stance.STAND;
         state.armed = !soldier.getMainHandItem().isEmpty();
+    }
+
+    // Vanilla lets a mob's arm hang whatever it is holding, spear apart; a soldier shoulders its
+    // rifle the way a player does, off the same table.
+    @Override
+    protected HumanoidModel.ArmPose getArmPose(GipfaeliSoldier soldier, HumanoidArm arm) {
+        HumanoidModel.ArmPose pose = GipfaeliGunPose.poseFor(soldier.getItemHeldByArm(arm));
+        return pose == null ? super.getArmPose(soldier, arm) : pose;
     }
 
     @Override

@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 
 import org.jspecify.annotations.Nullable;
 
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
@@ -275,6 +276,11 @@ public enum GipfaeliWeapon {
                 level.addFreshEntity(bullet);
             }
         }
+
+        // A puff and a lick of flame at the muzzle, so a shot is seen as well as heard - and seen
+        // from across a field, where the sound has long since stopped carrying.
+        level.sendParticles(ParticleTypes.SMOKE, muzzle.x, muzzle.y, muzzle.z, 2, 0.05, 0.05, 0.05, 0.01);
+        level.sendParticles(ParticleTypes.FLAME, muzzle.x, muzzle.y, muzzle.z, 1, 0.02, 0.02, 0.02, 0.01);
 
         level.playSound(null, shooter.getX(), shooter.getY(), shooter.getZ(),
                 this.sound, SoundSource.PLAYERS, this == PANZER ? 0.5F : 1.0F, this.pitch);

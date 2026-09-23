@@ -574,11 +574,20 @@ public final class GipfaeliArmy {
     // Hands a soldier the kit for a role, out of the player's pack unless nothing costs anything,
     // and takes back whatever it was carrying.
     public static void armSoldier(ServerPlayer commander, GipfaeliSoldier soldier, GipfaeliWeapon role) {
+        if (!armOne(commander, soldier, role)) {
+            refuse(commander, Component.translatable("combatupdate.army.no_kit", role.stack().getHoverName()));
+            return;
+        }
+
+        readout(commander, Component.translatable("combatupdate.army.rearmed", role.stack().getHoverName()));
+    }
+
+    // One soldier, one kit; false when there was none in the pack to give it.
+    private static boolean armOne(ServerPlayer commander, GipfaeliSoldier soldier, GipfaeliWeapon role) {
         boolean free = commander.getAbilities().instabuild || !Config.ARMY_CONSUMES_SUPPLIES.get();
         int slot = findWeaponSlot(commander, role);
         if (slot == NO_SLOT && !free) {
-            refuse(commander, Component.translatable("combatupdate.army.no_kit", role.stack().getHoverName()));
-            return;
+            return false;
         }
 
         ItemStack kit = slot == NO_SLOT ? role.stack() : commander.getInventory().getItem(slot).copyWithCount(1);
@@ -590,7 +599,7 @@ public final class GipfaeliArmy {
 
         handBack(commander, previous);
         soldier.playSound(SoundEvents.ARMOR_EQUIP_IRON.value(), 1.0F, 1.0F);
-        readout(commander, Component.translatable("combatupdate.army.rearmed", kit.getHoverName()));
+        return true;
     }
 
     public static void disarmSoldier(ServerPlayer commander, GipfaeliSoldier soldier) {
@@ -600,9 +609,97 @@ public final class GipfaeliArmy {
         readout(commander, Component.translatable("combatupdate.army.soldier.disarmed"));
     }
 
+    // The whole squad handed one kit: what the commander's menu does. The commander itself keeps
+    // what it has - it is dressed from its own menu - and the ranks are armed until the pack runs
+    // out, with a word about how many went short.
+    public static void armSquad(ServerPlayer commander, Scope scope, GipfaeliWeapon role) {
+        int armed = 0;
+        int ranks = 0;
+        for (GipfaeliSoldier soldier : squad(commander, scope)) {
+            if (soldier.commander()) {
+                continue;
+            }
+
+            ranks++;
+            if (soldier.weapon() == role || armOne(commander, soldier, role)) {
+                armed++;
+            }
+        }
+
+        if (ranks == 0) {
+            refuse(commander, nobody(scope));
+            return;
+        }
+
+        readout(commander, Component.translatable("combatupdate.army.squad.armed", armed, role.stack().getHoverName(), ranks - armed));
+    }
+
+    public static void disarmSquad(ServerPlayer commander, Scope scope) {
+        int disarmed = 0;
+        for (GipfaeliSoldier soldier : squad(commander, scope)) {
+            if (!soldier.commander() && !soldier.getMainHandItem().isEmpty()) {
+                handBack(commander, soldier.getMainHandItem().copy());
+                soldier.arm(ItemStack.EMPTY);
+                disarmed++;
+            }
+        }
+
+        readout(commander, Component.translatable("combatupdate.army.squad.disarmed", disarmed));
+    }
+
+    // The whole squad dressed in one suit, as far as the pack stretches.
+    public static void dressSquad(ServerPlayer commander, Scope scope, GipfaeliArmour armour) {
+        int pieces = 0;
+        int ranks = 0;
+        for (GipfaeliSoldier soldier : squad(commander, scope)) {
+            if (soldier.commander()) {
+                continue;
+            }
+
+            ranks++;
+            pieces += dressOne(commander, soldier, armour);
+        }
+
+        if (ranks == 0) {
+            refuse(commander, nobody(scope));
+            return;
+        }
+
+        readout(commander, Component.translatable("combatupdate.army.squad.dressed", pieces, armour.displayName(), ranks));
+    }
+
+    public static void stripSquad(ServerPlayer commander, Scope scope) {
+        int stripped = 0;
+        for (GipfaeliSoldier soldier : squad(commander, scope)) {
+            if (soldier.commander()) {
+                continue;
+            }
+
+            for (EquipmentSlot slot : GipfaeliArmour.SLOTS) {
+                handBack(commander, soldier.equip(slot, ItemStack.EMPTY));
+            }
+
+            stripped++;
+        }
+
+        readout(commander, Component.translatable("combatupdate.army.squad.stripped", stripped));
+    }
+
     // Dresses a soldier in a suit of armour: every piece of it the player has, or the whole suit
     // when nothing costs anything. Whatever comes off goes back in the pack.
     public static void dressSoldier(ServerPlayer commander, GipfaeliSoldier soldier, GipfaeliArmour armour) {
+        int dressed = dressOne(commander, soldier, armour);
+        if (dressed == 0) {
+            refuse(commander, Component.translatable("combatupdate.army.soldier.no_armour", armour.displayName()));
+            return;
+        }
+
+        soldier.playSound(SoundEvents.ARMOR_EQUIP_IRON.value(), 1.0F, 1.0F);
+        readout(commander, Component.translatable("combatupdate.army.soldier.dressed", dressed, armour.displayName()));
+    }
+
+    // One soldier, one suit; how many pieces of it actually went on.
+    private static int dressOne(ServerPlayer commander, GipfaeliSoldier soldier, GipfaeliArmour armour) {
         boolean free = commander.getAbilities().instabuild || !Config.ARMY_CONSUMES_SUPPLIES.get();
         int dressed = 0;
         for (int index = 0; index < GipfaeliArmour.SLOTS.length; index++) {
@@ -622,13 +719,7 @@ public final class GipfaeliArmy {
             dressed++;
         }
 
-        if (dressed == 0) {
-            refuse(commander, Component.translatable("combatupdate.army.soldier.no_armour", armour.displayName()));
-            return;
-        }
-
-        soldier.playSound(SoundEvents.ARMOR_EQUIP_IRON.value(), 1.0F, 1.0F);
-        readout(commander, Component.translatable("combatupdate.army.soldier.dressed", dressed, armour.displayName()));
+        return dressed;
     }
 
     public static void stripSoldier(ServerPlayer commander, GipfaeliSoldier soldier) {
@@ -1065,6 +1156,50 @@ public final class GipfaeliArmy {
         spawn.append(button(Component.translatable("combatupdate.army.squad.spawn.fill", size), prefix + "fill " + size,
                 Component.translatable("combatupdate.army.squad.spawn.fill.hover"), ChatFormatting.YELLOW));
         commander.sendSystemMessage(spawn);
+
+        // What the whole squad carries and wears, from its commander. The kit most of them hold
+        // shows white, so a glance says what the squad is.
+        GipfaeliWeapon common = commonKit(squad);
+        MutableComponent kits = heading("combatupdate.army.squad.kit");
+        for (GipfaeliWeapon role : GipfaeliWeapon.values()) {
+            kits.append(button(role.roleName(), prefix + "kit " + role.token(),
+                    Component.translatable("combatupdate.army.squad.kit.hover", role.stack().getHoverName())
+                            .append(Component.literal("\n"))
+                            .append(Component.translatable(role.key() + ".hover")),
+                    role == common ? ChatFormatting.WHITE : ChatFormatting.YELLOW));
+        }
+        kits.append(button(Component.translatable("combatupdate.army.soldier.disarm"), prefix + "disarm", null, ChatFormatting.GRAY));
+        commander.sendSystemMessage(kits);
+
+        MutableComponent suits = heading("combatupdate.army.squad.armour");
+        for (GipfaeliArmour armour : GipfaeliArmour.values()) {
+            suits.append(button(armour.displayName(), prefix + "armour " + armour.token(),
+                    Component.translatable("combatupdate.army.squad.armour.hover"), ChatFormatting.AQUA));
+        }
+        suits.append(button(Component.translatable("combatupdate.army.soldier.strip"), prefix + "strip", null, ChatFormatting.GRAY));
+        commander.sendSystemMessage(suits);
+    }
+
+    // The kit most of the ranks carry, or null when they carry nothing much.
+    private static @Nullable GipfaeliWeapon commonKit(List<GipfaeliSoldier> squad) {
+        Map<GipfaeliWeapon, Integer> counts = new EnumMap<>(GipfaeliWeapon.class);
+        for (GipfaeliSoldier soldier : squad) {
+            GipfaeliWeapon kit = soldier.weapon();
+            if (kit != null && !soldier.commander()) {
+                counts.merge(kit, 1, Integer::sum);
+            }
+        }
+
+        GipfaeliWeapon common = null;
+        int most = 0;
+        for (Map.Entry<GipfaeliWeapon, Integer> entry : counts.entrySet()) {
+            if (entry.getValue() > most) {
+                most = entry.getValue();
+                common = entry.getKey();
+            }
+        }
+
+        return common;
     }
 
     // Attack, stand, hold, follow: the four orders, for whoever the prefix names. Stand shows

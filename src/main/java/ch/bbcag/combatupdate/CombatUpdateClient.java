@@ -46,11 +46,16 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import ch.bbcag.combatupdate.client.BatteringRamHelmetModel;
 import ch.bbcag.combatupdate.client.BookEnchantmentProperty;
 import ch.bbcag.combatupdate.client.ElytraOrientation;
+import ch.bbcag.combatupdate.client.HeadingItemRenderer;
+import ch.bbcag.combatupdate.client.GipfaeliGunPose;
 import ch.bbcag.combatupdate.client.GipfaeliSight;
 import ch.bbcag.combatupdate.client.GipfaeliSoldierRenderer;
 import ch.bbcag.combatupdate.client.ScarletSpearRenderer;
 import ch.bbcag.combatupdate.client.ShortbowPullProperty;
 import ch.bbcag.combatupdate.client.TerritoryClient;
+import ch.bbcag.combatupdate.entity.GipfaeliBomb;
+import ch.bbcag.combatupdate.entity.GipfaeliBullet;
+import ch.bbcag.combatupdate.entity.GipfaeliRocket;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 
@@ -216,14 +221,19 @@ public final class CombatUpdateClient {
     static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         // Renders it the same way vanilla renders a Ghast fireball: a spinning icon of its held item (the fire charge).
         event.registerEntityRenderer(CombatUpdate.COMBAT_FIREBALL.get(), context -> new ThrownItemRenderer<>(context, 3.0F, true));
-        // At its own size and lit by the world, unlike the fireball: a pastry does not glow in the dark.
-        event.registerEntityRenderer(CombatUpdate.GIPFAELI_ROCKET.get(), context -> new ThrownItemRenderer<>(context, 1.0F, false));
-        // The same pastry, sitting on its pad and then arcing over: a bomb is a Gipfaeli taking the
-        // slow way round, and it has no business looking like anything else.
-        event.registerEntityRenderer(CombatUpdate.GIPFAELI_BOMB.get(), context -> new ThrownItemRenderer<>(context, 1.0F, false));
+        // A pastry in flight goes nose first (see HeadingItemRenderer), at its own size and lit by
+        // the world, unlike the fireball: a Gipfaeli does not glow in the dark. The rocket rolls as
+        // it flies, like anything fin-stabilised.
+        event.registerEntityRenderer(CombatUpdate.GIPFAELI_ROCKET.get(),
+                context -> HeadingItemRenderer.of(context, GipfaeliRocket::getItem, 1.0F, true));
+        // The same pastry, standing on its pad and then tipping over along its arc: a bomb is a
+        // Gipfaeli taking the slow way round, and it has no business looking like anything else.
+        event.registerEntityRenderer(CombatUpdate.GIPFAELI_BOMB.get(),
+                context -> HeadingItemRenderer.of(context, GipfaeliBomb::getItem, 1.0F, false));
         // A round out of a Gipfaeli gun: the same pastry again, small and quick enough to read as a
         // tracer rather than as lunch going past.
-        event.registerEntityRenderer(CombatUpdate.GIPFAELI_BULLET.get(), context -> new ThrownItemRenderer<>(context, 0.5F, false));
+        event.registerEntityRenderer(CombatUpdate.GIPFAELI_BULLET.get(),
+                context -> HeadingItemRenderer.of(context, GipfaeliBullet::getItem, 0.5F, true));
         event.registerEntityRenderer(CombatUpdate.GIPFAELI_SOLDIER.get(), GipfaeliSoldierRenderer::new);
         // The grenade is drawn as its own item, pin and all, tumbling the way a thrown thing does.
         event.registerEntityRenderer(CombatUpdate.GIPFAELI_GRENADE_ENTITY.get(), context -> new ThrownItemRenderer<>(context, 1.0F, false));
@@ -249,6 +259,11 @@ public final class CombatUpdateClient {
         event.registerItem(BatteringRamHelmetModel.INSTANCE,
                 Items.LEATHER_HELMET, Items.CHAINMAIL_HELMET, Items.IRON_HELMET,
                 Items.GOLDEN_HELMET, Items.DIAMOND_HELMET, Items.NETHERITE_HELMET, Items.TURTLE_HELMET);
+
+        // A Gipfaeli gun is held like a gun and the banner like a banner (see GipfaeliGunPose).
+        for (GipfaeliWeapon weapon : GipfaeliWeapon.values()) {
+            event.registerItem(GipfaeliGunPose.INSTANCE, weapon.item());
+        }
     }
 
     // Holding A or D while gliding rolls the player and W or S pitches it, instead of steering on foot
