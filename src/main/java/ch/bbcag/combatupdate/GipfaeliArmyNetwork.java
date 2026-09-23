@@ -9,6 +9,9 @@ import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
+import io.netty.buffer.ByteBuf;
+
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -78,18 +81,18 @@ public final class GipfaeliArmyNetwork {
         });
     }
 
-    private static <T extends CustomPacketPayload> CustomPacketPayload.Type<T> type(String path) {
+    private static <T extends CustomPacketPayload> CustomPacketPayload.Type<T> payloadType(String path) {
         return new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(CombatUpdate.MODID, path));
     }
 
-    private static <E extends Enum<E>> StreamCodec<FriendlyByteBuf, E> ordinal(E[] values) {
+    private static <E extends Enum<E>> StreamCodec<ByteBuf, E> ordinal(E[] values) {
         return ByteBufCodecs.VAR_INT.map(index -> values[Math.clamp(index, 0, values.length - 1)], Enum::ordinal);
     }
 
     // Client -> server: send count soldiers to hold this chunk. The server clamps the count to the
     // squad the player actually has, and the chunk to the ones its map could have shown.
     public record MarchRequest(int chunkX, int chunkZ, int count) implements CustomPacketPayload {
-        public static final Type<MarchRequest> TYPE = type("army_march");
+        public static final Type<MarchRequest> TYPE = payloadType("army_march");
         public static final StreamCodec<FriendlyByteBuf, MarchRequest> CODEC = StreamCodec.composite(
                 ByteBufCodecs.VAR_INT, MarchRequest::chunkX,
                 ByteBufCodecs.VAR_INT, MarchRequest::chunkZ,
@@ -104,7 +107,7 @@ public final class GipfaeliArmyNetwork {
 
     // Client -> server: tell me about my army.
     public record RosterRequest() implements CustomPacketPayload {
-        public static final Type<RosterRequest> TYPE = type("army_roster_request");
+        public static final Type<RosterRequest> TYPE = payloadType("army_roster_request");
         public static final StreamCodec<FriendlyByteBuf, RosterRequest> CODEC = StreamCodec.unit(new RosterRequest());
 
         @Override
@@ -124,9 +127,9 @@ public final class GipfaeliArmyNetwork {
     // Client -> server: one soldier, one order. The soldier is named by UUID rather than entity id
     // because the roster lists soldiers standing in chunks the client has never seen.
     public record SoldierOrder(UUID soldier, SoldierAction action, String argument) implements CustomPacketPayload {
-        public static final Type<SoldierOrder> TYPE = type("army_soldier_order");
+        public static final Type<SoldierOrder> TYPE = payloadType("army_soldier_order");
         public static final StreamCodec<FriendlyByteBuf, SoldierOrder> CODEC = StreamCodec.composite(
-                StreamCodec.of(FriendlyByteBuf::writeUUID, FriendlyByteBuf::readUUID), SoldierOrder::soldier,
+                UUIDUtil.STREAM_CODEC, SoldierOrder::soldier,
                 ordinal(SoldierAction.ALL), SoldierOrder::action,
                 ByteBufCodecs.STRING_UTF8, SoldierOrder::argument,
                 SoldierOrder::new);
@@ -147,7 +150,7 @@ public final class GipfaeliArmyNetwork {
     // Client -> server: everyone in scope, one order. The scope is the word the commands use:
     // "all", "camo", or a dye's name.
     public record SquadOrder(String scope, SquadAction action, String argument) implements CustomPacketPayload {
-        public static final Type<SquadOrder> TYPE = type("army_squad_order");
+        public static final Type<SquadOrder> TYPE = payloadType("army_squad_order");
         public static final StreamCodec<FriendlyByteBuf, SquadOrder> CODEC = StreamCodec.composite(
                 ByteBufCodecs.STRING_UTF8, SquadOrder::scope,
                 ordinal(SquadAction.ALL), SquadOrder::action,
@@ -181,7 +184,7 @@ public final class GipfaeliArmyNetwork {
     // supplies switched off), which decides whether the kit buttons are offered at all.
     public record Roster(List<Entry> soldiers, int squadSize, int armyCap, int rations, List<BlockPos> posts, boolean free)
             implements CustomPacketPayload {
-        public static final Type<Roster> TYPE = type("army_roster");
+        public static final Type<Roster> TYPE = payloadType("army_roster");
         public static final StreamCodec<FriendlyByteBuf, Roster> CODEC = StreamCodec.of(Roster::write, Roster::read);
 
         // The entity id is what the client looks the soldier up by when it is near enough to be
@@ -256,7 +259,7 @@ public final class GipfaeliArmyNetwork {
     // Server -> client: open the army screen on this scope. What clicking a commander, or
     // sneaking with the flag, does.
     public record OpenArmy(String scope) implements CustomPacketPayload {
-        public static final Type<OpenArmy> TYPE = type("army_open");
+        public static final Type<OpenArmy> TYPE = payloadType("army_open");
         public static final StreamCodec<FriendlyByteBuf, OpenArmy> CODEC = StreamCodec.composite(
                 ByteBufCodecs.STRING_UTF8, OpenArmy::scope,
                 OpenArmy::new);
