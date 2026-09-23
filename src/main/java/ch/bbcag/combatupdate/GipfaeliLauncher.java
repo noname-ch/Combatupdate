@@ -19,7 +19,8 @@ import ch.bbcag.combatupdate.entity.GipfaeliRocket;
 // only the one: sneak to work the sight (see GipfaeliLock), use it plainly to fire. A shot taken with
 // something sighted chases it; a shot taken with nothing sighted flies straight.
 public final class GipfaeliLauncher {
-    private static final int NO_AMMO = -1;
+    // Shared with the launch rig, which buys its bombs out of the same tin of pastry.
+    static final int NO_AMMO = -1;
 
     // Long enough to outlast the repeat rate of a held right-click, short enough that sighting and
     // then firing still feels like two halves of the one motion.
@@ -82,7 +83,7 @@ public final class GipfaeliLauncher {
         return true;
     }
 
-    private static int findAmmoSlot(Player player) {
+    static int findAmmoSlot(Player player) {
         Inventory inventory = player.getInventory();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             if (inventory.getItem(slot).is(CombatUpdate.GIPFAELI.get())) {

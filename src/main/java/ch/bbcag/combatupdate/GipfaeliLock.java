@@ -38,6 +38,11 @@ public final class GipfaeliLock {
     private static final int NO_TARGET = -1;
     private static int clientLock = NO_TARGET;
 
+    // What the sight is resting on but has not taken yet, refreshed every tick while the launcher is
+    // out. Drawing this is what makes the sight visible before anything is locked, so there is
+    // something to aim with rather than a feature you have to already know about to find.
+    private static int clientCandidate = NO_TARGET;
+
     // Long enough to outlast the gap between refreshes, short enough that a dropped lock stops showing
     // almost at once.
     private static final int GLOW_DURATION_TICKS = 40;
@@ -137,17 +142,36 @@ public final class GipfaeliLock {
     // The same conditions the server drops a lock under, applied to the mirror so the reticle and the
     // zoom let go at the same moment the real lock does.
     private static void tickClientMirror(Player player) {
-        if (clientLock == NO_TARGET || !player.isLocalPlayer()) {
+        if (!player.isLocalPlayer()) {
+            return;
+        }
+
+        boolean aiming = Config.on(Config.ENABLE_GIPFAELI) && holdingLauncher(player);
+
+        // Worked out once a tick rather than once a frame: it sweeps every living thing in range, and
+        // the answer cannot change faster than the entities themselves move.
+        LivingEntity candidate = aiming && clientLock == NO_TARGET ? findTarget(player.level(), player) : null;
+        clientCandidate = candidate == null ? NO_TARGET : candidate.getId();
+
+        if (clientLock == NO_TARGET) {
             return;
         }
 
         LivingEntity target = clientTarget(player.level());
         if (target == null
-                || !holdingLauncher(player)
-                || !Config.on(Config.ENABLE_GIPFAELI)
+                || !aiming
                 || target.distanceTo(player) > Config.GIPFAELI_LOCK_RANGE.getAsDouble()) {
             clientLock = NO_TARGET;
         }
+    }
+
+    // What the sight is resting on but has not taken. Client-side only.
+    public static @Nullable LivingEntity clientCandidate(Level level) {
+        if (clientCandidate == NO_TARGET) {
+            return null;
+        }
+
+        return level.getEntity(clientCandidate) instanceof LivingEntity target && target.isAlive() ? target : null;
     }
 
     // What the local player's sight is drawing on. Client-side only; the server steers rockets off
