@@ -175,8 +175,9 @@ public final class GipfaeliRocket extends Fireball {
                 .add(axis.scale(axis.dot(vector) * (1.0 - cos)));
     }
 
-    // Rotates heading the given angle towards desired, in the plane the two of them span.
-    private static Vec3 turn(Vec3 heading, Vec3 desired, double radians) {
+    // Rotates heading the given angle towards desired, in the plane the two of them span. The Exobeam
+    // homes the same way, so it borrows this rather than keeping a copy.
+    static Vec3 turn(Vec3 heading, Vec3 desired, double radians) {
         // The part of the target direction at right angles to where we are pointing: the direction the
         // turn has to go in. It vanishes when the two are exactly in line, which leaves nothing to
         // turn towards and no turn to make.
