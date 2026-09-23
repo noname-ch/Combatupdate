@@ -49,10 +49,14 @@ public final class GipfaeliManual {
                         "Right-click your own soldier: it holds here, or falls back in."),
 
                 page(title("RECRUITING"),
-                        "\n\nA recruit costs the kit for its role out of your pack, plus ",
-                        "a few Gipfäli as rations.\n\n",
-                        "The kit in a soldier's hand IS its role. Hand it a different gun and it changes role on the spot.\n\n",
-                        "Creative pays for nothing."),
+                        "\n\nA recruit costs a few Gipfäli as rations and turns up unarmed, in camouflage.\n\n",
+                        "Click the soldier (empty hand, or the flag) to open its own menu: kit, armour, colour.\n\n",
+                        "Kit and armour come out of your pack. Creative pays for nothing."),
+
+                page(title("KIT & ARMOUR"),
+                        "\n\nThe kit in a soldier's hand IS its role. Hand it a different gun and it changes role on the spot.\n\n",
+                        "Armour is vanilla armour: leather to netherite, and it protects like it does on you.\n\n",
+                        "Or just right-click the soldier holding a gun, a helmet or a dye."),
 
                 page(title("ROLES 1/2"),
                         "\n\n", bold("Rifleman"), " – Letony-Mate-AK47. Bursts, decent reach. The standard.\n\n",
@@ -90,6 +94,11 @@ public final class GipfaeliManual {
                         "\n\nCraft a Guard Post, set it down at whatever needs guarding, and click it.\n\n",
                         "Station soldiers there; they walk a beat around it and never stray far.\n\n",
                         bold("Defend"), " monsters. ", bold("Aggressive"), " strangers too. ", bold("Passive"), " only when hit."),
+
+                page(title("ATTACK & STAND"),
+                        "\n\n", bold("Attack"), " – the squad in the field: it engages, follows orders, keeps its shape.\n\n",
+                        bold("Stand"), " – on parade where you stand: ranks five wide and ten deep, at attention, shooting nothing unless shot at.\n\n",
+                        bold("Stand follow"), " – the same ranks, marching after you."),
 
                 page(title("FORMATIONS"),
                         "\n\n", bold("Loose"), " – bunch up behind you.\n",

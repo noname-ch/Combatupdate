@@ -1,6 +1,5 @@
 package ch.bbcag.combatupdate;
 
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -62,11 +61,8 @@ public final class GipfaeliCommandFlag {
                 GipfaeliArmy.menu(commander);
             } else if (target instanceof GipfaeliSoldier soldier && soldier.isOwnedBy(commander)) {
                 // One of ours. Pointing the squad at itself is never what was meant, so this press
-                // is the one soldier's own orders instead: stand here, or fall back in.
-                soldier.holdPosition(!soldier.holdingPosition());
-                GipfaeliArmy.readout(commander, Component.translatable(soldier.holdingPosition()
-                        ? "combatupdate.army.one.holding"
-                        : "combatupdate.army.one.following"));
+                // opens the one soldier's own menu instead: its kit, its armour, its colour.
+                GipfaeliArmy.soldierMenu(commander, soldier);
             } else if (target instanceof LivingEntity victim) {
                 GipfaeliArmy.attack(commander, victim);
             }

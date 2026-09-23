@@ -595,6 +595,28 @@ public final class Config {
     public static final ModConfigSpec.IntValue ARMY_MENU_ENTRIES = BUILDER
             .comment("How many targets the menu lists per group before it stops and says how many more there were")
             .defineInRange("armyMenuEntries", 10, 1, 50);
+    // --- Parade ground ---
+
+
+    public static final ModConfigSpec.IntValue ARMY_PARADE_WIDTH = BUILDER
+            .comment("How many soldiers stand abreast in one block of a parade")
+            .defineInRange("armyParadeWidth", 5, 1, 64);
+
+    public static final ModConfigSpec.IntValue ARMY_PARADE_DEPTH = BUILDER
+            .comment("How many ranks deep one block of a parade stands. Width times depth is how many soldiers go down before a second block falls in beside the first")
+            .defineInRange("armyParadeDepth", 10, 1, 64);
+
+    public static final ModConfigSpec.DoubleValue ARMY_PARADE_SPACING = BUILDER
+            .comment("How far apart, in blocks, soldiers stand from one another in the ranks. 1.0 is shoulder to shoulder, a block each; larger opens the ranks up")
+            .defineInRange("armyParadeSpacing", 1.0, 0.6, 8.0);
+
+    public static final ModConfigSpec.DoubleValue ARMY_PARADE_BLOCK_GAP = BUILDER
+            .comment("How wide a gap, in blocks, is left between one block of a parade and the next, on top of the spacing. One soldier's worth by default, so the blocks read apart")
+            .defineInRange("armyParadeBlockGap", 1.0, 0.0, 16.0);
+
+    public static final ModConfigSpec.DoubleValue ARMY_PARADE_STANDOFF = BUILDER
+            .comment("How far, in blocks, the front rank of a parade stands from the commander who called it")
+            .defineInRange("armyParadeStandoff", 3.0, 1.0, 32.0);
     static {
         BUILDER.pop();
     }

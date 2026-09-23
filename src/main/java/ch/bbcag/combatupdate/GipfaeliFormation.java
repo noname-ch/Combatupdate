@@ -24,7 +24,17 @@ public enum GipfaeliFormation {
     // squad pathing round through the wall.
     COLUMN,
     // A ring around you, facing out. Nothing gets to you without walking through a soldier.
-    CIRCLE;
+    CIRCLE,
+    // On parade: companies five abreast and ten deep, a pace apart, two paces of clear ground
+    // between companies, side by side and then rank behind rank. The shape a squad stands in when
+    // it has been told to stand, and the shape it marches in when told to follow that way.
+    PARADE;
+
+    private static final int PARADE_WIDTH = 5;
+    private static final int PARADE_DEPTH = 10;
+    private static final int PARADE_COMPANY = PARADE_WIDTH * PARADE_DEPTH;
+    private static final double PARADE_PACE = 1.2;
+    private static final double PARADE_GAP = 2.0;
 
     private static final GipfaeliFormation[] ALL = values();
 
@@ -86,6 +96,23 @@ public enum GipfaeliFormation {
                 double angle = Math.PI * 2.0 * index / size;
                 yield anchor.subtract(forward.scale(Math.cos(angle) * radius))
                         .add(right.scale(Math.sin(angle) * radius));
+            }
+            case PARADE -> {
+                int companies = (size + PARADE_COMPANY - 1) / PARADE_COMPANY;
+                int company = index / PARADE_COMPANY;
+                int within = index % PARADE_COMPANY;
+                int rank = within / PARADE_WIDTH;
+                int file = within % PARADE_WIDTH;
+
+                // Companies stand two abreast before they stand behind one another, and a lone
+                // company stands square behind the commander rather than off to one side.
+                int columns = Math.min(2, companies);
+                double companyStride = (PARADE_WIDTH - 1) * PARADE_PACE + PARADE_GAP + PARADE_PACE;
+                double rankStride = (PARADE_DEPTH - 1) * PARADE_PACE + PARADE_GAP + PARADE_PACE;
+                double across = (file - (PARADE_WIDTH - 1) / 2.0) * PARADE_PACE
+                        + ((company % 2) - (columns - 1) / 2.0) * companyStride;
+                double back = STANDOFF + rank * PARADE_PACE + (company / 2) * rankStride;
+                yield anchor.subtract(forward.scale(back)).add(right.scale(across));
             }
             case LOOSE -> null;
         };

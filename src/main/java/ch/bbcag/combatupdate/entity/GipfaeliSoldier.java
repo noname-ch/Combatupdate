@@ -72,8 +72,32 @@ import ch.bbcag.combatupdate.GipfaeliWeapon;
 // hand, which is also the only record of its role, and the colour of its uniform, which is only
 // there to be drawn.
 public final class GipfaeliSoldier extends TamableAnimal implements RangedAttackMob {
+    // Which uniform is drawn: a dye's id, or CAMO for the field uniform every recruit starts in.
     private static final EntityDataAccessor<Integer> DATA_UNIFORM =
             SynchedEntityData.defineId(GipfaeliSoldier.class, EntityDataSerializers.INT);
+    private static final int CAMO = -1;
+
+    // Attack or stand: whether the soldier is fighting or on parade. On the client only so the
+    // renderer knows to put its hands behind its back.
+    private static final EntityDataAccessor<Byte> DATA_STANCE =
+            SynchedEntityData.defineId(GipfaeliSoldier.class, EntityDataSerializers.BYTE);
+
+    // What the squad is doing as a whole. ATTACK is a squad in the field - it engages, it follows
+    // orders, it keeps whatever shape it was given. STAND is a squad on parade: in ranks, at
+    // attention, shooting nothing unless shot at.
+    public enum Stance {
+        ATTACK, STAND;
+
+        private static final Stance[] ALL = values();
+
+        public static Stance byOrdinal(int ordinal) {
+            return ordinal >= 0 && ordinal < ALL.length ? ALL[ordinal] : ATTACK;
+        }
+
+        public String key() {
+            return "combatupdate.army.stance." + this.name().toLowerCase(java.util.Locale.ROOT);
+        }
+    }
 
     // Every soldier's walking pace before its role scales it; a player sprints at about 0.28.
     private static final double BASE_SPEED = 0.31;
@@ -122,6 +146,12 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     private int slot;
     private int slots = 1;
 
+    // Where the parade is drawn up around, when it is drawn up somewhere rather than around the
+    // commander: the spot and the facing at the moment they said "stand". Null means the shape
+    // walks with the commander instead.
+    private @Nullable Vec3 paradeAnchor;
+    private float paradeYaw;
+
     // Somewhere it has been sent to stand - a chunk off the territory map, as a rule - and is
     // still on its way to. Cleared on arrival, where holding position takes over.
     private @Nullable Vec3 station;
@@ -165,7 +195,8 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder entityData) {
         super.defineSynchedData(entityData);
-        entityData.define(DATA_UNIFORM, DyeColor.WHITE.getId());
+        entityData.define(DATA_UNIFORM, CAMO);
+        entityData.define(DATA_STANCE, (byte) Stance.ATTACK.ordinal());
     }
 
     @Override
@@ -198,9 +229,18 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         // Its spot in the squad's shape, when the squad has one; otherwise a wolf's plain heel.
         this.goalSelector.addGoal(7, new FormationGoal(this));
         this.goalSelector.addGoal(8, new FollowOwnerGoal(this, 1.15, 8.0F, 3.0F));
-        this.goalSelector.addGoal(9, new WaterAvoidingRandomStrollGoal(this, 0.8));
-        this.goalSelector.addGoal(10, new LookAtPlayerGoal(this, Player.class, 10.0F));
-        this.goalSelector.addGoal(11, new RandomLookAroundGoal(this));
+        // A soldier in a shape, at a post, held, or on parade has somewhere to be; only one with
+        // none of those wanders off to look at the flowers.
+        this.goalSelector.addGoal(9, new WaterAvoidingRandomStrollGoal(this, 0.8) {
+            @Override
+            public boolean canUse() {
+                return GipfaeliSoldier.this.idle() && super.canUse();
+            }
+        });
+        // On parade, eyes front; otherwise the ordinary head-turning every mob does.
+        this.goalSelector.addGoal(10, new AttentionGoal(this));
+        this.goalSelector.addGoal(11, new LookAtPlayerGoal(this, Player.class, 10.0F));
+        this.goalSelector.addGoal(12, new RandomLookAroundGoal(this));
 
         // First, above everything reactive: an order is an order, and it outranks whatever the
         // soldier would have picked for itself.
@@ -212,12 +252,14 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         // was told to; the predicate is read per candidate, so the switch takes effect at once.
         this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Monster.class, true,
                 (target, level) -> Config.ARMY_GUARDS.get()
+                        && this.stance() == Stance.ATTACK
                         && !GipfaeliArmy.sameSide(this, target)
                         && this.guardMode() != GipfaeliGuardPost.Mode.PASSIVE));
         // A post kept aggressively: strangers within its watch are targets too. Never the owner's
         // side, and never anyone on the owner's scoreboard team, so a fortress can have guests.
         this.targetSelector.addGoal(6, new NearestAttackableTargetGoal<>(this, Player.class, true,
-                (target, level) -> this.guardMode() == GipfaeliGuardPost.Mode.AGGRESSIVE
+                (target, level) -> this.stance() == Stance.ATTACK
+                        && this.guardMode() == GipfaeliGuardPost.Mode.AGGRESSIVE
                         && this.withinWatch(target)
                         && !GipfaeliArmy.sameSide(this, target)
                         && !this.guest(target)));
@@ -256,12 +298,56 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         }
     }
 
-    public DyeColor uniform() {
-        return DyeColor.byId(this.entityData.get(DATA_UNIFORM));
+    // The dye the uniform is in, or null for the camouflage every recruit starts in.
+    public @Nullable DyeColor uniform() {
+        int id = this.entityData.get(DATA_UNIFORM);
+        return id == CAMO ? null : DyeColor.byId(id);
     }
 
-    public void setUniform(DyeColor color) {
-        this.entityData.set(DATA_UNIFORM, color.getId());
+    public void setUniform(@Nullable DyeColor color) {
+        this.entityData.set(DATA_UNIFORM, color == null ? CAMO : color.getId());
+    }
+
+    public Stance stance() {
+        return Stance.byOrdinal(this.entityData.get(DATA_STANCE));
+    }
+
+    public void setStance(Stance stance) {
+        this.entityData.set(DATA_STANCE, (byte) stance.ordinal());
+    }
+
+    // Draws the parade up around a fixed spot and facing, or - with null - around the commander,
+    // wherever they go.
+    public void standAt(@Nullable Vec3 anchor, float yaw) {
+        this.paradeAnchor = anchor;
+        this.paradeYaw = yaw;
+    }
+
+    // Whether the parade is drawn up somewhere in particular rather than around the commander.
+    public boolean paradeFixed() {
+        return this.paradeAnchor != null;
+    }
+
+    // Nothing to do and nowhere to be: the only state a soldier wanders in.
+    private boolean idle() {
+        return !this.holding && this.station == null && this.post == null
+                && this.formation == GipfaeliFormation.LOOSE && this.stance() == Stance.ATTACK;
+    }
+
+    // A soldier is named by what it carries: a rifleman, a marksman, a Panzer soldier - or, with
+    // nothing in its hands yet, just a soldier. This is what the target lists, the death messages
+    // and the nameplate all show.
+    @Override
+    protected Component getTypeName() {
+        GipfaeliWeapon kit = this.weapon();
+        return kit == null ? super.getTypeName() : Component.translatable("combatupdate.army.soldier.named", kit.roleName());
+    }
+
+    // Puts a piece of armour on, and hands back whatever was in that slot before.
+    public ItemStack equip(EquipmentSlot slot, ItemStack piece) {
+        ItemStack previous = this.getItemBySlot(slot).copy();
+        this.setItemSlot(slot, piece.copyWithCount(1));
+        return previous;
     }
 
     // --- What it has been told ---
@@ -369,12 +455,26 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     // Where this soldier belongs in the squad's shape right now, or null if the squad has no shape
     // or nobody to shape itself around.
     private @Nullable Vec3 formationSpot() {
+        if (this.paradeAnchor != null) {
+            return this.formation.slot(this.slot, this.slots, this.paradeAnchor, this.paradeYaw);
+        }
+
         LivingEntity owner = this.getOwner();
         if (owner == null) {
             return null;
         }
 
         return this.formation.slot(this.slot, this.slots, owner.position(), owner.getYRot());
+    }
+
+    // Which way the shape faces: the anchor's facing on a fixed parade, the commander's otherwise.
+    private @Nullable Vec3 formationFront() {
+        if (this.paradeAnchor != null) {
+            return Vec3.directionFromRotation(0.0F, this.paradeYaw);
+        }
+
+        LivingEntity owner = this.getOwner();
+        return owner == null ? null : Vec3.directionFromRotation(0.0F, owner.getYRot());
     }
 
     // --- What it does on its own ---
@@ -450,12 +550,26 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
 
         ItemStack held = player.getItemInHand(hand);
         DyeColor dye = dyeOf(held);
+        EquipmentSlot armourSlot = armourSlotOf(held);
         if (this.level().isClientSide()) {
             boolean handled = GipfaeliWeapon.of(held) != null
                     || held.isEmpty()
                     || dye != null
+                    || armourSlot != null
                     || held.is(CombatUpdate.GIPFAELI.get());
             return handled ? InteractionResult.SUCCESS : super.mobInteract(player, hand);
+        }
+
+        // A piece of armour held out goes straight on, and whatever it replaces comes back.
+        if (armourSlot != null) {
+            ItemStack previous = this.equip(armourSlot, held);
+            held.shrink(1);
+            if (!previous.isEmpty()) {
+                player.getInventory().placeItemBackInInventory(previous, Prediction.SERVER_ONLY);
+            }
+
+            this.playSound(SoundEvents.ARMOR_EQUIP_IRON.value(), 1.0F, 1.0F);
+            return InteractionResult.SUCCESS;
         }
 
         GipfaeliWeapon offered = GipfaeliWeapon.of(held);
@@ -487,11 +601,9 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
             return InteractionResult.SUCCESS;
         }
 
-        if (held.isEmpty()) {
-            this.holdPosition(!this.holdingPosition());
-            GipfaeliArmy.readout(player, Component.translatable(this.holdingPosition()
-                    ? "combatupdate.army.one.holding"
-                    : "combatupdate.army.one.following"));
+        // An empty hand opens the soldier's own menu: its kit, its armour, its colour.
+        if (held.isEmpty() && player instanceof net.minecraft.server.level.ServerPlayer commander) {
+            GipfaeliArmy.soldierMenu(commander, this);
             return InteractionResult.SUCCESS;
         }
 
@@ -502,6 +614,12 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     // one counts - a dye, or anything else somebody has managed to put a colour on.
     private static @Nullable DyeColor dyeOf(ItemStack stack) {
         return stack.getItem() instanceof net.minecraft.world.item.DyeItem ? stack.get(DataComponents.DYE) : null;
+    }
+
+    // The armour slot a held item is meant for, or null for anything that is not body armour.
+    private static @Nullable EquipmentSlot armourSlotOf(ItemStack stack) {
+        net.minecraft.world.item.equipment.Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
+        return equippable != null && equippable.slot().getType() == EquipmentSlot.Type.HUMANOID_ARMOR ? equippable.slot() : null;
     }
 
     // A soldier carries its kit out of the world with it unless something kills it, in which case
@@ -516,6 +634,16 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         }
 
         this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+
+        // And the armour it was dressed in, for the same reason: somebody paid for it.
+        for (EquipmentSlot slot : ch.bbcag.combatupdate.GipfaeliArmour.SLOTS) {
+            ItemStack piece = this.getItemBySlot(slot);
+            if (!piece.isEmpty() && Config.ARMY_CONSUMES_SUPPLIES.get()) {
+                this.spawnAtLocation(level, piece.copy());
+            }
+
+            this.setItemSlot(slot, ItemStack.EMPTY);
+        }
     }
 
     // Never on its own side, whatever it was told. Without this an order aimed at a crowd takes the
@@ -570,7 +698,14 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
             output.store("Post", BlockPos.CODEC, this.post);
         }
 
-        output.store("Uniform", DyeColor.CODEC, this.uniform());
+        DyeColor uniform = this.uniform();
+        output.putString("Uniform", uniform == null ? "camo" : uniform.getName());
+        output.putInt("Stance", this.stance().ordinal());
+        if (this.paradeAnchor != null) {
+            output.store("ParadeAnchor", Vec3.CODEC, this.paradeAnchor);
+            output.putFloat("ParadeYaw", this.paradeYaw);
+        }
+
         output.putBoolean("Holding", this.holding);
         output.putInt("Formation", this.formation.ordinal());
         output.putInt("Slot", this.slot);
@@ -583,7 +718,10 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         this.orderedTargetId = input.read("OrderedTarget", UUIDUtil.CODEC).orElse(null);
         this.station = input.read("Station", Vec3.CODEC).orElse(null);
         this.post = input.read("Post", BlockPos.CODEC).orElse(null);
-        this.setUniform(input.read("Uniform", DyeColor.CODEC).orElse(DyeColor.WHITE));
+        this.setUniform(DyeColor.byName(input.getStringOr("Uniform", "camo"), null));
+        this.setStance(Stance.byOrdinal(input.getIntOr("Stance", 0)));
+        this.paradeAnchor = input.read("ParadeAnchor", Vec3.CODEC).orElse(null);
+        this.paradeYaw = input.getFloatOr("ParadeYaw", 0.0F);
         this.holding = input.getBooleanOr("Holding", false);
         this.formation = GipfaeliFormation.byOrdinal(input.getIntOr("Formation", 0));
         this.slot = input.getIntOr("Slot", 0);
@@ -793,6 +931,41 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         }
     }
 
+    // Eyes front. On parade a soldier looks the way the ranks face, and keeps looking there,
+    // instead of turning its head after whoever walks past. Owns only the right to look.
+    private static final class AttentionGoal extends Goal {
+        private final GipfaeliSoldier soldier;
+
+        AttentionGoal(GipfaeliSoldier soldier) {
+            this.soldier = soldier;
+            this.setFlags(EnumSet.of(Goal.Flag.LOOK));
+        }
+
+        @Override
+        public boolean canUse() {
+            return this.soldier.stance() == Stance.STAND && this.soldier.getTarget() == null;
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return this.canUse();
+        }
+
+        @Override
+        public boolean requiresUpdateEveryTick() {
+            return true;
+        }
+
+        @Override
+        public void tick() {
+            Vec3 front = this.soldier.formationFront();
+            if (front != null) {
+                Vec3 ahead = this.soldier.position().add(front.scale(10.0));
+                this.soldier.getLookControl().setLookAt(ahead.x, this.soldier.getEyeY(), ahead.z);
+            }
+        }
+    }
+
     // Staying put. All this goal does is own the right to move while the soldier is held and has
     // nothing to shoot, so that nothing below it - the formation, the heel, the wander - walks it
     // off its spot. It never moves the soldier itself.
@@ -880,16 +1053,21 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
             }
 
             // Left far enough behind, a soldier does what a wolf does and simply appears at heel;
-            // a formation that is a chunk behind its commander is not a formation.
-            if (this.soldier.shouldTryTeleportToOwner() && this.soldier.distanceTo(owner) > 24.0) {
+            // a formation that is a chunk behind its commander is not a formation. Not on a fixed
+            // parade, though, which is drawn up somewhere on purpose.
+            if (this.soldier.paradeAnchor == null && this.soldier.shouldTryTeleportToOwner()
+                    && this.soldier.distanceTo(owner) > 24.0) {
                 this.soldier.tryToTeleportToOwner();
                 return;
             }
 
-            // Look where the commander looks, so a line faces the same way as the person leading it
+            // Look where the shape faces, so a line faces the same way as the person leading it
             // rather than each soldier staring at whoever is nearest.
-            Vec3 ahead = owner.position().add(Vec3.directionFromRotation(0.0F, owner.getYRot()).scale(10.0));
-            this.soldier.getLookControl().setLookAt(ahead.x, this.soldier.getEyeY(), ahead.z);
+            Vec3 front = this.soldier.formationFront();
+            if (front != null) {
+                Vec3 ahead = this.soldier.position().add(front.scale(10.0));
+                this.soldier.getLookControl().setLookAt(ahead.x, this.soldier.getEyeY(), ahead.z);
+            }
 
             if (this.repathCooldown-- > 0) {
                 return;
