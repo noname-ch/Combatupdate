@@ -5,7 +5,6 @@ import ch.bbcag.combatupdate.Config;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.context.ContextKey;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
@@ -132,7 +131,7 @@ public final class ElytraOrientation {
 
     // Applied as deltas to both the current and previous rotation, the way vanilla's turn() does, so
     // the frame-to-frame interpolation of the view stays intact.
-    public static void writeRotation(Entity entity) {
+    public static void writeRotation(LivingEntity entity) {
         float yaw = (float) -Math.toDegrees(Math.atan2(forward.x, forward.z));
         float pitch = (float) -Math.toDegrees(Math.asin(Math.clamp(forward.y, -1.0, 1.0)));
 
@@ -143,6 +142,14 @@ public final class ElytraOrientation {
         entity.setXRot(entity.getXRot() + pitchDelta);
         entity.yRotO += yawDelta;
         entity.xRotO += pitchDelta;
+
+        // The head yaw has to come too. It is what the drawn body is put on (see CombatUpdateClient),
+        // and vanilla only brings it back onto the entity's yaw once a tick, at the top of
+        // Player#aiStep. This runs every frame, so left alone the body would trail up to a tick behind
+        // the nose through every turn. Carried as the same delta on the previous value as on the
+        // current one, for the same reason the yaw above is.
+        entity.yHeadRot += yawDelta;
+        entity.yHeadRotO += yawDelta;
     }
 
     // How far the aircraft is banked: the signed angle from the horizon's "up" to our own, about the nose.
