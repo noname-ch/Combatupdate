@@ -62,6 +62,7 @@ import ch.bbcag.combatupdate.entity.GipfaeliSoldier;
 import ch.bbcag.combatupdate.entity.GipfaeliTnt;
 import ch.bbcag.combatupdate.entity.ScarletBullet;
 import ch.bbcag.combatupdate.entity.ScarletSpear;
+import ch.bbcag.combatupdate.entity.TrainingDummy;
 import ch.bbcag.combatupdate.mixin.PrimedTntAccessor;
 import ch.bbcag.combatupdate.territory.TerritoryBorders;
 import ch.bbcag.combatupdate.territory.TerritoryCommands;
@@ -194,6 +195,16 @@ public final class CombatUpdate {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "gipfaeli_soldier"))));
 
+    // Something to test weapons on that stays put and never dies; see TrainingDummy.
+    public static final DeferredHolder<EntityType<?>, EntityType<TrainingDummy>> TRAINING_DUMMY = ENTITY_TYPES.register("training_dummy",
+            () -> EntityType.Builder.of(TrainingDummy::new, MobCategory.MISC)
+                    // Picked up whole rather than broken (see TrainingDummy#mobInteract), so nothing to roll for.
+                    .noLootTable()
+                    .sized(0.6F, 1.95F)
+                    .eyeHeight(1.62F)
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "training_dummy"))));
+
     // Gipfaeli TNT, plain and Ultra, with vanilla TNT's own block properties; see GipfaeliTntBlock.
     public static final DeferredBlock<GipfaeliTntBlock> GIPFAELI_TNT_BLOCK = BLOCKS.registerBlock("gipfaeli_tnt",
             p -> new GipfaeliTntBlock(GipfaeliTntBlock.Kind.STANDARD, p),
@@ -218,6 +229,10 @@ public final class CombatUpdate {
             MeatObelisk::new,
             p -> p.mapColor(MapColor.COLOR_PINK).strength(0.8F).sound(SoundType.SLIME_BLOCK));
     public static final DeferredItem<BlockItem> MEAT_OBELISK_ITEM = ITEMS.registerSimpleBlockItem("meat_obelisk", MEAT_OBELISK);
+
+    // Sets a training dummy down; see TrainingDummyItem.
+    public static final DeferredItem<TrainingDummyItem> TRAINING_DUMMY_ITEM = ITEMS.registerItem("training_dummy",
+            TrainingDummyItem::new, p -> p.stacksTo(16));
 
     // Swords with no swing timer and less damage behind each hit; see Shortsword for the trade
     public static final DeferredItem<Item> IRON_SHORTSWORD = ITEMS.registerSimpleItem("iron_shortsword",
@@ -288,6 +303,7 @@ public final class CombatUpdate {
         NeoForge.EVENT_BUS.register(GipfaeliLock.class);
         NeoForge.EVENT_BUS.register(GipfaeliLaunchRig.class);
         NeoForge.EVENT_BUS.register(Exoblade.class);
+        NeoForge.EVENT_BUS.register(TrainingDummy.class);
         NeoForge.EVENT_BUS.register(TerritoryManager.class);
         NeoForge.EVENT_BUS.register(TerritoryBorders.class);
         NeoForge.EVENT_BUS.addListener(TerritoryCommands::register);
@@ -327,6 +343,9 @@ public final class CombatUpdate {
             }
             if (Config.on(Config.ENABLE_SCARLET_DEVIL)) {
                 event.accept(SCARLET_DEVIL);
+            }
+            if (Config.on(Config.ENABLE_TRAINING_DUMMY)) {
+                event.accept(TRAINING_DUMMY_ITEM);
             }
             // Kept out of the tab while the feature is off, so nobody is handed a launcher that will
             // not fire. The items stay registered either way - pulling them out of the registry would
@@ -370,6 +389,7 @@ public final class CombatUpdate {
     // see. They are built once, here, rather than carried on the entity.
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
         event.put(GIPFAELI_SOLDIER.get(), GipfaeliSoldier.createAttributes().build());
+        event.put(TRAINING_DUMMY.get(), TrainingDummy.createAttributes().build());
     }
 
     // The army's orders, which are also what the target menu's buttons run (see GipfaeliArmy).
@@ -498,5 +518,6 @@ public final class CombatUpdate {
     public void onServerTick(ServerTickEvent.Post event) {
         DamageNumbers.tick();
         GipfaeliArmy.tick(event.getServer());
+        Exoblade.tickSlashes();
     }
 }

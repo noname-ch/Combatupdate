@@ -79,6 +79,10 @@ public final class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_SCARLET_DEVIL = BUILDER
             .comment("Whether the Scarlet Devil can be thrown. Off leaves it a spear that only stabs and takes it out of the creative tab; the item stays registered, so a world already holding one still loads")
             .define("enableScarletDevil", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_TRAINING_DUMMY = BUILDER
+            .comment("Whether a training dummy can be set down. Off also takes it out of the creative tab; dummies already standing stay where they are, and the item stays registered, so a world already holding one still loads")
+            .define("enableTrainingDummy", true);
     // --- Enchantments ---
 
 
@@ -360,6 +364,14 @@ public final class Config {
     public static final ModConfigSpec.DoubleValue EXOBEAM_HOMING_RANGE = BUILDER
             .comment("How far, in blocks, an Exobeam looks for a monster or player to bend towards. 0 makes every beam fly straight")
             .defineInRange("exobeamHomingRange", 16.0, 0.0, 64.0);
+
+    public static final ModConfigSpec.DoubleValue EXOBLADE_SWING_CUT_DAMAGE = BUILDER
+            .comment("How much damage a full-strength swing deals to every other monster and player in the arc in front of you, besides whatever it was aimed at. 0 makes swings hit only what they are aimed at")
+            .defineInRange("exobladeSwingCutDamage", 8.0, 0.0, 100.0);
+
+    public static final ModConfigSpec.DoubleValue EXOBEAM_SLASH_DAMAGE = BUILDER
+            .comment("How much damage each of the three Exo slashes that follow an Exobeam hit deals. 0 turns the slashes off")
+            .defineInRange("exobeamSlashDamage", 3.0, 0.0, 100.0);
     // --- Lunge (right-click) ---
 
 
@@ -374,6 +386,16 @@ public final class Config {
     public static final ModConfigSpec.IntValue EXOBLADE_DASH_COOLDOWN_TICKS = BUILDER
             .comment("How many ticks must pass between one lunge and the next (20 ticks = 1 second)")
             .defineInRange("exobladeDashCooldownTicks", 40, 0, 1200);
+    // --- Big slash (the first swing after a lunge lands) ---
+
+
+    public static final ModConfigSpec.DoubleValue EXOBLADE_BIG_SLASH_DAMAGE = BUILDER
+            .comment("How much damage the big slash deals to every monster and player in the arc in front of you. It also throws three Exobeams")
+            .defineInRange("exobladeBigSlashDamage", 24.0, 0.0, 200.0);
+
+    public static final ModConfigSpec.IntValue EXOBLADE_BIG_SLASH_WINDOW_TICKS = BUILDER
+            .comment("How many ticks after a lunge lands the next swing stays a big slash (20 ticks = 1 second). 0 turns the big slash off")
+            .defineInRange("exobladeBigSlashWindowTicks", 40, 0, 400);
     static {
         BUILDER.pop();
     }
@@ -395,8 +417,8 @@ public final class Config {
             .defineInRange("scarletSpearSpeed", 4.0, 0.5, 8.0);
 
     public static final ModConfigSpec.IntValue SCARLET_DEVIL_COOLDOWN_TICKS = BUILDER
-            .comment("How many ticks must pass between one throw and the next (20 ticks = 1 second)")
-            .defineInRange("scarletDevilCooldownTicks", 20, 0, 1200);
+            .comment("How many ticks must pass between one throw and the next (20 ticks = 1 second). Holding right-click throws again as soon as this runs out")
+            .defineInRange("scarletDevilCooldownTicks", 12, 0, 1200);
     // --- Scarlet Blast ---
 
 
@@ -417,7 +439,7 @@ public final class Config {
 
 
     public static final ModConfigSpec.IntValue GUNGNIR_CHARGE_TICKS = BUILDER
-            .comment("How long, in ticks, the spear has to be held back before the throw becomes a Gungnir: a bigger spear that hits twice as hard, sheds bullets three times as fast, blasts twice as wide and heals its thrower")
+            .comment("How long, in ticks, you have to go without throwing before the next throw is a Gungnir (Calamity's stealth strike): a bigger spear that hits twice as hard, sheds bullets three times as fast, blasts twice as wide and heals its thrower")
             .defineInRange("gungnirChargeTicks", 40, 10, 400);
 
     public static final ModConfigSpec.DoubleValue GUNGNIR_HEAL = BUILDER
