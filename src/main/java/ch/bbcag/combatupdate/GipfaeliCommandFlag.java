@@ -39,7 +39,7 @@ public final class GipfaeliCommandFlag {
 
         if (level instanceof ServerLevel && player instanceof ServerPlayer commander) {
             if (commander.isShiftKeyDown()) {
-                GipfaeliArmy.menu(commander);
+                GipfaeliArmy.openArmy(commander, GipfaeliArmy.Scope.ALL);
             } else {
                 GipfaeliArmy.raiseSquad(commander);
             }
@@ -58,7 +58,7 @@ public final class GipfaeliCommandFlag {
 
         if (level instanceof ServerLevel && player instanceof ServerPlayer commander) {
             if (commander.isShiftKeyDown()) {
-                GipfaeliArmy.menu(commander);
+                GipfaeliArmy.openArmy(commander, GipfaeliArmy.Scope.ALL);
             } else if (target instanceof GipfaeliSoldier soldier && soldier.isOwnedBy(commander)) {
                 // One of ours. Pointing the squad at itself is never what was meant, so this press
                 // opens the one soldier's own menu instead: its kit, its armour, its colour.

@@ -28,6 +28,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Prediction;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -45,6 +46,7 @@ import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
@@ -1132,12 +1134,13 @@ public final class GipfaeliArmy {
 
     // --- The menus ---
 
-    // Clicking a soldier: a commander opens its squad's orders, anyone else its own kit.
+    // Clicking a soldier: a commander opens the army screen on its squad, anyone else its own
+    // kit bag. The chat menus below stay behind the commands, for whoever prefers them.
     public static void click(ServerPlayer commander, GipfaeliSoldier soldier) {
         if (soldier.commander()) {
-            squadMenu(commander, Scope.of(soldier.uniform()));
+            openArmy(commander, Scope.of(soldier.uniform()));
         } else {
-            soldierMenu(commander, soldier);
+            openSoldier(commander, soldier);
         }
     }
 
@@ -1203,6 +1206,9 @@ public final class GipfaeliArmy {
         }
         suits.append(button(Component.translatable("combatupdate.army.soldier.strip"), prefix + "strip", null, ChatFormatting.GRAY));
         commander.sendSystemMessage(suits);
+
+        commander.sendSystemMessage(colours("combatupdate.army.menu.colour", prefix + "colour ",
+                Component.translatable("combatupdate.army.squad.colour.hover")));
     }
 
     // The kit most of the ranks carry, or null when they carry nothing much.
@@ -1429,6 +1435,188 @@ public final class GipfaeliArmy {
 
     private static MutableComponent rule() {
         return Component.literal(" ═══════ ").withStyle(ChatFormatting.DARK_GRAY);
+    }
+
+    // --- The screens ---
+
+    // Opens one soldier's kit bag (see GipfaeliSoldierMenu): its armour and gun as slots the
+    // player drags things in and out of, with the quick buttons beside them. Needs the soldier
+    // in reach, the way a horse's does - the slots are its equipment, and the client only has
+    // the equipment of what it can see.
+    public static void openSoldier(ServerPlayer commander, GipfaeliSoldier soldier) {
+        if (!commander.isWithinEntityInteractionRange(soldier, 4.0)) {
+            refuse(commander, Component.translatable("combatupdate.army.screen.too_far"));
+            return;
+        }
+
+        List<BlockPos> posts = postPositions(commander);
+        commander.openMenu(new SimpleMenuProvider(
+                (id, inventory, player) -> new GipfaeliSoldierMenu(id, inventory, soldier, posts),
+                soldier.getDisplayName()),
+                buffer -> GipfaeliSoldierMenu.write(buffer, soldier, posts));
+    }
+
+    // Opens the army screen on a scope: the roster first, so it has something to show, then the
+    // word to open it on.
+    public static void openArmy(ServerPlayer commander, Scope scope) {
+        sendRoster(commander);
+        PacketDistributor.sendToPlayer(commander, new GipfaeliArmyNetwork.OpenArmy(scope.token()));
+    }
+
+    // The army as the screen shows it: every soldier, what it carries, and what it is doing.
+    public static void sendRoster(ServerPlayer commander) {
+        List<GipfaeliArmyNetwork.Roster.Entry> entries = new ArrayList<>();
+        for (GipfaeliSoldier soldier : squad(commander)) {
+            GipfaeliWeapon kit = soldier.weapon();
+            GipfaeliArmour armour = GipfaeliArmour.of(soldier.getItemBySlot(EquipmentSlot.CHEST).getItem());
+            DyeColor uniform = soldier.uniform();
+            ChunkPos chunk = soldier.chunkPosition();
+            entries.add(new GipfaeliArmyNetwork.Roster.Entry(
+                    soldier.getUUID(), soldier.getId(), soldier.getName().getString(),
+                    kit == null ? -1 : kit.ordinal(),
+                    armour == null ? -1 : armour.ordinal(),
+                    uniform == null ? -1 : uniform.getId(),
+                    soldier.commander(), soldier.getHealth(), soldier.getMaxHealth(),
+                    activity(soldier), soldier.level() == commander.level(), chunk.x(), chunk.z()));
+        }
+
+        boolean free = commander.getAbilities().instabuild || !Config.ARMY_CONSUMES_SUPPLIES.get();
+        PacketDistributor.sendToPlayer(commander, new GipfaeliArmyNetwork.Roster(entries,
+                Config.ARMY_SQUAD_SIZE.getAsInt(), Config.ARMY_MAX_SQUAD.getAsInt(), Config.ARMY_RECRUIT_RATIONS.getAsInt(),
+                postPositions(commander), free));
+    }
+
+    private static GipfaeliArmyNetwork.Activity activity(GipfaeliSoldier soldier) {
+        if (soldier.getTarget() != null) {
+            return GipfaeliArmyNetwork.Activity.FIGHTING;
+        }
+
+        if (soldier.marching()) {
+            return GipfaeliArmyNetwork.Activity.MARCHING;
+        }
+
+        if (soldier.post() != null) {
+            return GipfaeliArmyNetwork.Activity.GUARDING;
+        }
+
+        if (soldier.stance() == Stance.STAND) {
+            return GipfaeliArmyNetwork.Activity.PARADE;
+        }
+
+        return soldier.holdingPosition() ? GipfaeliArmyNetwork.Activity.HOLDING : GipfaeliArmyNetwork.Activity.FOLLOWING;
+    }
+
+    // The player's guard posts by number, as positions.
+    private static List<BlockPos> postPositions(ServerPlayer commander) {
+        MinecraftServer server = commander.level().getServer();
+        if (server == null) {
+            return List.of();
+        }
+
+        List<BlockPos> positions = new ArrayList<>();
+        for (GipfaeliArmyData.PostRef ref : GipfaeliArmyData.get(server).posts(server, commander.getUUID())) {
+            positions.add(ref.pos());
+        }
+
+        return positions;
+    }
+
+    // One soldier's screen buttons, and the roster's, land here: the same orders the chat menu
+    // gives, named by the packet instead of by a command. Every one is answered with the roster
+    // again, so the screen redraws from what actually happened.
+    public static void soldierOrder(ServerPlayer commander, UUID id, GipfaeliArmyNetwork.SoldierAction action, String argument) {
+        GipfaeliSoldier soldier = soldierOf(commander, id);
+        if (soldier == null) {
+            refuse(commander, Component.translatable("combatupdate.army.soldier.gone"));
+            sendRoster(commander);
+            return;
+        }
+
+        switch (action) {
+            case OPEN -> openSoldier(commander, soldier);
+            case KIT -> {
+                GipfaeliWeapon role = GipfaeliWeapon.byName(argument);
+                if (role != null) {
+                    armSoldier(commander, soldier, role);
+                }
+            }
+            case DISARM -> disarmSoldier(commander, soldier);
+            case ARMOUR -> {
+                GipfaeliArmour armour = GipfaeliArmour.byName(argument);
+                if (armour != null) {
+                    dressSoldier(commander, soldier, armour);
+                }
+            }
+            case STRIP -> stripSoldier(commander, soldier);
+            case COLOUR -> paintSoldier(commander, soldier, DyeColor.byName(argument, null));
+            case PROMOTE -> promote(commander, soldier);
+            case DEMOTE -> demote(commander, soldier);
+            case POST -> sendToPost(commander, soldier, number(argument));
+            case DISMISS -> dismissSoldier(commander, soldier);
+        }
+
+        sendRoster(commander);
+    }
+
+    public static void squadOrder(ServerPlayer commander, String token, GipfaeliArmyNetwork.SquadAction action, String argument) {
+        Scope scope = Scope.parse(token);
+        if (scope == null) {
+            return;
+        }
+
+        switch (action) {
+            case ATTACK -> attackSighted(commander, scope);
+            case STAND -> stance(commander, scope, Stance.STAND, false);
+            case HOLD -> hold(commander, scope);
+            case FOLLOW -> follow(commander, scope);
+            case KIT -> {
+                GipfaeliWeapon role = GipfaeliWeapon.byName(argument);
+                if (role != null) {
+                    armSquad(commander, scope, role);
+                }
+            }
+            case DISARM -> disarmSquad(commander, scope);
+            case ARMOUR -> {
+                GipfaeliArmour armour = GipfaeliArmour.byName(argument);
+                if (armour != null) {
+                    dressSquad(commander, scope, armour);
+                }
+            }
+            case STRIP -> stripSquad(commander, scope);
+            case FILL -> fill(commander, scope, Math.max(1, number(argument)));
+            case FORM -> {
+                GipfaeliFormation formation = GipfaeliFormation.byName(argument);
+                if (formation != null) {
+                    form(commander, scope, formation);
+                }
+            }
+            case DISMISS -> dismiss(commander, scope);
+            case RAISE -> raiseSquad(commander);
+        }
+
+        sendRoster(commander);
+    }
+
+    private static int number(String argument) {
+        try {
+            return Integer.parseInt(argument.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    // Sends one soldier home, kit and armour back in the pack, the way dismiss() does for a squad.
+    public static void dismissSoldier(ServerPlayer commander, GipfaeliSoldier soldier) {
+        handBack(commander, soldier.getMainHandItem().copy());
+        for (EquipmentSlot slot : GipfaeliArmour.SLOTS) {
+            handBack(commander, soldier.getItemBySlot(slot).copy());
+        }
+
+        soldier.level().playSound(null, soldier.getX(), soldier.getY(), soldier.getZ(),
+                SoundEvents.ARMOR_EQUIP_IRON.value(), SoundSource.PLAYERS, 0.7F, 1.4F);
+        soldier.discard();
+        reformParade(commander);
+        readout(commander, Component.translatable("combatupdate.army.dismissed", 1));
     }
 
     // --- Guard posts ---

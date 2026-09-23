@@ -294,6 +294,7 @@ public final class CombatUpdate {
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
         SOUND_EVENTS.register(modEventBus);
+        GipfaeliSoldierMenu.MENUS.register(modEventBus);
 
         // Register ourselves for the game events the @SubscribeEvent methods below handle.
         NeoForge.EVENT_BUS.register(this);
