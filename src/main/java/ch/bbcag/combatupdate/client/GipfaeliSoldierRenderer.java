@@ -28,15 +28,21 @@ import ch.bbcag.combatupdate.entity.GipfaeliSoldier;
 // The colour is a texture per dye rather than a tint: sixteen small files and a seventeenth for
 // the camouflage, and no second render pass to composite an overlay on every soldier every frame.
 public final class GipfaeliSoldierRenderer extends HumanoidMobRenderer<GipfaeliSoldier, GipfaeliSoldierRenderer.State, GipfaeliSoldierRenderer.Model> {
-    private static final Identifier CAMO = Identifier.fromNamespaceAndPath(CombatUpdate.MODID,
-            "textures/entity/gipfaeli_soldier/camo.png");
+    private static final Identifier CAMO = uniform("camo");
+    private static final Identifier CAMO_COMMANDER = uniform("commander_camo");
     private static final Identifier[] UNIFORMS = new Identifier[DyeColor.values().length];
+    // A commander wears black whatever the squad wears, with the squad's colour as a stripe.
+    private static final Identifier[] COMMANDERS = new Identifier[DyeColor.values().length];
 
     static {
         for (DyeColor color : DyeColor.values()) {
-            UNIFORMS[color.getId()] = Identifier.fromNamespaceAndPath(CombatUpdate.MODID,
-                    "textures/entity/gipfaeli_soldier/" + color.getName() + ".png");
+            UNIFORMS[color.getId()] = uniform(color.getName());
+            COMMANDERS[color.getId()] = uniform("commander_" + color.getName());
         }
+    }
+
+    private static Identifier uniform(String name) {
+        return Identifier.fromNamespaceAndPath(CombatUpdate.MODID, "textures/entity/gipfaeli_soldier/" + name + ".png");
     }
 
     public GipfaeliSoldierRenderer(EntityRendererProvider.Context context) {
@@ -54,12 +60,17 @@ public final class GipfaeliSoldierRenderer extends HumanoidMobRenderer<GipfaeliS
     public void extractRenderState(GipfaeliSoldier soldier, State state, float partialTicks) {
         super.extractRenderState(soldier, state, partialTicks);
         state.uniform = soldier.uniform();
+        state.commander = soldier.commander();
         state.atAttention = soldier.stance() == GipfaeliSoldier.Stance.STAND;
         state.armed = !soldier.getMainHandItem().isEmpty();
     }
 
     @Override
     public Identifier getTextureLocation(State state) {
+        if (state.commander) {
+            return state.uniform == null ? CAMO_COMMANDER : COMMANDERS[state.uniform.getId()];
+        }
+
         return state.uniform == null ? CAMO : UNIFORMS[state.uniform.getId()];
     }
 
@@ -67,6 +78,7 @@ public final class GipfaeliSoldierRenderer extends HumanoidMobRenderer<GipfaeliS
     // draw, whether the soldier is on parade, and whether it has something in its hands.
     public static final class State extends HumanoidRenderState {
         @Nullable DyeColor uniform;
+        boolean commander;
         boolean atAttention;
         boolean armed;
     }

@@ -95,6 +95,11 @@ public final class GipfaeliManual {
                         "Station soldiers there; they walk a beat around it and never stray far.\n\n",
                         bold("Defend"), " monsters. ", bold("Aggressive"), " strangers too. ", bold("Passive"), " only when hit."),
 
+                page(title("SQUADS"),
+                        "\n\nA squad is a colour: up to 40 soldiers wearing it, plus one commander.\n\n",
+                        "Paint a soldier blue and it is in the blue squad. Camouflage is the reserve.\n\n",
+                        "Promote a soldier from its menu: it turns black with the squad's stripe. Click the commander for the whole squad's orders."),
+
                 page(title("ATTACK & STAND"),
                         "\n\n", bold("Attack"), " – the squad in the field: it engages, follows orders, keeps its shape.\n\n",
                         bold("Stand"), " – on parade where you stand: ranks five wide and ten deep, at attention, shooting nothing unless shot at.\n\n",
