@@ -135,6 +135,7 @@ public final class GipfaeliManual {
                         "  colour <dye>\n",
                         "  enlist <role>\n",
                         "  manual\n\n",
+                        "  training [n] [armed] · training clear\n",
                         "Short: /soldats <order>, /soldats-red attack Steve, /soldats-blue hold\n\n",
                         "Ops: recruit <role> [n]\n",
                         "  fortress [radius]"));

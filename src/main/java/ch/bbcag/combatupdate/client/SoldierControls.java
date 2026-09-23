@@ -68,7 +68,7 @@ final class SoldierControls {
     private boolean commander;
     private int confirmTicks;
 
-    SoldierControls(Consumer<AbstractWidget> add, int x, int y, UUID soldier, boolean commander, int posts) {
+    SoldierControls(Consumer<AbstractWidget> add, int x, int y, UUID soldier, boolean commander, int posts, Tab initial) {
         this.soldier = soldier;
         this.x = x;
         this.y = y;
@@ -154,7 +154,12 @@ final class SoldierControls {
         cursor += ROW;
 
         this.bottom = cursor;
-        this.select(Tab.KIT);
+        this.select(initial);
+    }
+
+    // Which tab is showing, so a screen rebuilt around new controls can put it back.
+    Tab tab() {
+        return this.tab;
     }
 
     private boolean commanderNow() {

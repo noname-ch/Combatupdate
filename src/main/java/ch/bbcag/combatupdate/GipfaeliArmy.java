@@ -157,7 +157,7 @@ public final class GipfaeliArmy {
 
         for (ServerLevel level : server.getAllLevels()) {
             level.getEntities(EntityTypeTest.forClass(GipfaeliSoldier.class),
-                    soldier -> soldier.isAlive() && soldier.isOwnedBy(commander), squad);
+                    soldier -> soldier.isAlive() && !soldier.training() && soldier.isOwnedBy(commander), squad);
         }
 
         // The banner at the point of the wedge and the head of the column, where it is of most use
@@ -433,6 +433,49 @@ public final class GipfaeliArmy {
         readout(commander, Component.translatable("combatupdate.army.squad.filled", mustered, colourName(colour),
                 ranks(squad) + mustered, Config.ARMY_SQUAD_SIZE.getAsInt()));
         reform(commander);
+    }
+
+    // How many dummies one call stands up, and how far around the player they and "clear" reach.
+    private static final int TRAINING_MAX = 30;
+    private static final double TRAINING_SPREAD = 6.0;
+    private static final double TRAINING_RANGE = 64.0;
+
+    // Stands up count training dummies in front of the player: nobody's soldiers, in grey, that
+    // anyone and any army can be sent at. Armed ones carry a rifle and shoot back at whoever hits
+    // them; unarmed ones just take it. They pack up on their own after ten minutes.
+    public static void training(ServerPlayer commander, int count, boolean armed) {
+        ServerLevel level = commander.level();
+        Vec3 look = commander.getLookAngle();
+        Vec3 ahead = commander.position().add(look.x * 8.0, 0.0, look.z * 8.0);
+        int stood = Math.clamp(count, 1, TRAINING_MAX);
+        for (int index = 0; index < stood; index++) {
+            double dx = (commander.getRandom().nextDouble() * 2.0 - 1.0) * TRAINING_SPREAD;
+            double dz = (commander.getRandom().nextDouble() * 2.0 - 1.0) * TRAINING_SPREAD;
+            BlockPos ground = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    BlockPos.containing(ahead.x + dx, ahead.y, ahead.z + dz));
+            GipfaeliSoldier dummy = new GipfaeliSoldier(CombatUpdate.GIPFAELI_SOLDIER.get(), level);
+            dummy.setPos(Vec3.atBottomCenterOf(ground));
+            dummy.setYRot(commander.getYRot() + 180.0F);
+            dummy.setUniform(DyeColor.LIGHT_GRAY);
+            dummy.arm(armed ? GipfaeliWeapon.RIFLEMAN.stack() : ItemStack.EMPTY);
+            dummy.setHealth(dummy.getMaxHealth());
+            dummy.setTraining(true);
+            level.addFreshEntity(dummy);
+        }
+
+        level.playSound(null, ahead.x, ahead.y, ahead.z, SoundEvents.ARMOR_EQUIP_IRON.value(), SoundSource.PLAYERS, 1.0F, 0.9F);
+        readout(commander, Component.translatable(armed ? "combatupdate.army.training.armed" : "combatupdate.army.training.stood", stood));
+    }
+
+    // Takes every dummy near the player down again.
+    public static void clearTraining(ServerPlayer commander) {
+        List<GipfaeliSoldier> dummies = commander.level().getEntitiesOfClass(GipfaeliSoldier.class,
+                commander.getBoundingBox().inflate(TRAINING_RANGE), GipfaeliSoldier::training);
+        for (GipfaeliSoldier dummy : dummies) {
+            dummy.discard();
+        }
+
+        readout(commander, Component.translatable("combatupdate.army.training.cleared", dummies.size()));
     }
 
     // Whether a squad can take one more, and a word to the player if it cannot.
@@ -1592,6 +1635,12 @@ public final class GipfaeliArmy {
             }
             case DISMISS -> dismiss(commander, scope);
             case RAISE -> raiseSquad(commander);
+            // The argument is a dye's name or "camo"; anything else is left alone.
+            case COLOUR -> {
+                if (argument.equalsIgnoreCase("camo") || DyeColor.byName(argument, null) != null) {
+                    paint(commander, scope, DyeColor.byName(argument, null));
+                }
+            }
         }
 
         sendRoster(commander);

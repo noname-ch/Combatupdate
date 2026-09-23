@@ -98,7 +98,17 @@ public final class TerritoryScreen extends Screen {
     private Button sendButton;
 
     public TerritoryScreen() {
+        this(null);
+    }
+
+    // Opened with a chunk already picked: what the army screen hands back on its way here.
+    public TerritoryScreen(@Nullable ChunkPos selected) {
         super(Component.translatable("combatupdate.territory.title"));
+        if (selected != null) {
+            selectedX = selected.x();
+            selectedZ = selected.z();
+            selectionMade = true;
+        }
     }
 
     @Override
