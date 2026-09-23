@@ -542,7 +542,7 @@ public final class Config {
 
     public static final ModConfigSpec.IntValue ARMY_MAX_SQUAD = BUILDER
             .comment("How many soldiers one player may have in all their squads together. Every one of them paths, shoots and is tracked by everybody nearby, so this is as much a budget for the server as it is a balance knob")
-            .defineInRange("armyMaxSquad", 200, 1, 2000);
+            .defineInRange("armyLimit", 200, 1, 2000);
 
     public static final ModConfigSpec.IntValue ARMY_SQUAD_SIZE = BUILDER
             .comment("How many soldiers one squad - one colour - holds, not counting its commander. Forty is eight ranks of five, which is what a squad stands as on parade")

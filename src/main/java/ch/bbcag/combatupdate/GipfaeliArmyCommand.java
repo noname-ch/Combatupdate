@@ -73,6 +73,9 @@ public final class GipfaeliArmyCommand {
                         .executes(context -> run(context, GipfaeliArmy::menu)))
                 .then(Commands.literal("manual")
                         .executes(context -> run(context, GipfaeliArmy::manual)))
+                // A new squad: what the flag does.
+                .then(Commands.literal("raise")
+                        .executes(context -> run(context, GipfaeliArmy::raiseSquad)))
                 // One squad: its menu, and every order the army takes, for it alone.
                 .then(Commands.literal("squad")
                         .then(orders(Commands.argument("squad", StringArgumentType.word()), GipfaeliArmyCommand::squadScope)
@@ -90,6 +93,10 @@ public final class GipfaeliArmyCommand {
                                         .executes(context -> soldier(context, GipfaeliArmy::stripSoldier)))
                                 .then(Commands.literal("promote")
                                         .executes(context -> soldier(context, GipfaeliArmy::promote)))
+                                .then(Commands.literal("post")
+                                        .then(Commands.argument("number", IntegerArgumentType.integer(1))
+                                                .executes(context -> soldier(context, (commander, soldier) -> GipfaeliArmy.sendToPost(
+                                                        commander, soldier, IntegerArgumentType.getInteger(context, "number"))))))
                                 .then(Commands.literal("demote")
                                         .executes(context -> soldier(context, GipfaeliArmy::demote)))
                                 .then(Commands.literal("kit")
@@ -239,6 +246,12 @@ public final class GipfaeliArmyCommand {
 
                                     GipfaeliArmy.paint(commander, s, DyeColor.byName(wanted, null));
                                 }))))
+                // Filling the squad the order is for with unarmed soldiers: what a commander's spawn
+                // buttons run.
+                .then(Commands.literal("fill")
+                        .then(Commands.argument("count", IntegerArgumentType.integer(1, 200))
+                                .executes(context -> scoped(context, scope, (commander, s) -> GipfaeliArmy.fill(
+                                        commander, s, IntegerArgumentType.getInteger(context, "count"))))))
                 // Signing on one soldier: unarmed, for its rations, into the squad the order is for
                 // - the reserve, from the army's own menu; or with a role's kit out of the pack
                 // when one is named.

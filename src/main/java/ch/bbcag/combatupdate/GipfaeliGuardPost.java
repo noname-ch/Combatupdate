@@ -104,9 +104,12 @@ public final class GipfaeliGuardPost {
         @Override
         public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity by, ItemStack stack) {
             super.setPlacedBy(level, pos, state, by, stack);
-            if (by instanceof ServerPlayer player && level.getBlockEntity(pos) instanceof Post post) {
+            if (by instanceof ServerPlayer player && level instanceof ServerLevel serverLevel
+                    && level.getBlockEntity(pos) instanceof Post post) {
                 post.claim(player);
-                GipfaeliArmy.readout(player, Component.translatable("combatupdate.army.post.placed"));
+                GipfaeliArmyData.get(serverLevel.getServer()).addPost(player.getUUID(), serverLevel, pos);
+                GipfaeliArmy.readout(player, Component.translatable("combatupdate.army.post.placed",
+                        number(player, serverLevel, pos)));
             }
         }
 
@@ -196,7 +199,8 @@ public final class GipfaeliGuardPost {
         String at = pos.getX() + " " + pos.getY() + " " + pos.getZ() + " ";
 
         commander.sendSystemMessage(Component.literal(" ═══════ ").withStyle(ChatFormatting.DARK_GRAY)
-                .append(Component.translatable("combatupdate.army.post.title", pos.getX(), pos.getY(), pos.getZ())
+                .append(Component.translatable("combatupdate.army.post.title", number(commander, commander.level(), pos),
+                        pos.getX(), pos.getY(), pos.getZ())
                         .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD))
                 .append(Component.literal(" ═══════ ").withStyle(ChatFormatting.DARK_GRAY)));
         commander.sendSystemMessage(Component.translatable("combatupdate.army.post.status",
@@ -262,6 +266,11 @@ public final class GipfaeliGuardPost {
             post.setRadius(chosen);
             GipfaeliArmy.readout(commander, Component.translatable("combatupdate.army.post.set_radius", chosen));
         }
+    }
+
+    // Which number this post is to its owner: the order it was set down in.
+    public static int number(ServerPlayer owner, ServerLevel level, BlockPos pos) {
+        return GipfaeliArmyData.get(level.getServer()).number(level.getServer(), owner.getUUID(), level, pos);
     }
 
     // The post at pos, if there is one and this player may give it orders: its owner, or an op.

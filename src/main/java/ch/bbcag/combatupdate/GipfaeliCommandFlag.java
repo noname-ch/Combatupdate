@@ -16,7 +16,7 @@ import ch.bbcag.combatupdate.entity.GipfaeliSoldier;
 // sneaking - the same trick the launcher and the rig use, for the same reason: a held item has only
 // the one button, and an army needs more than one order.
 //
-//   right-click nothing   raise the flag and sign a recruit on, armed out of your own pack
+//   right-click nothing   raise a new squad: its commander appears, and is clicked to fill it
 //   right-click something send the squad after it
 //   sneak + right-click   open the list of everything on the map worth sending them after
 //
@@ -41,7 +41,7 @@ public final class GipfaeliCommandFlag {
             if (commander.isShiftKeyDown()) {
                 GipfaeliArmy.menu(commander);
             } else {
-                GipfaeliArmy.recruit(commander, null, GipfaeliArmy.Scope.ALL);
+                GipfaeliArmy.raiseSquad(commander);
             }
         }
 

@@ -43,14 +43,14 @@ public final class GipfaeliManual {
                         "Keep this book. Sneak + right-click the flag opens the menu; everything in here is a button on it."),
 
                 page(title("THE FLAG"),
-                        "\n\nRight-click the air: sign on a soldier.\n\n",
+                        "\n\nRight-click the air: raise a new squad — its commander appears.\n\n",
                         "Right-click a target: send the whole squad after it.\n\n",
                         "Sneak + right-click: open the army menu.\n\n",
                         "Right-click your own soldier: it holds here, or falls back in."),
 
                 page(title("RECRUITING"),
-                        "\n\nA recruit costs a few Gipfäli as rations and turns up unarmed, in camouflage.\n\n",
-                        "Click the soldier (empty hand, or the flag) to open its own menu: kit, armour, colour.\n\n",
+                        "\n\nClick a commander: +1, +5, +10 or fill to 40. Soldiers cost rations and come unarmed, in the squad's colour.\n\n",
+                        "Click a soldier (empty hand, or the flag) for its own menu: kit, armour, colour, posts.\n\n",
                         "Kit and armour come out of your pack. Creative pays for nothing."),
 
                 page(title("KIT & ARMOUR"),
@@ -74,11 +74,12 @@ public final class GipfaeliManual {
                         "(Both are config switches.)"),
 
                 page(title("ORDERS"),
-                        "\n\n", bold("Attack"), " – click a target on the menu, or point at it and click the flag.\n",
-                        bold("Follow"), " – break off, fall in.\n",
-                        bold("Hold"), " – stand here, shoot what comes.\n",
-                        bold("Stand down"), " – stop shooting.\n",
-                        bold("Dismiss"), " – go home; kit comes back to you."),
+                        "\n\nFour, on the flag's menu for the army and on a commander for its squad:\n\n",
+                        bold("Attack"), " – whatever you are looking at.\n",
+                        bold("Stand"), " – on parade, here.\n",
+                        bold("Hold"), " – stay put, shoot what comes.\n",
+                        bold("Follow me"), " – fall in.\n\n",
+                        "Or point at a target and click the flag."),
 
                 page(title("TARGETS"),
                         "\n\nThe menu lists every player on the server, and every animal and monster around you, nearest first.\n\n",
@@ -91,8 +92,8 @@ public final class GipfaeliManual {
                         "Somebody else's: they lay siege. As long as one of them stands in it, the capture runs as if you stood there."),
 
                 page(title("GUARD POSTS"),
-                        "\n\nCraft a Guard Post, set it down at whatever needs guarding, and click it.\n\n",
-                        "Station soldiers there; they walk a beat around it and never stray far.\n\n",
+                        "\n\nCraft a Guard Post, set it down at whatever needs guarding, and click it. Posts are numbered as you place them.\n\n",
+                        "A soldier's menu lists your posts: click Post 1 and it goes there and walks a beat.\n\n",
                         bold("Defend"), " monsters. ", bold("Aggressive"), " strangers too. ", bold("Passive"), " only when hit."),
 
                 page(title("SQUADS"),
