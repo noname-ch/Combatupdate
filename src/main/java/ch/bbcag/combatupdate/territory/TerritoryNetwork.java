@@ -126,7 +126,7 @@ public final class TerritoryNetwork {
     // Server -> client: the map. Tiles are only sent for chunks the server has loaded; the screen
     // draws the rest dark. Colours are vanilla's packed map colours, one byte a block.
     public record MapPayload(int centerX, int centerZ, int radius, List<Tile> tiles, List<ClaimInfo> claims,
-            int ownClaims, int maxClaims, int captureSeconds, @Nullable CaptureState capture)
+            int ownBlocks, int maxBlocks, int captureSeconds, @Nullable CaptureState capture)
             implements CustomPacketPayload {
         public static final Type<MapPayload> TYPE = payloadType("territory_map");
         public static final StreamCodec<FriendlyByteBuf, MapPayload> CODEC = StreamCodec.ofMember(MapPayload::write, MapPayload::new);
@@ -185,8 +185,8 @@ public final class TerritoryNetwork {
                 buf.writeLong(claim.claimedAt());
                 buf.writeNullable(claim.capturer(), FriendlyByteBuf::writeUtf);
             }
-            buf.writeVarInt(ownClaims);
-            buf.writeVarInt(maxClaims);
+            buf.writeVarInt(ownBlocks);
+            buf.writeVarInt(maxBlocks);
             buf.writeVarInt(captureSeconds);
             buf.writeNullable(capture, (b, state) -> {
                 b.writeVarInt(state.chunkX());

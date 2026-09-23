@@ -73,6 +73,10 @@ public final class TerritoryManager {
     private static final Map<UUID, Long> LAST_DENIAL = new HashMap<>();
     private static final int DENIAL_INTERVAL_TICKS = 20;
 
+    // Territory is measured in blocks of ground but still claimed a chunk at a time, so every chunk
+    // held counts for its whole 16 x 16 footprint against the limit.
+    public static final int BLOCKS_PER_CHUNK = 16 * 16;
+
     private static final float SOUND_VOLUME = 1.0F;
 
     private TerritoryManager() {
@@ -91,6 +95,10 @@ public final class TerritoryManager {
             }
         }
         return null;
+    }
+
+    static boolean contested(TerritoryClaim.Key key) {
+        return captureOf(key) != null;
     }
 
     private static boolean enabled() {
@@ -123,15 +131,13 @@ public final class TerritoryManager {
             return false;
         }
 
-        int max = Config.TERRITORY_MAX_CLAIMS.get();
         int held = data.count(me);
-        if (held >= max) {
-            chat(player, text("limit", max).withStyle(ChatFormatting.RED));
+        if (!roomForAnother(player, held)) {
             return false;
         }
 
         data.put(new TerritoryClaim(key.dimension(), pos.x(), pos.z(), me, nameOf(player), System.currentTimeMillis()));
-        chat(player, text("claimed", pos.x(), pos.z(), held + 1, max).withStyle(ChatFormatting.GREEN));
+        chat(player, text("claimed", pos.x(), pos.z(), blocks(held + 1), maxBlocks()).withStyle(ChatFormatting.GREEN));
         ping(player, SoundEvents.NOTE_BLOCK_PLING, 1.2F);
         return true;
     }
@@ -208,9 +214,7 @@ public final class TerritoryManager {
             chat(player, text("capture.busy", other.attackerName()).withStyle(ChatFormatting.RED));
             return false;
         }
-        int max = Config.TERRITORY_MAX_CLAIMS.get();
-        if (data.count(me) >= max) {
-            chat(player, text("limit", max).withStyle(ChatFormatting.RED));
+        if (!roomForAnother(player, data.count(me))) {
             return false;
         }
         boolean ownerOnline = server.getPlayerList().getPlayer(existing.owner()) != null;
@@ -271,7 +275,7 @@ public final class TerritoryManager {
     public static boolean list(ServerPlayer player) {
         TerritoryData data = TerritoryData.get(player.level().getServer());
         List<TerritoryClaim> mine = data.claimsOf(player.getUUID());
-        chat(player, text("list.header", mine.size(), Config.TERRITORY_MAX_CLAIMS.get()).withStyle(ChatFormatting.GOLD));
+        chat(player, text("list.header", blocks(mine.size()), maxBlocks()).withStyle(ChatFormatting.GOLD));
         for (TerritoryClaim claim : mine) {
             chat(player, text("list.entry", claim.chunkX(), claim.chunkZ(),
                     claim.chunkX() * 16 + 8, claim.chunkZ() * 16 + 8, claim.dimension()));
@@ -330,7 +334,7 @@ public final class TerritoryManager {
                 : new MapPayload.CaptureState(mine.key().chunkX(), mine.key().chunkZ(), mine.ticksLeft());
 
         PacketDistributor.sendToPlayer(player, new MapPayload(centerX, centerZ, radius, tiles, claims,
-                data.count(me), Config.TERRITORY_MAX_CLAIMS.get(), Config.TERRITORY_CAPTURE_SECONDS.get(), state));
+                blocks(data.count(me)), maxBlocks(), Config.TERRITORY_CAPTURE_SECONDS.get(), state));
     }
 
     public static void sendChunkInfo(ServerPlayer player, int chunkX, int chunkZ) {
@@ -425,9 +429,7 @@ public final class TerritoryManager {
             Capture next = capture.tick();
             if (next.ticksLeft() <= 0) {
                 captures.remove();
-                int max = Config.TERRITORY_MAX_CLAIMS.get();
-                if (data.count(attacker.getUUID()) >= max) {
-                    chat(attacker, text("limit", max).withStyle(ChatFormatting.RED));
+                if (!roomForAnother(attacker, data.count(attacker.getUUID()))) {
                     continue;
                 }
                 transfer(attacker, claim, data);
@@ -555,6 +557,27 @@ public final class TerritoryManager {
             TerritoryClaim claim = data.get(new TerritoryClaim.Key(dimension, chunk.x(), chunk.z()));
             return claim != null && !claim.owner().equals(culprit);
         });
+    }
+
+    // ---- The limit ----
+
+    private static int maxBlocks() {
+        return Config.TERRITORY_MAX_BLOCKS.get();
+    }
+
+    private static int blocks(int chunks) {
+        return chunks * BLOCKS_PER_CHUNK;
+    }
+
+    // Whether one more chunk still fits under the limit, telling the player why not if it does not.
+    // A limit that is not a whole number of chunks leaves its remainder unusable: half a chunk
+    // cannot be claimed.
+    private static boolean roomForAnother(ServerPlayer player, int chunksHeld) {
+        if (blocks(chunksHeld + 1) <= maxBlocks()) {
+            return true;
+        }
+        chat(player, text("limit", blocks(chunksHeld), maxBlocks(), BLOCKS_PER_CHUNK).withStyle(ChatFormatting.RED));
+        return false;
     }
 
     private static boolean mayBuild(ServerPlayer player, TerritoryClaim claim) {

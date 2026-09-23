@@ -5,11 +5,11 @@ import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
@@ -19,14 +19,12 @@ import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.material.MapColor;
@@ -62,6 +60,7 @@ import ch.bbcag.combatupdate.entity.GipfaeliRocket;
 import ch.bbcag.combatupdate.entity.GipfaeliSoldier;
 import ch.bbcag.combatupdate.entity.GipfaeliTnt;
 import ch.bbcag.combatupdate.mixin.PrimedTntAccessor;
+import ch.bbcag.combatupdate.territory.TerritoryBorders;
 import ch.bbcag.combatupdate.territory.TerritoryCommands;
 import ch.bbcag.combatupdate.territory.TerritoryManager;
 import ch.bbcag.combatupdate.territory.TerritoryNetwork;
@@ -78,12 +77,16 @@ public final class CombatUpdate {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MODID);
     // Create a Deferred Register to hold Items which will all be registered under the "combatupdate" namespace
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
-    // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "combatupdate" namespace
-    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
     // Create a Deferred Register to hold Entity Types which will all be registered under the "combatupdate" namespace
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
     // And one for block entities, of which the guard post is so far the only one
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
+    // And one for sounds of our own, which vanilla has nothing to stand in for
+    public static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(Registries.SOUND_EVENT, MODID);
+
+    // The reading a Meat Obelisk gets when it is set down; the recording itself is wired up in sounds.json.
+    public static final DeferredHolder<SoundEvent, SoundEvent> MEAT_OBELISK_SPEECH = SOUND_EVENTS.register("block.meat_obelisk.place",
+            SoundEvent::createVariableRangeEvent);
 
     // The projectile entity thrown fire charges turn into; see CombatFireball for its constant-speed, explosive behavior
     public static final DeferredHolder<EntityType<?>, EntityType<CombatFireball>> COMBAT_FIREBALL = ENTITY_TYPES.register("combat_fireball",
@@ -160,11 +163,6 @@ public final class CombatUpdate {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(MODID, "gipfaeli_soldier"))));
 
-    // Creates a new Block with the id "combatupdate:example_block", combining the namespace and path
-    public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", p -> p.mapColor(MapColor.STONE));
-    // Creates a new BlockItem with the id "combatupdate:example_block", combining the namespace and path
-    public static final DeferredItem<BlockItem> EXAMPLE_BLOCK_ITEM = ITEMS.registerSimpleBlockItem("example_block", EXAMPLE_BLOCK);
-
     // Gipfaeli TNT, plain and Ultra, with vanilla TNT's own block properties; see GipfaeliTntBlock.
     public static final DeferredBlock<GipfaeliTntBlock> GIPFAELI_TNT_BLOCK = BLOCKS.registerBlock("gipfaeli_tnt",
             p -> new GipfaeliTntBlock(GipfaeliTntBlock.Kind.STANDARD, p),
@@ -184,9 +182,11 @@ public final class CombatUpdate {
     public static final DeferredItem<BlockItem> GIPFAELI_TNT_ITEM = ITEMS.registerSimpleBlockItem("gipfaeli_tnt", GIPFAELI_TNT_BLOCK);
     public static final DeferredItem<BlockItem> GIPFAELI_ULTRA_TNT_ITEM = ITEMS.registerSimpleBlockItem("gipfaeli_ultra_tnt", GIPFAELI_ULTRA_TNT_BLOCK);
 
-    // Creates a new food item with the id "combatupdate:example_id", nutrition 1 and saturation 2
-    public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", p -> p.food(new FoodProperties.Builder()
-            .alwaysEdible().nutrition(1).saturationModifier(2f).build()));
+    // Nine porkchops as one block of deli ham; see MeatObelisk for what it says when it is set down.
+    public static final DeferredBlock<MeatObelisk> MEAT_OBELISK = BLOCKS.registerBlock("meat_obelisk",
+            MeatObelisk::new,
+            p -> p.mapColor(MapColor.COLOR_PINK).strength(0.8F).sound(SoundType.SLIME_BLOCK));
+    public static final DeferredItem<BlockItem> MEAT_OBELISK_ITEM = ITEMS.registerSimpleBlockItem("meat_obelisk", MEAT_OBELISK);
 
     // Swords with no swing timer and less damage behind each hit; see Shortsword for the trade
     public static final DeferredItem<Item> IRON_SHORTSWORD = ITEMS.registerSimpleItem("iron_shortsword",
@@ -228,14 +228,6 @@ public final class CombatUpdate {
     public static final DeferredItem<Item> GIPFAELI_COMMAND_FLAG = ITEMS.registerSimpleItem("gipfaeli_command_flag",
             p -> p.stacksTo(1));
 
-    // Creates a creative tab with the id "combatupdate:example_tab" for the example item, that is placed after the combat tab
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
-            .title(Component.translatable("itemGroup.combatupdate")) //The language key for the title of your CreativeModeTab
-            .withTabsBefore(CreativeModeTabs.COMBAT)
-            .icon(() -> EXAMPLE_ITEM.get().getDefaultInstance())
-            .displayItems((parameters, output) -> {
-                output.accept(EXAMPLE_ITEM.get());// Add the example item to the tab. For your own tabs, this method is preferred over the event
-            }).build());
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.
     // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
@@ -244,11 +236,10 @@ public final class CombatUpdate {
         BLOCKS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so items get registered
         ITEMS.register(modEventBus);
-        // Register the Deferred Register to the mod event bus so tabs get registered
-        CREATIVE_MODE_TABS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so entity types get registered
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
+        SOUND_EVENTS.register(modEventBus);
 
         // Register ourselves for the game events the @SubscribeEvent methods below handle.
         NeoForge.EVENT_BUS.register(this);
@@ -257,6 +248,7 @@ public final class CombatUpdate {
         NeoForge.EVENT_BUS.register(GipfaeliLock.class);
         NeoForge.EVENT_BUS.register(GipfaeliLaunchRig.class);
         NeoForge.EVENT_BUS.register(TerritoryManager.class);
+        NeoForge.EVENT_BUS.register(TerritoryBorders.class);
         NeoForge.EVENT_BUS.addListener(TerritoryCommands::register);
 
         // The packets the territory screen and the server trade; see TerritoryNetwork.
@@ -281,10 +273,10 @@ public final class CombatUpdate {
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
-    // Add the example block item to the building blocks tab
+    // Hand our items out to the vanilla creative tabs they belong in
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
-            event.accept(EXAMPLE_BLOCK_ITEM);
+            event.accept(MEAT_OBELISK_ITEM);
         }
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
             event.accept(IRON_SHORTSWORD);
