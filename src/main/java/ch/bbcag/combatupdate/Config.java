@@ -93,18 +93,28 @@ public final class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_BOOK_TEXTURES = BUILDER
             .comment("Whether an enchanted book holding one of the mod's enchantments shows that enchantment's own cover. Off draws every enchanted book as vanilla's. Only changes how books look, so each player can set it for themselves")
             .define("enableBookTextures", true);
-    // --- Gipfaeli launcher ---
+    // --- Gipfaeli launcher and launch rig ---
 
 
     public static final ModConfigSpec.BooleanValue ENABLE_GIPFAELI = BUILDER
             .comment("Whether the Gipfaeli launcher fires at all. Off also takes it and its ammo out of the creative tab; both items stay registered, so a world already holding one still loads")
             .define("enableGipfaeli", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_GIPFAELI_BOMB = BUILDER
+            .comment("Whether the Gipfaeli launch rig sets bombs down and calls strikes with them. Off also takes it out of the creative tab; the item stays registered, so a world already holding one still loads")
+            .define("enableGipfaeliBomb", true);
     // --- Floating damage numbers ---
 
 
     public static final ModConfigSpec.BooleanValue ENABLE_DAMAGE_NUMBERS = BUILDER
             .comment("Whether damage a player deals is shown as a number floating beside whatever they hit")
             .define("enableDamageNumbers", true);
+    // --- Territory ---
+
+
+    public static final ModConfigSpec.BooleanValue ENABLE_TERRITORY = BUILDER
+            .comment("Whether chunks can be claimed as territory, kept from other players, and captured off their owner. Off leaves every chunk open to everyone; claims already made stay on disk and come back when it is turned on again")
+            .define("enableTerritory", true);
     static {
         BUILDER.pop();
     }
@@ -396,6 +406,14 @@ public final class Config {
             .comment("How sharply a Gipfaeli in flight can steer towards the target it was locked on to, in degrees per tick. Low enough and a target that breaks hard to one side can throw it off; 0 turns homing off and leaves the launcher firing straight")
             .defineInRange("gipfaeliTurnRate", 9.0, 0.0, 90.0);
 
+    public static final ModConfigSpec.BooleanValue GIPFAELI_AVOID_BLOCKS = BUILDER
+            .comment("Whether a homing Gipfaeli steers around terrain in its way instead of burying itself in the first hill between it and its target. Off makes it fly the straight line and take whatever is on it")
+            .define("gipfaeliAvoidBlocks", true);
+
+    public static final ModConfigSpec.DoubleValue GIPFAELI_AVOID_LOOKAHEAD = BUILDER
+            .comment("How far ahead, in blocks, a homing Gipfaeli looks for something solid to steer around. Further ahead starts the climb earlier and flies wider; nearer cuts it finer and clips more corners")
+            .defineInRange("gipfaeliAvoidLookahead", 8.0, 1.0, 48.0);
+
     public static final ModConfigSpec.BooleanValue GIPFAELI_LOCK_NEEDS_LINE_OF_SIGHT = BUILDER
             .comment("Whether a target has to be in plain view to be locked on to. Off lets a lock be taken through walls")
             .define("gipfaeliLockNeedsLineOfSight", true);
@@ -414,24 +432,20 @@ public final class Config {
     // --- Launch rig and its bombs ---
 
 
-    public static final ModConfigSpec.BooleanValue ENABLE_GIPFAELI_BOMB = BUILDER
-            .comment("Whether the Gipfaeli launch rig sets bombs down and calls strikes with them. Off also takes it out of the creative tab; the item stays registered, so a world already holding one still loads")
-            .define("enableGipfaeliBomb", true);
-
     public static final ModConfigSpec.IntValue GIPFAELI_BOMB_COUNTDOWN_TICKS = BUILDER
-            .comment("How long a bomb counts down between the spot being called and it leaving the pad, in ticks (20 ticks = 1 second). This is the whole warning anyone standing on the spot gets, and the whole warning the shooter gets that they picked the wrong one")
+            .comment("How long a bomb counts down between being set down and leaving the pad, in ticks (20 ticks = 1 second). This is the whole warning anyone standing on the called block gets")
             .defineInRange("gipfaeliBombCountdownTicks", 100, 0, 1200);
 
     public static final ModConfigSpec.DoubleValue GIPFAELI_BOMB_RANGE = BUILDER
-            .comment("How far away, in blocks, a strike can be called. Reaching much past the server's simulation distance is asking for the bomb to fly into chunks nobody has loaded")
+            .comment("How far away, in blocks, a block can be called as a target. This limits the aim, not the flight - carry the rig somewhere else before setting the bomb down and it still flies the whole way back. Reaching much past the server's simulation distance is asking for the bomb to fly into chunks nobody has loaded")
             .defineInRange("gipfaeliBombRange", 128.0, 16.0, 512.0);
 
     public static final ModConfigSpec.DoubleValue GIPFAELI_BOMB_FLIGHT_SPEED = BUILDER
-            .comment("How fast a bomb crosses the ground towards the spot, in blocks per tick, which is what sets how long the flight takes. It always lands where it was called; this is how long anyone has to get out of the way once they hear it go")
+            .comment("How fast a bomb crosses the ground towards the called block, in blocks per tick, which is what sets how long the flight takes. It lands on that block either way; this is how long anyone standing there has to get out of the way once they hear it go")
             .defineInRange("gipfaeliBombFlightSpeed", 1.5, 0.2, 10.0);
 
     public static final ModConfigSpec.DoubleValue GIPFAELI_BOMB_ARC = BUILDER
-            .comment("How high the bomb climbs over the middle of its flight, as a fraction of the distance to the spot (0.4 is a mortar's lob, low values are a flat throw that clips into anything in the way). Never less than 6 blocks, however short the shot")
+            .comment("How high the bomb climbs over the middle of its flight, as a fraction of the distance to the called block (0.4 is a mortar's lob, 0 is a flat throw). Nothing stops the bomb in the air either way - this is how the flight looks, not where it ends up. Never less than 6 blocks, however short the shot")
             .defineInRange("gipfaeliBombArc", 0.4, 0.0, 2.0);
 
     public static final ModConfigSpec.DoubleValue GIPFAELI_BOMB_EXPLOSION_POWER = BUILDER
@@ -441,10 +455,112 @@ public final class Config {
     public static final ModConfigSpec.BooleanValue GIPFAELI_BOMB_BREAKS_BLOCKS = BUILDER
             .comment("Whether a bomb's blast breaks terrain, rather than only dealing damage and knockback")
             .define("gipfaeliBombBreaksBlocks", false);
+    static {
+        BUILDER.pop();
+    }
 
-    public static final ModConfigSpec.IntValue GIPFAELI_BOMB_ARM_WINDOW_TICKS = BUILDER
-            .comment("How long a bomb waits for a spot to be called on it before it packs up, in ticks, dropping the Gipfaeli it cost back on the ground. Keeps forgotten bombs from collecting in the world")
-            .defineInRange("gipfaeliBombArmWindowTicks", 600, 20, 12000);
+    // Its own page in the config screen: a pushed section renders as a button that
+    // opens a screen showing only what is inside it.
+    static {
+        BUILDER.comment("The Gipfaeli army: what a soldier costs to sign on, what it can take, and how far it will go after something it was pointed at.").push("gipfaeliArmy");
+    }
+    // --- Gipfaeli army ---
+
+
+    public static final ModConfigSpec.BooleanValue ENABLE_GIPFAELI_ARMY = BUILDER
+            .comment("Whether the command flag recruits soldiers and gives them orders at all. Off also takes the flag and the guns out of the creative tab; every item stays registered, so a world already holding them still loads, and soldiers already standing in one stay where they are")
+            .define("enableGipfaeliArmy", true);
+
+    public static final ModConfigSpec.BooleanValue ARMY_CONSUMES_SUPPLIES = BUILDER
+            .comment("Whether signing a soldier on spends the gun it is handed and the Gipfaeli it eats. Off raises an army out of nothing, and also stops a dismissed or fallen soldier handing its gun back, since there was never one to pay for")
+            .define("armyConsumesSupplies", true);
+
+    public static final ModConfigSpec.IntValue ARMY_RECRUIT_RATIONS = BUILDER
+            .comment("How many Gipfaeli a recruit eats on the way in, on top of the gun it is handed")
+            .defineInRange("armyRecruitRations", 2, 0, 64);
+
+    public static final ModConfigSpec.IntValue ARMY_MAX_SQUAD = BUILDER
+            .comment("How many soldiers one commander may have at once. Every one of them paths, shoots and is tracked by everybody nearby, so this is as much a budget for the server as it is a balance knob")
+            .defineInRange("armyMaxSquad", 8, 1, 64);
+
+    public static final ModConfigSpec.DoubleValue ARMY_SOLDIER_HEALTH = BUILDER
+            .comment("How much health a soldier is signed on with (a player is 20)")
+            .defineInRange("armySoldierHealth", 20.0, 1.0, 200.0);
+
+    public static final ModConfigSpec.DoubleValue ARMY_SOLDIER_ARMOR = BUILDER
+            .comment("How much armour a soldier stands in (a full set of iron is 15)")
+            .defineInRange("armySoldierArmor", 4.0, 0.0, 30.0);
+
+    public static final ModConfigSpec.DoubleValue ARMY_WEAPON_DAMAGE = BUILDER
+            .comment("Multiplies what every Gipfaeli gun deals, in a soldier's hands and in a player's alike (1.0 leaves each weapon at its own damage). The launcher is not included: what it throws is a Gipfaeli, and that one is tuned above")
+            .defineInRange("armyWeaponDamageMultiplier", 1.0, 0.0, 10.0);
+
+    public static final ModConfigSpec.DoubleValue ARMY_MARCH_RANGE = BUILDER
+            .comment("How far away, in blocks, something can be and still be worth marching on. Past this an order lapses and the squad falls back in - which is what stops a target picked off the far end of the menu walking the whole army off the map")
+            .defineInRange("armyMarchRange", 192.0, 16.0, 512.0);
+
+    public static final ModConfigSpec.BooleanValue ARMY_GUARDS = BUILDER
+            .comment("Whether soldiers take on monsters that come near of their own accord. Off leaves them firing only at what they were told to, and at whatever hits them or their commander first")
+            .define("armyGuardsAgainstMonsters", true);
+
+    public static final ModConfigSpec.BooleanValue ARMY_FRIENDLY_FIRE = BUILDER
+            .comment("Whether rounds from a Gipfaeli gun hit the shooter's own side - their commander, and the rest of that commander's squad. Off, they pass straight through, which is the only thing that makes a squad standing shoulder to shoulder survivable")
+            .define("armyFriendlyFire", false);
+
+    public static final ModConfigSpec.DoubleValue ARMY_MENU_RANGE = BUILDER
+            .comment("How far out, in blocks, the target menu looks for animals and monsters to list. Players on the server are always listed, however far off or however many worlds away they are")
+            .defineInRange("armyMenuRange", 128.0, 16.0, 512.0);
+
+    public static final ModConfigSpec.IntValue ARMY_MENU_ENTRIES = BUILDER
+            .comment("How many targets the menu lists per group before it stops and says how many more there were")
+            .defineInRange("armyMenuEntries", 10, 1, 50);
+    static {
+        BUILDER.pop();
+    }
+
+    // Its own page in the config screen: a pushed section renders as a button that
+    // opens a screen showing only what is inside it.
+    static {
+        BUILDER.comment("Territory: how much of the map one player may claim, what a claim keeps out, and how long taking one off its owner takes. Switched on and off on the Features page.").push("territory");
+    }
+    // --- Territory ---
+
+
+    public static final ModConfigSpec.IntValue TERRITORY_MAX_CLAIMS = BUILDER
+            .comment("How many chunks one player may hold at once, across every dimension")
+            .defineInRange("territoryMaxClaims", 8, 1, 10000);
+
+    public static final ModConfigSpec.IntValue TERRITORY_CAPTURE_SECONDS = BUILDER
+            .comment("How long, in seconds, a player has to stand in somebody else's chunk to take it off them. The owner is told the moment it starts, so this is the whole window they have to come and do something about it. 0 hands the chunk over on the spot")
+            .defineInRange("territoryCaptureSeconds", 30, 0, 3600);
+
+    public static final ModConfigSpec.BooleanValue TERRITORY_CAPTURE_NEEDS_OWNER_ONLINE = BUILDER
+            .comment("Whether a chunk can only be captured while its owner is on the server. Off lets territory be taken from a player who is away; they are told the moment they next log in")
+            .define("territoryCaptureNeedsOwnerOnline", false);
+
+    public static final ModConfigSpec.BooleanValue TERRITORY_PROTECT_BLOCKS = BUILDER
+            .comment("Whether anyone but the owner is kept from breaking and placing blocks inside a claimed chunk")
+            .define("territoryProtectBlocks", true);
+
+    public static final ModConfigSpec.BooleanValue TERRITORY_PROTECT_INTERACTIONS = BUILDER
+            .comment("Whether anyone but the owner is kept from opening chests, doors, gates, buttons and levers inside a claimed chunk")
+            .define("territoryProtectInteractions", true);
+
+    public static final ModConfigSpec.BooleanValue TERRITORY_PROTECT_FROM_EXPLOSIONS = BUILDER
+            .comment("Whether explosions leave the blocks of a claimed chunk standing, unless the owner set them off")
+            .define("territoryProtectFromExplosions", true);
+
+    public static final ModConfigSpec.BooleanValue TERRITORY_OPS_BYPASS = BUILDER
+            .comment("Whether operators (permission level 2 and up) build, open and unclaim inside anyone's territory as if it were their own")
+            .define("territoryOpsBypass", true);
+
+    public static final ModConfigSpec.IntValue TERRITORY_MAP_RADIUS = BUILDER
+            .comment("How many chunks in each direction the territory screen's map reaches around the player. Every chunk shown is rendered by the server on each refresh, so a wide map is more work per player with the screen open")
+            .defineInRange("territoryMapRadius", 4, 1, 6);
+
+    public static final ModConfigSpec.BooleanValue TERRITORY_NOTIFY_SOUND = BUILDER
+            .comment("Whether a territory notification (a claim taken, a capture started) is played as a sound as well as written in chat")
+            .define("territoryNotifySound", true);
     static {
         BUILDER.pop();
     }

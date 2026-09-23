@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "G": "combatupdate:gipfaeli",
+    "S": "minecraft:stick"
+  },
+  "pattern": [
+    "III",
+    "GSS"
+  ],
+  "result": {
+    "id": "combatupdate:letony_mate_ak47"
+  }
+}
