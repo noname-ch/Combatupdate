@@ -65,4 +65,3 @@ Blast size is deliberately not separate — it goes through the existing onEntit
 
 Two things I didn't assume: it drops 0.6 blocks below you soooking like it passed through you, and there's no extra drag
 beyond vanilla's. If you want bombs to lag further behind yo that'd need a mixin on getAirDrag — say the word.
-
