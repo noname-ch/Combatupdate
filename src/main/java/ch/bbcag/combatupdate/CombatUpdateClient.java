@@ -21,6 +21,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterRangeSelectItemModelPropertyEvent;
+import net.neoforged.neoforge.client.event.RegisterSelectItemModelPropertyEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent;
@@ -41,6 +42,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 import ch.bbcag.combatupdate.client.BatteringRamHelmetModel;
+import ch.bbcag.combatupdate.client.BookEnchantmentProperty;
 import ch.bbcag.combatupdate.client.ElytraOrientation;
 import ch.bbcag.combatupdate.client.GipfaeliSight;
 import ch.bbcag.combatupdate.client.ShortbowPullProperty;
@@ -63,6 +65,11 @@ public final class CombatUpdateClient {
     @SubscribeEvent
     static void onRegisterRangeSelectItemModelProperty(RegisterRangeSelectItemModelPropertyEvent event) {
         event.register(Identifier.fromNamespaceAndPath(CombatUpdate.MODID, "shortbow_pull"), ShortbowPullProperty.MAP_CODEC);
+    }
+
+    @SubscribeEvent
+    static void onRegisterSelectItemModelProperty(RegisterSelectItemModelPropertyEvent event) {
+        event.register(Identifier.fromNamespaceAndPath(CombatUpdate.MODID, "book_enchantment"), BookEnchantmentProperty.TYPE);
     }
 
     // Vanilla lists an enchantment by name and level and stops there, which is fine for Sharpness

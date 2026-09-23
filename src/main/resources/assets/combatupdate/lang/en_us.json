@@ -54,6 +54,7 @@
   "combatupdate.configuration.enableEnchantments": "Enable Combat Enchantments",
   "combatupdate.configuration.enableShortbow": "Enable Shortbow",
   "combatupdate.configuration.enableLeatherEnchantColors": "Enable Leather Enchant Colors",
+  "combatupdate.configuration.enableBookTextures": "Enable Enchanted Book Textures",
   "combatupdate.configuration.enableFireball": "Enable Thrown Fireballs",
   "combatupdate.configuration.enableTntTuning": "Enable TNT Blast Retuning",
   "combatupdate.configuration.enableElytraBomb": "Enable Elytra Bombing",
