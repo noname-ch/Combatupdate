@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "combatupdate:block/meat_obelisk_top",
+    "side": "combatupdate:block/meat_obelisk_side",
+    "top": "combatupdate:block/meat_obelisk_top"
+  }
+}

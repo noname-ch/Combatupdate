@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "combatupdate:meat_obelisk"
+        }
+      ],
+      "rolls": 1
+    }
+  ],
+  "random_sequence": "combatupdate:blocks/meat_obelisk"
+}

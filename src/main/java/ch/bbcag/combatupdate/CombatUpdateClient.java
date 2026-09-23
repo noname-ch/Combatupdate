@@ -167,6 +167,15 @@ public final class CombatUpdateClient {
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
 
+        // The obelisk's is a whole speech, far too long for one line, so the language file holds it
+        // a line to a key and this reads them off in order until it runs out.
+        if (stack.is(CombatUpdate.MEAT_OBELISK_ITEM.get())) {
+            for (int line = 1; Language.getInstance().has("block.combatupdate.meat_obelisk.desc." + line); line++) {
+                event.getToolTip().add(Component.translatable("block.combatupdate.meat_obelisk.desc." + line)
+                        .withStyle(ChatFormatting.DARK_GRAY));
+            }
+        }
+
         describeAll(event, stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY));
         // An enchanted book keeps what it teaches in a different component from what it is enchanted
         // with, and a book is exactly where someone reads up on an enchantment.

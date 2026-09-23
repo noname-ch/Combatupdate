@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "combatupdate:meat_obelisk"
+  ],
+  "result": {
+    "id": "minecraft:porkchop",
+    "count": 9
+  }
+}

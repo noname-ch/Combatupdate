@@ -10,6 +10,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
@@ -85,6 +86,12 @@ public final class CombatUpdate {
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
     // And one for block entities, of which the guard post is so far the only one
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
+    // And one for sounds of our own, which vanilla has nothing to stand in for
+    public static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(Registries.SOUND_EVENT, MODID);
+
+    // The reading a Meat Obelisk gets when it is set down; the recording itself is wired up in sounds.json.
+    public static final DeferredHolder<SoundEvent, SoundEvent> MEAT_OBELISK_SPEECH = SOUND_EVENTS.register("block.meat_obelisk.place",
+            SoundEvent::createVariableRangeEvent);
 
     // The projectile entity thrown fire charges turn into; see CombatFireball for its constant-speed, explosive behavior
     public static final DeferredHolder<EntityType<?>, EntityType<CombatFireball>> COMBAT_FIREBALL = ENTITY_TYPES.register("combat_fireball",
@@ -185,6 +192,12 @@ public final class CombatUpdate {
     public static final DeferredItem<BlockItem> GIPFAELI_TNT_ITEM = ITEMS.registerSimpleBlockItem("gipfaeli_tnt", GIPFAELI_TNT_BLOCK);
     public static final DeferredItem<BlockItem> GIPFAELI_ULTRA_TNT_ITEM = ITEMS.registerSimpleBlockItem("gipfaeli_ultra_tnt", GIPFAELI_ULTRA_TNT_BLOCK);
 
+    // Nine porkchops as one block of deli ham; see MeatObelisk for what it says when it is set down.
+    public static final DeferredBlock<MeatObelisk> MEAT_OBELISK = BLOCKS.registerBlock("meat_obelisk",
+            MeatObelisk::new,
+            p -> p.mapColor(MapColor.COLOR_PINK).strength(0.8F).sound(SoundType.SLIME_BLOCK));
+    public static final DeferredItem<BlockItem> MEAT_OBELISK_ITEM = ITEMS.registerSimpleBlockItem("meat_obelisk", MEAT_OBELISK);
+
     // Creates a new food item with the id "combatupdate:example_id", nutrition 1 and saturation 2
     public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", p -> p.food(new FoodProperties.Builder()
             .alwaysEdible().nutrition(1).saturationModifier(2f).build()));
@@ -250,6 +263,7 @@ public final class CombatUpdate {
         // Register the Deferred Register to the mod event bus so entity types get registered
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
+        SOUND_EVENTS.register(modEventBus);
 
         // Register ourselves for the game events the @SubscribeEvent methods below handle.
         NeoForge.EVENT_BUS.register(this);
@@ -287,6 +301,7 @@ public final class CombatUpdate {
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
             event.accept(EXAMPLE_BLOCK_ITEM);
+            event.accept(MEAT_OBELISK_ITEM);
         }
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
             event.accept(IRON_SHORTSWORD);

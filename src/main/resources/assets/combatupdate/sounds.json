@@ -1,0 +1,11 @@
+{
+  "block.meat_obelisk.place": {
+    "subtitle": "subtitles.combatupdate.block.meat_obelisk.place",
+    "sounds": [
+      {
+        "name": "combatupdate:block/meat_obelisk/speech",
+        "stream": true
+      }
+    ]
+  }
+}
