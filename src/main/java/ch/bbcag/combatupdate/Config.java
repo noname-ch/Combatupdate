@@ -417,8 +417,8 @@ public final class Config {
             .defineInRange("scarletSpearSpeed", 4.0, 0.5, 8.0);
 
     public static final ModConfigSpec.IntValue SCARLET_DEVIL_COOLDOWN_TICKS = BUILDER
-            .comment("How many ticks must pass between one throw and the next (20 ticks = 1 second)")
-            .defineInRange("scarletDevilCooldownTicks", 20, 0, 1200);
+            .comment("How many ticks must pass between one throw and the next (20 ticks = 1 second). Holding right-click throws again as soon as this runs out")
+            .defineInRange("scarletDevilCooldownTicks", 12, 0, 1200);
     // --- Scarlet Blast ---
 
 
@@ -439,7 +439,7 @@ public final class Config {
 
 
     public static final ModConfigSpec.IntValue GUNGNIR_CHARGE_TICKS = BUILDER
-            .comment("How long, in ticks, the spear has to be held back before the throw becomes a Gungnir: a bigger spear that hits twice as hard, sheds bullets three times as fast, blasts twice as wide and heals its thrower")
+            .comment("How long, in ticks, you have to go without throwing before the next throw is a Gungnir (Calamity's stealth strike): a bigger spear that hits twice as hard, sheds bullets three times as fast, blasts twice as wide and heals its thrower")
             .defineInRange("gungnirChargeTicks", 40, 10, 400);
 
     public static final ModConfigSpec.DoubleValue GUNGNIR_HEAL = BUILDER

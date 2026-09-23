@@ -8,8 +8,8 @@
   "item.combatupdate.exoblade.big_slash": "Swing right after a lunge lands: a huge slash that cuts everything in front of you and throws three beams",
   "entity.combatupdate.exobeam": "Exobeam",
   "item.combatupdate.scarlet_devil": "Scarlet Devil",
-  "item.combatupdate.scarlet_devil.throw": "Hold and release right-click: throw a piercing spear of light that sheds homing bullets and bursts into a Scarlet Blast on every hit",
-  "item.combatupdate.scarlet_devil.gungnir": "Hold until it chimes: throw a Gungnir, twice as strong, that heals you for everything it strikes",
+  "item.combatupdate.scarlet_devil.throw": "Right-click (hold to keep throwing): throw a piercing spear of light that sheds homing bullets and bursts into a Scarlet Blast on every hit",
+  "item.combatupdate.scarlet_devil.gungnir": "Stealth strike: hold off throwing until it chimes, and the next throw is a Gungnir, twice as strong, that heals you for everything it strikes",
   "entity.combatupdate.scarlet_spear": "Scarlet Devil",
   "entity.combatupdate.scarlet_bullet": "Scarlet Bullet",
   "item.combatupdate.gipfaeli": "Gipfäli",
@@ -495,6 +495,6 @@
   "combatupdate.configuration.scarletBlastDamage": "Scarlet Blast Damage",
   "combatupdate.configuration.scarletBlastRadius": "Scarlet Blast Radius (blocks)",
   "combatupdate.configuration.scarletBulletDamage": "Bullet Damage",
-  "combatupdate.configuration.gungnirChargeTicks": "Gungnir Charge Time (ticks)",
+  "combatupdate.configuration.gungnirChargeTicks": "Stealth Strike Charge Time (ticks)",
   "combatupdate.configuration.gungnirHeal": "Gungnir Heal per Hit"
 }

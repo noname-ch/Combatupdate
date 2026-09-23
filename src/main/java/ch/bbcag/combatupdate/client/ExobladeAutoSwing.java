@@ -21,7 +21,7 @@ public final class ExobladeAutoSwing {
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
         if (player == null
-                || minecraft.screen != null
+                || minecraft.gui.screen() != null
                 || !minecraft.options.keyAttack.isDown()
                 || !Config.on(Config.ENABLE_EXOBLADE)
                 || !player.getMainHandItem().is(CombatUpdate.EXOBLADE.get())
