@@ -270,7 +270,7 @@ public final class Config {
 
 
     public static final ModConfigSpec.IntValue ARMAGEDDON_STREAK_REQUIRED = BUILDER
-            .comment("How many hits an Armageddon boots wearer has to land (or take, if the target is wearing them) before the next hit is empowered")
+            .comment("How many hits an Armageddon boots wearer has to take from players, without landing one of their own, before their next hit is empowered")
             .defineInRange("armageddonStreakRequired", 3, 1, 10);
 
     public static final ModConfigSpec.DoubleValue ARMAGEDDON_DAMAGE_BONUS_PERCENT = BUILDER
