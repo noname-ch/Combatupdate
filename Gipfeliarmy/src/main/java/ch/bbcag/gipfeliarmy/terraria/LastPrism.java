@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.server.level.ServerLevel;
@@ -50,6 +51,22 @@ public final class LastPrism extends Item {
     // shrugs off further hits after one; any closer and the pulses in between would do nothing.
     private static final int PULSE_TICKS = 10;
     private static final float EXHAUSTION_PER_TICK = 0.06F;
+    // How many ticks the prism may go without being ticked and still count as the same hold. A
+    // use that is dropped and picked straight back up while the button is still down (the client
+    // does that on its own whenever the server's idea of "using" and its own disagree for a tick)
+    // must not start the charge over, or the beams never get as far as merging.
+    private static final int HOLD_GRACE_TICKS = 5;
+
+    // How long each player has been holding a prism, one table per side: in singleplayer both
+    // sides run in the same game, on different threads, with a different Player object each.
+    // Counted here rather than read off vanilla's remaining-use counter, which starts from scratch
+    // every time the use is restarted. Weak, so a player who leaves takes their entry with them.
+    private static final Map<Player, Hold> SERVER_HOLDS = new WeakHashMap<>();
+    private static final Map<Player, Hold> CLIENT_HOLDS = new WeakHashMap<>();
+
+    // Ticks held so far, and the player's own tick count when the prism was last ticked.
+    private record Hold(int used, int lastTick) {
+    }
 
     private final boolean randomColours;
 
@@ -88,7 +105,7 @@ public final class LastPrism extends Item {
             return;
         }
 
-        int used = this.getUseDuration(stack, user) - ticksRemaining;
+        int used = held(player, level.isClientSide());
         List<Beam> beams = beams(player, used);
         if (level.isClientSide()) {
             this.draw(level, beams, used);
@@ -112,6 +129,24 @@ public final class LastPrism extends Item {
         if (used % PULSE_TICKS == 0) {
             this.hurt(serverLevel, player, beams, used);
         }
+    }
+
+    // Ticks this player has been holding the prism, counting this one. Once per tick at most, even
+    // if something ticks the use twice; picked back up where it was after a short break.
+    private static int held(Player player, boolean clientSide) {
+        Map<Player, Hold> holds = clientSide ? CLIENT_HOLDS : SERVER_HOLDS;
+        Hold hold = holds.get(player);
+        int now = player.tickCount;
+        int used;
+        if (hold == null || now < hold.lastTick() || now - hold.lastTick() > HOLD_GRACE_TICKS) {
+            used = 0;
+        } else if (now == hold.lastTick()) {
+            return hold.used();
+        } else {
+            used = hold.used() + (now - hold.lastTick());
+        }
+        holds.put(player, new Hold(used, now));
+        return used;
     }
 
     // One beam: where it leaves the prism, where it stops, and which of the six it is.

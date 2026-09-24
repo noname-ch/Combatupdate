@@ -475,6 +475,13 @@
   "gipfeliarmy.terraria.lair.plantera": "Jungle Cave",
   "gipfeliarmy.terraria.awoken": "%s has awoken!",
   "gipfeliarmy.terraria.defeated": "%s has been defeated!",
+  "gipfeliarmy.terraria.servant_of_cthulhu": "Servant of Cthulhu",
+  "gipfeliarmy.terraria.the_hungry": "The Hungry",
+  "gipfeliarmy.terraria.tongued": "The Wall of Flesh drags you back!",
+  "gipfeliarmy.terraria.loot.shield_of_cthulhu": "Shield of Cthulhu",
+  "gipfeliarmy.terraria.loot.breaker_blade": "Breaker Blade",
+  "gipfeliarmy.terraria.loot.seedler": "Seedler",
+  "gipfeliarmy.terraria.loot.from": "Dropped by %s",
   "gipfeliarmy.terraria.waypoint": "%s · %sm",
   "gipfeliarmy.terraria.waypoint.sleeping": "%s · %sm · %s min",
   "gipfeliarmy.terraria.command.none": "No boss lairs have been placed yet",
@@ -490,5 +497,7 @@
   "gipfeliarmy.configuration.lastPrismHunger": "Last Prism Costs Hunger",
   "gipfeliarmy.configuration.terrariaMaxDistance": "Max Lair Distance from Spawn (blocks)",
   "gipfeliarmy.configuration.terrariaRespawnMinutes": "Boss Respawn Time (minutes)",
-  "gipfeliarmy.configuration.terrariaShowWaypoints": "Show Lair Waypoints"
+  "gipfeliarmy.configuration.terrariaShowWaypoints": "Show Lair Waypoints",
+  "gipfeliarmy.configuration.terrariaBossHealth": "Boss Health Multiplier",
+  "gipfeliarmy.configuration.terrariaBossDamage": "Boss Damage Multiplier"
 }

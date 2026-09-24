@@ -10,6 +10,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.projectile.hurtingprojectile.Fireball;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -20,17 +21,21 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 // Everything the bosses shoot: the Wall of Flesh's eye lasers, Plantera's seeds (some of them
-// poisoned) and her thorn balls. One entity for all of them, told apart by the item it carries,
+// poisoned), her thorn balls and the spores she lets loose once enraged. One entity for all of them, told apart by the item it carries,
 // which is also what it is drawn as - the way GipfaeliBullet is a flying Gipfaeli.
 //
-// Straight, no drag, gone on the first thing it hits. It flies through the ground, since the
+// Straight, no drag, gone on the first thing it hits - except spores, which drift after their
+// target, slowly enough to be outrun. It flies through the ground, since the
 // bosses that fire it do, and a boss that could only be shot back at from in the open would be a
 // boss best fought from behind a wall.
 public final class BossBolt extends Fireball {
     private static final int LIFETIME_TICKS = 100;
+    // How hard a spore turns towards its target each tick, as a share of its speed.
+    private static final double SPORE_STEER = 0.08;
 
+    // Saved by position, so new kinds go on the end.
     public enum Kind {
-        LASER, SEED, POISON_SEED, THORN_BALL
+        LASER, SEED, POISON_SEED, THORN_BALL, SPORE
     }
 
     private float damage;
@@ -50,7 +55,7 @@ public final class BossBolt extends Fireball {
         this.setItem(new ItemStack(switch (kind) {
             case LASER -> TerrariaContent.BOSS_LASER.get();
             case SEED -> TerrariaContent.PLANTERA_SEED.get();
-            case POISON_SEED -> TerrariaContent.PLANTERA_POISON_SEED.get();
+            case POISON_SEED, SPORE -> TerrariaContent.PLANTERA_POISON_SEED.get();
             case THORN_BALL -> TerrariaContent.PLANTERA_THORN_BALL.get();
         }));
     }
@@ -58,6 +63,13 @@ public final class BossBolt extends Fireball {
     @Override
     public void tick() {
         this.noPhysics = true;
+        if (this.kind == Kind.SPORE && !this.level().isClientSide() && this.getOwner() instanceof Mob owner
+                && owner.getTarget() != null) {
+            Vec3 velocity = this.getDeltaMovement();
+            Vec3 towards = owner.getTarget().getBoundingBox().getCenter().subtract(this.position()).normalize();
+            double speed = velocity.length();
+            this.setDeltaMovement(velocity.normalize().add(towards.scale(SPORE_STEER)).normalize().scale(speed));
+        }
         super.tick();
         if (!this.level().isClientSide() && this.tickCount > LIFETIME_TICKS) {
             this.discard();
@@ -84,7 +96,7 @@ public final class BossBolt extends Fireball {
     @Override
     protected boolean canHitEntity(Entity entity) {
         return super.canHitEntity(entity) && entity != this.getOwner() && !(entity instanceof TerrariaBoss)
-                && !(entity instanceof BossBolt);
+                && !(entity instanceof BossBolt) && !TerrariaBoss.isMinion(entity);
     }
 
     @Override
@@ -97,7 +109,7 @@ public final class BossBolt extends Fireball {
         Entity target = hitResult.getEntity();
         DamageSource source = this.damageSources().mobProjectile(this,
                 this.getOwner() instanceof LivingEntity shooter ? shooter : null);
-        if (target.hurtServer(level, source, this.damage) && this.kind == Kind.POISON_SEED
+        if (target.hurtServer(level, source, this.damage) && (this.kind == Kind.POISON_SEED || this.kind == Kind.SPORE)
                 && target instanceof LivingEntity living) {
             living.addEffect(new MobEffectInstance(MobEffects.POISON, 100, 0), this);
         }

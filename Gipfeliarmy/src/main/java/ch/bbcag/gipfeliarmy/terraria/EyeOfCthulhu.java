@@ -15,19 +15,28 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-// The Eye of Cthulhu. It hangs in the air above whoever it is after, circling, and then throws
-// itself at them - three times in a row, a pause, and again. At half health it spins, sheds its
-// iris in a spray of blood and comes back as a mouth full of teeth: faster, harder, and charging
-// four times a round instead of three.
+// The Eye of Cthulhu. It hangs in the air above whoever it is after, circling and calling up
+// Servants of Cthulhu, and then throws itself at them - three times in a row, a pause, and again.
+// Each charge is signalled by a flare in front of it. At half health it spins, sheds its iris in a
+// spray of blood and comes back as a mouth full of teeth: faster, harder, and charging four times
+// a round instead of three. Under a quarter it stops circling altogether and dashes non-stop.
 public final class EyeOfCthulhu extends TerrariaBoss {
     private static final float CONTACT = 6.0F;
     private static final float CONTACT_ENRAGED = 9.0F;
 
     private static final double HOVER_HEIGHT = 7.0;
     private static final double HOVER_RADIUS = 6.0;
+
+    // Servants: how many at once, how often one comes while it circles, and what they are.
+    private static final int MAX_SERVANTS = 4;
+    private static final int SERVANT_EVERY = 30;
+    private static final double SERVANT_HEALTH = 8.0;
+    private static final double SERVANT_DAMAGE = 3.0;
+    private static final int SERVANT_LIFE = 20 * 20;
 
     private enum Stage {
         HOVER, WIND_UP, CHARGE, TRANSFORM
@@ -45,7 +54,7 @@ public final class EyeOfCthulhu extends TerrariaBoss {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 300.0)
+                .add(Attributes.MAX_HEALTH, 400.0)
                 .add(Attributes.ARMOR, 4.0)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
                 .add(Attributes.FOLLOW_RANGE, 96.0);
@@ -72,6 +81,7 @@ public final class EyeOfCthulhu extends TerrariaBoss {
     protected void bossTick(ServerLevel level, @Nullable Player target) {
         this.stageTicks++;
         boolean enraged = this.isEnraged();
+        boolean desperate = this.isDesperate();
 
         if (this.stage == Stage.TRANSFORM) {
             // Spinning in place and bleeding, while it turns into the second phase.
@@ -108,18 +118,26 @@ public final class EyeOfCthulhu extends TerrariaBoss {
                 }
                 this.setDeltaMovement(this.getDeltaMovement().scale(0.7).add(steer.scale(0.3)));
                 this.faceTowards(targetCentre.subtract(this.position()));
-                if (this.stageTicks > (enraged ? 40 : 70)) {
+                // Only the eye still has its iris calls servants; the mouth does its own biting.
+                if (!enraged && this.stageTicks % SERVANT_EVERY == SERVANT_EVERY / 2
+                        && this.minions(level).size() < MAX_SERVANTS) {
+                    this.summonMinion(level, this.pupil(targetCentre), "servant_of_cthulhu",
+                            SERVANT_HEALTH, SERVANT_DAMAGE, SERVANT_LIFE);
+                    this.playSound(SoundEvents.SLIME_SQUISH, 2.0F, 0.6F);
+                }
+                if (this.stageTicks > (desperate ? 10 : enraged ? 40 : 70)) {
                     this.stage = Stage.WIND_UP;
                     this.stageTicks = 0;
-                    this.chargesLeft = enraged ? 4 : 3;
+                    this.chargesLeft = desperate ? 6 : enraged ? 4 : 3;
                 }
             }
             case WIND_UP -> {
                 this.setDeltaMovement(this.getDeltaMovement().scale(0.75));
                 this.faceTowards(targetCentre.subtract(this.position()));
-                if (this.stageTicks > (enraged ? 6 : 12)) {
+                this.telegraph(level, this.pupil(targetCentre), this.stageTicks - 1, 0.4F);
+                if (this.stageTicks > (desperate ? 4 : enraged ? 8 : 14)) {
                     Vec3 direction = targetCentre.subtract(this.position().add(0, 1.3, 0)).normalize();
-                    this.setDeltaMovement(direction.scale(enraged ? 1.5 : 1.1));
+                    this.setDeltaMovement(direction.scale(desperate ? 1.8 : enraged ? 1.5 : 1.1));
                     this.faceTowards(direction);
                     this.playSound(SoundEvents.RAVAGER_ROAR, 2.0F, enraged ? 1.6F : 1.3F);
                     this.stage = Stage.CHARGE;
@@ -127,10 +145,12 @@ public final class EyeOfCthulhu extends TerrariaBoss {
                 }
             }
             case CHARGE -> {
-                if (this.stageTicks > 16) {
+                level.sendParticles(new DustParticleOptions(0x8A0303, 1.5F), this.getX(), this.getY() + 1.3, this.getZ(),
+                        2, 0.6, 0.6, 0.6, 0.0);
+                if (this.stageTicks > (desperate ? 12 : 16)) {
                     this.setDeltaMovement(this.getDeltaMovement().scale(0.85));
                 }
-                if (this.stageTicks > 24) {
+                if (this.stageTicks > (desperate ? 18 : 24)) {
                     if (--this.chargesLeft > 0) {
                         this.stage = Stage.WIND_UP;
                         this.stageTicks = 0;
@@ -141,6 +161,12 @@ public final class EyeOfCthulhu extends TerrariaBoss {
             }
             default -> this.startHover();
         }
+    }
+
+    // Just in front of it, on the side facing the target: where the servants and the flare come from.
+    private Vec3 pupil(Vec3 targetCentre) {
+        Vec3 centre = this.position().add(0, 1.3, 0);
+        return centre.add(targetCentre.subtract(centre).normalize().scale(1.8));
     }
 
     private void startHover() {
@@ -159,6 +185,10 @@ public final class EyeOfCthulhu extends TerrariaBoss {
         this.spawnAtLocation(level, new ItemStack(Items.DIAMOND, 2 + this.random.nextInt(3)));
         this.spawnAtLocation(level, new ItemStack(Items.GOLD_INGOT, 6 + this.random.nextInt(7)));
         this.spawnAtLocation(level, new ItemStack(Items.ENDER_EYE, 1 + this.random.nextInt(3)));
+        // Its shield, with Mending thrown in the first time.
+        this.spawnAtLocation(level, firstKill
+                ? this.relic(level, Items.SHIELD, "shield_of_cthulhu", Enchantments.UNBREAKING, 3, Enchantments.THORNS, 2, Enchantments.MENDING, 1)
+                : this.relic(level, Items.SHIELD, "shield_of_cthulhu", Enchantments.UNBREAKING, 3, Enchantments.THORNS, 2));
     }
 
     @Override

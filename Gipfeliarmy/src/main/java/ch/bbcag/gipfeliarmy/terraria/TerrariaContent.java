@@ -77,7 +77,8 @@ public final class TerrariaContent {
                     .noLootTable()
                     .sized(0.4F, 0.4F)
                     .clientTrackingRange(8)
-                    .updateInterval(10)
+                    // Often enough that a homing spore's curve is followed rather than guessed at.
+                    .updateInterval(2)
                     .build(key("boss_bolt")));
 
     private TerrariaContent() {

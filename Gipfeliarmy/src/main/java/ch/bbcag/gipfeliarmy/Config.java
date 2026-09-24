@@ -408,6 +408,14 @@ public final class Config {
             .comment("How many real minutes a beaten boss sleeps before walking into its lair wakes it again")
             .defineInRange("terrariaRespawnMinutes", 20, 0, 10080);
 
+    public static final ModConfigSpec.DoubleValue TERRARIA_BOSS_HEALTH = BUILDER
+            .comment("How much health the bosses have, as a multiple of their own. Each player fighting beyond the first adds 60% of their base health on top of this")
+            .defineInRange("terrariaBossHealth", 1.0, 0.1, 10.0);
+
+    public static final ModConfigSpec.DoubleValue TERRARIA_BOSS_DAMAGE = BUILDER
+            .comment("How hard the bosses and their shots hit, as a multiple of their own. Each player fighting beyond the first adds 15% on top of this")
+            .defineInRange("terrariaBossDamage", 1.0, 0.1, 10.0);
+
     public static final ModConfigSpec.BooleanValue TERRARIA_SHOW_WAYPOINTS = BUILDER
             .comment("Whether each boss's lair is marked on the HUD with a waypoint, its name and how far off it is. Read on the client")
             .define("terrariaShowWaypoints", true);
