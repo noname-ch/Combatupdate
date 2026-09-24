@@ -34,6 +34,8 @@ bin/
 
 ### Minecraft Modding ###
 run/
+# A dedicated server set up by tools/setup-server.sh
+server/
 !**/src/**/run/
 **/src/generated/**/.cache/
 repo/

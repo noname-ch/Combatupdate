@@ -4,6 +4,8 @@
 plugins {
     id 'net.neoforged.moddev' version '2.0.147' apply false
     id 'idea'
+    // The lifecycle tasks at the root, so that `gradlew build` here also packs the zip below.
+    id 'base'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -138,4 +140,31 @@ subprojects {
             downloadJavadoc = true
         }
     }
+}
+
+// One zip to hand out: both jars and the install notes, as build/distributions/Combatupdate-mods-<version>.zip.
+// Everything in it goes into .minecraft/mods on every client and into the server's mods folder; see
+// tools/release/INSTALL.txt, which is the copy of the notes that ends up inside the zip.
+var combat = project(':combatupdate')
+var army = project(':gipfeliarmy')
+tasks.register('packMods', Zip) {
+    group = 'distribution'
+    description = 'Packs both mod jars and the install notes into one zip for players and the server.'
+    archiveBaseName = 'Combatupdate-mods'
+    archiveVersion = combat.version.toString()
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+    from(combat.tasks.named('jar'))
+    from(army.tasks.named('jar'))
+    from('tools/release') {
+        expand(
+                version          : combat.version.toString(),
+                combat_jar       : "${combat.mod_id}-${combat.version}.jar",
+                army_jar         : "${army.mod_id}-${army.version}.jar",
+                minecraft_version: minecraft_version,
+                neo_version      : neo_version,
+        )
+    }
+}
+tasks.named('assemble') {
+    dependsOn 'packMods'
 }

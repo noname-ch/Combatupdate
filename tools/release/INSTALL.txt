@@ -1,0 +1,33 @@
+CombatUpdate + Gipfaeli Army, version ${version}
+=================================================
+
+Two mods that go together. Both jars must be installed on the server and on every
+client that joins, or the connection is refused.
+
+  ${combat_jar}   CombatUpdate: sword blocking, 3D elytra flight, the enchantments,
+                             dash and slide, the endgame weapons
+  ${army_jar}     Gipfaeli Army: territory you can claim and capture, the Gipfaeli
+                             arsenal, and an army that fires Gipfaeli
+
+What you need
+  Minecraft Java ${minecraft_version} with NeoForge ${neo_version}.
+  Get NeoForge from https://neoforged.net, run the installer and pick "Install client".
+  That adds a NeoForge profile to the launcher.
+
+On every player's computer
+  1. Put both jars into the mods folder of the game:
+       Windows:  %APPDATA%/.minecraft/mods
+       macOS:    ~/Library/Application Support/minecraft/mods
+       Linux:    ~/.minecraft/mods
+  2. Start the NeoForge profile in the launcher.
+  3. Join the server, or have one player open a world to LAN (Esc, "Open to LAN").
+
+On the server
+  1. Put both jars into the server's mods folder.
+  2. Restart the server. Players need the same two jars as the server.
+
+Coming from the old single jar (combatupdate-1.0.0.jar, with everything in it)
+  Take the old jar out and put both new ones in, on the server and on every client.
+  Existing worlds keep their items, soldiers, guard posts, territory and settings.
+
+How to play is on the website: https://noname-ch.github.io/Combatupdate/
