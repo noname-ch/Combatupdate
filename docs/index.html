@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="CombatUpdate: a NeoForge mod for Minecraft 26.3 with sword blocking, 3D elytra flight, ten new enchantments, territory claims and the Gipfäli army.">
+<meta name="description" content="CombatUpdate and Gipfäli Army: two NeoForge mods for Minecraft 26.3. Sword blocking, 3D elytra flight and ten new enchantments; an army that fires croissants and territory to claim.">
 <link rel="icon" href="img/mod/iron_shortsword.png">
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>CombatUpdate</title>
@@ -25,6 +25,10 @@
   --straw:#7A6610;
   --on-gold:#FFF8EC;
   --hatch:rgba(26,29,33,.06);
+  --band:#1A1D21;
+  --band-ink:#ECEEF0;
+  --band-muted:#A3ABB5;
+  --band-gold:#E8A548;
   --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
   --body:"Chivo",system-ui,-apple-system,"Segoe UI",sans-serif;
   --pixel:"VT323",ui-monospace,"Cascadia Mono",Menlo,monospace;
@@ -36,12 +40,14 @@
     color-scheme:dark;
     --ground:#121519;--surface:#1B1F24;--sunk:#0C0E11;--ink:#ECEEF0;--muted:#9CA4AE;--line:#2C323A;
     --gold:#E8A548;--gold-soft:#8A5A1C;--tnt:#EF5A4C;--ham:#E8A3A0;--straw:#D9C25B;--on-gold:#1A1206;--hatch:rgba(236,238,240,.05);
+    --band:#232830;
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
   --ground:#121519;--surface:#1B1F24;--sunk:#0C0E11;--ink:#ECEEF0;--muted:#9CA4AE;--line:#2C323A;
   --gold:#E8A548;--gold-soft:#8A5A1C;--tnt:#EF5A4C;--ham:#E8A3A0;--straw:#D9C25B;--on-gold:#1A1206;--hatch:rgba(236,238,240,.05);
+  --band:#232830;
 }
 
 *{box-sizing:border-box}
@@ -81,9 +87,9 @@ p{margin:0}
 
 /* ---------- nav ---------- */
 nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--ground);border-block:2px solid var(--ink);margin-inline:calc(var(--gutter)*-1);padding-inline:var(--gutter)}
-nav.toc ul{max-width:var(--maxw);margin:0 auto;padding:0;list-style:none;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
-nav.toc a{display:flex;align-items:center;gap:8px;padding:10px 12px;font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:1.1rem;letter-spacing:.05em;text-decoration:none;white-space:nowrap}
-nav.toc a img{width:20px;height:20px}
+nav.toc ul{max-width:var(--maxw);margin:0 auto;padding:0;list-style:none;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.toc a{display:flex;align-items:center;gap:7px;padding:10px 9px;font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:1.02rem;letter-spacing:.04em;text-decoration:none;white-space:nowrap}
+nav.toc a img{width:18px;height:18px}
 nav.toc a:hover,nav.toc a.on{background:var(--ink);color:var(--ground)}
 
 /* ---------- chapters ---------- */
@@ -196,8 +202,33 @@ td.n.hl{color:var(--gold)}
 .formation svg{width:100%;height:auto;display:block}
 .formation span{font-family:var(--pixel);font-size:1.15rem}
 
+/* ---------- mods ---------- */
+section.mod{scroll-margin-top:48px}
+.mod-head{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(20px,4vw,56px);align-items:center;margin-top:clamp(72px,10vw,128px);padding-block:clamp(36px,6vw,72px);background:var(--band);color:var(--band-ink);box-shadow:0 0 0 100vmax var(--band);clip-path:inset(0 -100vmax)}
+#combatupdate>.mod-head{margin-top:0}
+.mod-head .eyebrow{color:var(--band-gold)}
+.mod-head .modid{font-family:var(--pixel);color:var(--band-muted)}
+.mod-name{font-size:clamp(3.6rem,11vw,8.5rem);font-weight:900;line-height:.8;letter-spacing:-.005em;margin-top:10px}
+.mod-name span{display:block;color:var(--band-gold)}
+.mod-lede{font-size:clamp(1.05rem,1.5vw,1.25rem);max-width:44ch;margin-top:20px;color:var(--band-ink)}
+.mod-head .chips{margin-top:20px}
+.mod-head .chip{background:rgba(255,255,255,.09);color:var(--band-ink)}
+.mod-head .chip b{color:var(--band-gold)}
+.mod-toc{display:flex;flex-wrap:wrap;gap:4px;margin:22px 0 0;padding:0;list-style:none}
+.mod-toc a{display:flex;align-items:center;gap:8px;padding:8px 12px;border:2px solid rgba(255,255,255,.22);font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:1.05rem;letter-spacing:.05em;text-decoration:none;color:var(--band-ink)}
+.mod-toc a img{width:20px;height:20px}
+.mod-toc a:hover{background:var(--band-ink);color:var(--band);border-color:var(--band-ink)}
+.mod-art{width:clamp(120px,18vw,240px);height:auto;transform:rotate(-24deg);filter:drop-shadow(8px 10px 0 rgba(0,0,0,.35))}
+.mod-end{margin-top:clamp(56px,8vw,96px)}
+.aside{align-self:end;font-size:.93rem;color:var(--muted);border-left:3px solid var(--gold-soft);padding-left:12px;max-width:46ch}
+nav.toc li.grp{display:flex}
+nav.toc li.grp a{font-family:var(--pixel);font-weight:400;font-size:1.25rem;letter-spacing:.02em;text-transform:none;color:var(--gold)}
+nav.toc li.grp a.on{background:var(--gold);color:var(--on-gold)}
+nav.toc li.grp:not(:first-child),nav.toc li.end{margin-left:6px;padding-left:6px;border-left:2px solid var(--ink)}
+
 /* ---------- controls ---------- */
 .keys td:first-child{white-space:nowrap}
+.keys .grp-row th{font-family:var(--pixel);font-weight:400;font-size:1.2rem;color:var(--gold);padding-top:16px;border-bottom:1px solid var(--line)}
 kbd{font-family:var(--pixel);font-size:1.1rem;line-height:1;padding:0 .35em;border:2px solid var(--ink);border-bottom-width:3px;background:var(--surface);border-radius:3px}
 
 /* ---------- obelisk ---------- */
@@ -247,6 +278,8 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
   .hero-art{margin-top:8px}
   .hero-art .launcher{right:-4px;top:-12%;width:96px}
   .formations{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mod-head{grid-template-columns:minmax(0,1fr)}
+  .mod-art{position:absolute;right:0;top:28px;width:84px}
 }
 </style>
 </head>
@@ -255,13 +288,15 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
 <div class="wrap">
 <header class="hero">
   <div>
-    <div class="eyebrow">A NeoForge mod for Minecraft 26.3</div>
+    <div class="eyebrow">Two NeoForge mods for Minecraft 26.3</div>
     <h1>Combat <span>Update</span></h1>
-    <p class="lede">Swords that block again. Elytra that fly like aircraft. Ten new enchantments, land you can claim and lose — and an army that fires Gipfäli.</p>
-    <p class="gloss"><i>Gipfäli</i> (n., Swiss German): a croissant. In this mod, also ammunition, grenade filling and explosive payload.</p>
+    <p class="lede">Swords that block again. Elytra that fly like aircraft. Ten new enchantments — and, in a second mod, an army that fires Gipfäli and land it can claim and lose.</p>
+    <p class="gloss"><i>Gipfäli</i> (n., Swiss German): a croissant. In these mods, also ammunition, grenade filling and explosive payload.</p>
     <div class="cta">
       <a class="btn primary" href="#install">Install</a>
-      <a class="btn" href="https://github.com/noname-ch/Combatupdate" target="_blank" rel="noopener">Source on GitHub ↗</a>
+      <a class="btn" href="#combatupdate">CombatUpdate ↓</a>
+      <a class="btn" href="#gipfeliarmy">Gipfäli Army ↓</a>
+      <a class="btn" href="https://github.com/noname-ch/Combatupdate" target="_blank" rel="noopener">GitHub ↗</a>
     </div>
     <div class="stats">
       <div class="stat">10<small>new enchantments</small></div>
@@ -280,21 +315,35 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
 
 <nav class="toc" aria-label="Sections">
   <ul>
+    <li class="grp"><a href="#combatupdate" data-mod="combatupdate">CombatUpdate</a></li>
     <li><a href="#melee"><img class="px" src="img/mod/iron_shortsword.png" alt="">Melee</a></li>
     <li><a href="#blocking"><img class="px" src="img/mc/diamond_sword.png" alt="">Blocking</a></li>
     <li><a href="#movement"><img class="px" src="img/mc/feather.png" alt="">Movement</a></li>
     <li><a href="#flight"><img class="px" src="img/mc/elytra.png" alt="">Flight</a></li>
     <li><a href="#enchantments"><img class="px" src="img/mod/enchanted_book_combo_perun.png" alt="">Enchantments</a></li>
+    <li><a href="#extras"><img class="iso" src="img/block/meat_obelisk.png" alt="">Extras</a></li>
+    <li class="grp"><a href="#gipfeliarmy" data-mod="gipfeliarmy">Gipfäli Army</a></li>
     <li><a href="#gipfaeli"><img class="px" src="img/mod/gipfaeli.png" alt="">Gipfäli</a></li>
     <li><a href="#army"><img class="px" src="img/mod/gipfaeli_command_flag.png" alt="">Army</a></li>
     <li><a href="#territory"><img class="px" src="img/mod/gipfaeli_war_banner.png" alt="">Territory</a></li>
-    <li><a href="#extras"><img class="iso" src="img/block/meat_obelisk.png" alt="">Extras</a></li>
-    <li><a href="#install"><img class="px" src="img/mc/iron_ingot.png" alt="">Install</a></li>
+    <li class="end"><a href="#install"><img class="px" src="img/mc/iron_ingot.png" alt="">Install</a></li>
   </ul>
 </nav>
 
 <main class="wrap">
 
+<!-- ################ MOD 1: COMBATUPDATE ################ -->
+<section class="mod" id="combatupdate" aria-labelledby="mod-combatupdate">
+  <header class="mod-head">
+    <div class="mod-copy">
+      <div class="eyebrow">Mod 1 of 2 · <span class="modid">combatupdate</span></div>
+      <h2 class="mod-name" id="mod-combatupdate">Combat<span>Update</span></h2>
+      <p class="mod-lede">Swords that block again, a dash and a slide, elytra that fly like aircraft, ten new enchantments and three endgame weapons.</p>
+      <div class="chips"><span class="chip">Jar <b>combatupdate-1.0.0.jar</b></span><span class="chip">Config <b>Mods → CombatUpdate</b></span><span class="chip">Off switches <b>20</b></span></div>
+      <ul class="mod-toc" aria-label="CombatUpdate chapters"><li><a href="#melee"><img class="px" src="img/mod/iron_shortsword.png" alt="">Melee</a></li><li><a href="#blocking"><img class="px" src="img/mc/diamond_sword.png" alt="">Blocking</a></li><li><a href="#movement"><img class="px" src="img/mc/feather.png" alt="">Movement</a></li><li><a href="#flight"><img class="px" src="img/mc/elytra.png" alt="">Flight</a></li><li><a href="#enchantments"><img class="px" src="img/mod/enchanted_book_combo_perun.png" alt="">Enchantments</a></li><li><a href="#extras"><img class="iso" src="img/block/meat_obelisk.png" alt="">Extras</a></li></ul>
+    </div>
+    <img class="px mod-art" src="img/mod/exoblade.png" alt="">
+  </header>
 <!-- ============ MELEE ============ -->
 <section class="chapter" id="melee">
   <div class="chapter-head">
@@ -370,8 +419,8 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     <div class="feat">
       <img class="px" src="img/mc/iron_sword.png" alt="">
       <h3>Raise the guard</h3>
-      <p>Hold right-click with a sword. The guard is up after half a second, twice a shield's wind-up, and stays up for as long as you hold. It covers the 90° in front of you. A hit from the side or behind lands in full.</p>
-      <div class="chips"><span class="chip">Wind-up <b>0.5 s</b></span><span class="chip">Arc <b>90°</b></span></div>
+      <p>Hold right-click with a sword. The guard is up instantly, with no wind-up, and stays up for as long as you hold. It covers the 90° in front of you. A hit from the side or behind lands in full.</p>
+      <div class="chips"><span class="chip">Wind-up <b>none</b></span><span class="chip">Arc <b>90°</b></span></div>
     </div>
     <div class="feat">
       <img class="px" src="img/mc/diamond_sword.png" alt="">
@@ -410,7 +459,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
         <thead><tr><th>Blocking</th><th>Shield</th><th>Sword</th></tr></thead>
         <tbody>
           <tr><td>Damage blocked</td><td class="n">100%</td><td class="n hl">50%</td></tr>
-          <tr><td>Wind-up</td><td class="n">0.25 s</td><td class="n hl">0.5 s</td></tr>
+          <tr><td>Wind-up</td><td class="n">0.25 s</td><td class="n hl">none</td></tr>
           <tr><td>Disabled by an axe</td><td class="n">×1.0</td><td class="n hl">×1.5</td></tr>
           <tr><td>Blocking arc</td><td class="n">90°</td><td class="n">90°</td></tr>
           <tr><td>Durability cost</td><td class="n">1 + dmg</td><td class="n">1 + dmg</td></tr>
@@ -568,6 +617,96 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
   </div>
 </section>
 
+<!-- ============ EXTRAS ============ -->
+<section class="chapter" id="extras">
+  <div class="chapter-head">
+    <img class="iso" src="img/block/meat_obelisk.png" alt="">
+    <div><h2>Extras</h2><p class="thesis">Floating damage numbers, a training dummy to read them off, a config screen with a switch for everything, and a block of ham.</p></div>
+  </div>
+
+  <div class="split" style="margin-top:0">
+    <div>
+      <h3>Damage numbers</h3>
+      <p style="margin:8px 0 16px;color:var(--muted)">Every hit you land floats its number up beside whatever you hit. Every player nearby sees it, and nothing extra is needed on the client. Want to read them in peace? That's what the dummy below is for.</p>
+    </div>
+    <figure class="shot" data-shot="damage-numbers">
+      <div class="frame"><div class="ph"><span class="tag">screenshot · damage-numbers</span><p>Mid-fight with a sword against 2–3 mobs, or a training dummy taking hits, several damage numbers hanging in the air.</p></div></div>
+    </figure>
+  </div>
+
+  <div class="dummy">
+    <div>
+      <button class="dmg" id="dmg" type="button" aria-label="Hit the training dummy to see a damage number">
+        <span class="hint">click to hit</span>
+        <img class="px" src="img/mod/training_dummy.png" alt="">
+      </button>
+      <div class="recipes" style="margin-top:12px;justify-content:center;background:transparent;padding:0">
+        <div class="recipe-wrap"><span class="recipe" data-recipe="training_dummy"></span></div>
+      </div>
+    </div>
+    <div>
+      <div class="eyebrow" style="color:var(--straw)">Placeable · stacks to 16</div>
+      <h3 style="font-size:clamp(2.4rem,5vw,3.6rem);margin:4px 0 12px">Training Dummy</h3>
+      <p style="margin-bottom:18px">A sack of straw on a post, arms out like a scarecrow. Set it down, try a weapon on it, and read what every hit did off the damage numbers. Hit it and it wobbles on its post the way an armour stand does.</p>
+      <dl class="rules">
+        <div><dt>Never dies</dt><dd>Every hit goes through armour, enchantments and damage events exactly as it would on a mob. Only then is its health put back, so the number you see is what that hit really did. Only <code>/kill</code> and the void remove it.</dd></div>
+        <div><dt>Never moves</dt><dd>Not for knockback, explosions, water, the Battering Ram or the Exoblade's lunge. It can still fall, so it never hangs in the air over a mined-out block.</dd></div>
+        <div><dt>Counts as a monster</dt><dd>So Exobeams, Scarlet bullets, the launcher's lock and the army's target menu all go after it. Iron golems are kept off it, so one in a village isn't punched forever.</dd></div>
+        <div><dt>Dress it</dt><dd>Right-click it with armour to put that piece on, and get back whatever it replaced. Try the same weapon against leather, then netherite. <kbd>Sneak</kbd> + right-click with an empty hand picks it up, armour and all.</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="obelisk">
+    <div>
+      <div class="cube-stage"><div class="cube" data-side="img/mod/meat_obelisk_side.png" data-top="img/mod/meat_obelisk_top.png"></div></div>
+      <div class="recipes" style="margin-top:12px;justify-content:center;background:transparent;padding:0">
+        <div class="recipe-wrap"><span class="recipe" data-recipe="meat_obelisk"></span></div>
+      </div>
+    </div>
+    <div>
+      <div class="eyebrow" style="color:var(--ham)">Block · 9 porkchops</div>
+      <h3 style="font-size:clamp(2.4rem,5vw,3.6rem);margin:4px 0 16px">Meat Obelisk</h3>
+      <div class="mc-tip" id="tip"><div class="t">Meat Obelisk</div></div>
+      <div class="listen">
+        <button class="btn" id="play" type="button" aria-pressed="false">▶ Hear it placed</button>
+        <small>When you place it, a calm voice reads this to everyone nearby.</small>
+      </div>
+      <audio id="speech" src="audio/speech.ogg" preload="none"></audio>
+    </div>
+  </div>
+
+  <div class="split">
+    <div>
+      <h3>Everything has an off switch</h3>
+      <p style="margin:8px 0 6px;color:var(--muted)">In game: <b>Mods → CombatUpdate → Config</b>. The first page is nothing but these switches. Every number quoted in this half of the page is a default you can tune on the pages after it.</p>
+      <ul class="switches">
+        <li>Elytra free look</li><li>Elytra speed tuning</li><li>Shift rocket boost</li><li>Elytra bombing</li><li>Battering Ram</li>
+        <li>Combat enchantments</li><li>Shortbow</li><li>Leather enchant colours</li><li>Enchanted book textures</li><li>Thrown fireballs</li>
+        <li>TNT blast retuning</li><li>Weapon reach</li><li>Sword blocking</li><li>Damage numbers</li>
+        <li>Exoblade</li><li>Scarlet Devil</li><li>Zenith</li><li>Training dummy</li><li>Dash</li><li>Slide</li>
+      </ul>
+    </div>
+    <figure class="shot" data-shot="config-screen">
+      <div class="frame"><div class="ph"><span class="tag">screenshot · config-screen</span><p>The CombatUpdate config screen opened from the Mods menu, on the Features page.</p></div></div>
+    </figure>
+  </div>
+</section>
+
+</section>
+
+<!-- ################ MOD 2: GIPFÄLI ARMY ################ -->
+<section class="mod" id="gipfeliarmy" aria-labelledby="mod-gipfeliarmy">
+  <header class="mod-head">
+    <div class="mod-copy">
+      <div class="eyebrow">Mod 2 of 2 · <span class="modid">gipfeliarmy</span></div>
+      <h2 class="mod-name" id="mod-gipfeliarmy">Gipfäli<span>Army</span></h2>
+      <p class="mod-lede">A croissant that is also ammunition, the army that fires it, and the land it fights over.</p>
+      <div class="chips"><span class="chip">Jar <b>gipfeliarmy-1.0.0.jar</b></span><span class="chip">Config <b>Mods → Gipfäli Army</b></span><span class="chip">Off switches <b>5</b></span></div>
+      <ul class="mod-toc" aria-label="GipfäliArmy chapters"><li><a href="#gipfaeli"><img class="px" src="img/mod/gipfaeli.png" alt="">Gipfäli</a></li><li><a href="#army"><img class="px" src="img/mod/gipfaeli_command_flag.png" alt="">Army</a></li><li><a href="#territory"><img class="px" src="img/mod/gipfaeli_war_banner.png" alt="">Territory</a></li><li><a href="#army-commands"><img class="px" src="img/mc/iron_ingot.png" alt="">Commands</a></li></ul>
+    </div>
+    <img class="px mod-art" src="img/mod/letony_mate_ak47.png" alt="">
+  </header>
 <!-- ============ GIPFÄLI ============ -->
 <section class="chapter" id="gipfaeli">
   <div class="chapter-head">
@@ -771,121 +910,17 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
   </div>
 </section>
 
-<!-- ============ EXTRAS ============ -->
-<section class="chapter" id="extras">
-  <div class="chapter-head">
-    <img class="iso" src="img/block/meat_obelisk.png" alt="">
-    <div><h2>Extras</h2><p class="thesis">Floating damage numbers, a training dummy to read them off, a config screen with a switch for everything, and a block of ham.</p></div>
-  </div>
-
-  <div class="split" style="margin-top:0">
-    <div>
-      <h3>Damage numbers</h3>
-      <p style="margin:8px 0 16px;color:var(--muted)">Every hit you land floats its number up beside whatever you hit. Every player nearby sees it, and nothing extra is needed on the client. Want to read them in peace? That's what the dummy below is for.</p>
-    </div>
-    <figure class="shot" data-shot="damage-numbers">
-      <div class="frame"><div class="ph"><span class="tag">screenshot · damage-numbers</span><p>Mid-fight with a sword against 2–3 mobs, or a training dummy taking hits, several damage numbers hanging in the air.</p></div></div>
-    </figure>
-  </div>
-
-  <div class="dummy">
-    <div>
-      <button class="dmg" id="dmg" type="button" aria-label="Hit the training dummy to see a damage number">
-        <span class="hint">click to hit</span>
-        <img class="px" src="img/mod/training_dummy.png" alt="">
-      </button>
-      <div class="recipes" style="margin-top:12px;justify-content:center;background:transparent;padding:0">
-        <div class="recipe-wrap"><span class="recipe" data-recipe="training_dummy"></span></div>
-      </div>
-    </div>
-    <div>
-      <div class="eyebrow" style="color:var(--straw)">Placeable · stacks to 16</div>
-      <h3 style="font-size:clamp(2.4rem,5vw,3.6rem);margin:4px 0 12px">Training Dummy</h3>
-      <p style="margin-bottom:18px">A sack of straw on a post, arms out like a scarecrow. Set it down, try a weapon on it, and read what every hit did off the damage numbers. Hit it and it wobbles on its post the way an armour stand does.</p>
-      <dl class="rules">
-        <div><dt>Never dies</dt><dd>Every hit goes through armour, enchantments and damage events exactly as it would on a mob. Only then is its health put back, so the number you see is what that hit really did. Only <code>/kill</code> and the void remove it.</dd></div>
-        <div><dt>Never moves</dt><dd>Not for knockback, explosions, water, the Battering Ram or the Exoblade's lunge. It can still fall, so it never hangs in the air over a mined-out block.</dd></div>
-        <div><dt>Counts as a monster</dt><dd>So Exobeams, Scarlet bullets, the launcher's lock and the army's target menu all go after it. Iron golems are kept off it, so one in a village isn't punched forever.</dd></div>
-        <div><dt>Dress it</dt><dd>Right-click it with armour to put that piece on, and get back whatever it replaced. Try the same weapon against leather, then netherite. <kbd>Sneak</kbd> + right-click with an empty hand picks it up, armour and all.</dd></div>
-      </dl>
-    </div>
-  </div>
-
-  <div class="obelisk">
-    <div>
-      <div class="cube-stage"><div class="cube" data-side="img/mod/meat_obelisk_side.png" data-top="img/mod/meat_obelisk_top.png"></div></div>
-      <div class="recipes" style="margin-top:12px;justify-content:center;background:transparent;padding:0">
-        <div class="recipe-wrap"><span class="recipe" data-recipe="meat_obelisk"></span></div>
-      </div>
-    </div>
-    <div>
-      <div class="eyebrow" style="color:var(--ham)">Block · 9 porkchops</div>
-      <h3 style="font-size:clamp(2.4rem,5vw,3.6rem);margin:4px 0 16px">Meat Obelisk</h3>
-      <div class="mc-tip" id="tip"><div class="t">Meat Obelisk</div></div>
-      <div class="listen">
-        <button class="btn" id="play" type="button" aria-pressed="false">▶ Hear it placed</button>
-        <small>When you place it, a calm voice reads this to everyone nearby.</small>
-      </div>
-      <audio id="speech" src="audio/speech.ogg" preload="none"></audio>
-    </div>
-  </div>
-
-  <div class="split">
+  <div class="split mod-end">
     <div>
       <h3>Everything has an off switch</h3>
-      <p style="margin:8px 0 6px;color:var(--muted)">In game: <b>Mods → CombatUpdate → Config</b>. The first page is nothing but these switches. Every number quoted on this page is a default you can tune on the pages after it.</p>
+      <p style="margin:8px 0 6px;color:var(--muted)">In game: <b>Mods → Gipfäli Army → Config</b>. The first page is nothing but these switches. Every number quoted in this half of the page is a default you can tune on the pages after it.</p>
       <ul class="switches">
-        <li>Elytra free look</li><li>Elytra speed tuning</li><li>Shift rocket boost</li><li>Elytra bombing</li><li>Battering Ram</li>
-        <li>Combat enchantments</li><li>Shortbow</li><li>Leather enchant colours</li><li>Enchanted book textures</li><li>Thrown fireballs</li>
-        <li>TNT blast retuning</li><li>Weapon reach</li><li>Sword blocking</li><li>Gipfäli Launcher</li><li>Gipfäli Launch Rig</li>
-        <li>Gipfäli grenade &amp; TNT</li><li>Gipfäli Army</li><li>Damage numbers</li><li>Territory</li>
-        <li>Exoblade</li><li>Scarlet Devil</li><li>Zenith</li><li>Training dummy</li><li>Dash</li><li>Slide</li>
+        <li>Gipfäli Launcher</li><li>Gipfäli Launch Rig</li><li>Gipfäli grenade &amp; TNT</li><li>Gipfäli Army</li><li>Territory</li>
       </ul>
     </div>
-    <figure class="shot" data-shot="config-screen">
-      <div class="frame"><div class="ph"><span class="tag">screenshot · config-screen</span><p>The CombatUpdate config screen opened from the Mods menu, on the Features page.</p></div></div>
-    </figure>
+    <p class="aside">Gipfäli Army runs on its own, without CombatUpdate. Switched off, a feature's items stay in the game, so a world that already holds them still loads.</p>
   </div>
-</section>
-
-<!-- ============ INSTALL ============ -->
-<section class="chapter" id="install">
-  <div class="chapter-head">
-    <img class="px" src="img/mc/iron_ingot.png" alt="">
-    <div><h2>Install</h2><p class="thesis">Minecraft Java 26.3 with NeoForge. Needed on the server and on every client that joins.</p></div>
-  </div>
-  <div class="split" style="margin-top:0">
-    <ol class="steps">
-      <li><div><b>Get NeoForge 26.3.0.7-beta</b>Run the installer from <a href="https://neoforged.net" target="_blank" rel="noopener">neoforged.net</a> and pick <i>Install client</i>. It adds a NeoForge profile to the launcher.</div></li>
-      <li><div><b>Add the mod</b>Drop <code>combatupdate-1.0.0.jar</code> into <code>.minecraft/mods</code>. Servers take it in their own <code>mods</code> folder.</div></li>
-      <li><div><b>Launch the NeoForge profile</b>CombatUpdate shows up under Mods, with its config one click away.</div></li>
-      <li><div><b>Or build it yourself</b>Clone the repo and run <code>./gradlew build</code>. The jar lands in <code>build/libs</code>.</div></li>
-    </ol>
-    <div class="tbl">
-      <table class="keys">
-        <thead><tr><th>Control</th><th>Does</th></tr></thead>
-        <tbody>
-          <tr><td><kbd>R</kbd></td><td>Dash (rebind under Controls → CombatUpdate)</td></tr>
-          <tr><td><kbd>Sneak</kbd> while sprinting</td><td>Slide</td></tr>
-          <tr><td><kbd>W</kbd> <kbd>S</kbd> · <kbd>A</kbd> <kbd>D</kbd></td><td>Pitch · roll while gliding</td></tr>
-          <tr><td><kbd>Shift</kbd> gliding</td><td>Continuous rocket boost</td></tr>
-          <tr><td>Right-click TNT gliding</td><td>Drop it as a bomb</td></tr>
-          <tr><td>Hold right-click, sword</td><td>Block</td></tr>
-          <tr><td>Right-click fire charge</td><td>Throw a fireball</td></tr>
-          <tr><td>Hold attack · right-click, Exoblade</td><td>Keep swinging · lunge</td></tr>
-          <tr><td>Hold right-click, Scarlet Devil</td><td>Keep throwing</td></tr>
-          <tr><td><kbd>Sneak</kbd> + right-click launcher</td><td>Lock on / let go</td></tr>
-          <tr><td>Right-click the air, flag</td><td>Raise a new squad</td></tr>
-          <tr><td><kbd>Sneak</kbd> + right-click flag</td><td>Army menu</td></tr>
-          <tr><td><kbd>Sneak</kbd> + right-click dummy</td><td>Pick it back up</td></tr>
-          <tr><td><kbd>K</kbd></td><td>Army screen</td></tr>
-          <tr><td><kbd>M</kbd></td><td>Territory map</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <details class="cmds">
+  <details class="cmds" id="army-commands">
     <summary class="btn"><span class="closed">Show all commands</span><span class="opened">Hide commands</span></summary>
     <div class="cmds-body">
       <div class="cmd-group">
@@ -990,9 +1025,51 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
   </details>
 </section>
 
+<!-- ============ INSTALL ============ -->
+<section class="chapter" id="install">
+  <div class="chapter-head">
+    <img class="px" src="img/mc/iron_ingot.png" alt="">
+    <div><h2>Install</h2><p class="thesis">Minecraft Java 26.3 with NeoForge. Each mod runs on its own, so install one or both, but whatever the server has, every client that joins needs too.</p></div>
+  </div>
+  <div class="split" style="margin-top:0">
+    <ol class="steps">
+      <li><div><b>Get NeoForge 26.3.0.7-beta</b>Run the installer from <a href="https://neoforged.net" target="_blank" rel="noopener">neoforged.net</a> and pick <i>Install client</i>. It adds a NeoForge profile to the launcher.</div></li>
+      <li><div><b>Download the mods</b><code>Combatupdate-mods-1.0.0.zip</code> from <a href="https://github.com/noname-ch/Combatupdate/releases" target="_blank" rel="noopener">Releases</a> holds both jars.</div></li>
+      <li><div><b>Add them</b>Drop <code>combatupdate-1.0.0.jar</code> and <code>gipfeliarmy-1.0.0.jar</code> into <code>.minecraft/mods</code>. Servers take them in their own <code>mods</code> folder.</div></li>
+      <li><div><b>Launch the NeoForge profile</b>CombatUpdate and Gipfäli Army show up under Mods, each with its config one click away.</div></li>
+      <li><div><b>Or build them yourself</b>Clone the repo and run <code>./gradlew build</code>. The jars land in <code>combatupdate/build/libs</code> and <code>Gipfeliarmy/build/libs</code>.</div></li>
+    </ol>
+    <div class="tbl">
+      <table class="keys">
+        <thead><tr><th>Control</th><th>Does</th></tr></thead>
+        <tbody>
+          <tr class="grp-row"><th colspan="2">CombatUpdate</th></tr>
+          <tr><td><kbd>R</kbd></td><td>Dash (rebind under Controls → CombatUpdate)</td></tr>
+          <tr><td><kbd>Sneak</kbd> while sprinting</td><td>Slide</td></tr>
+          <tr><td><kbd>W</kbd> <kbd>S</kbd> · <kbd>A</kbd> <kbd>D</kbd></td><td>Pitch · roll while gliding</td></tr>
+          <tr><td><kbd>Shift</kbd> gliding</td><td>Continuous rocket boost</td></tr>
+          <tr><td>Right-click TNT gliding</td><td>Drop it as a bomb</td></tr>
+          <tr><td>Hold right-click, sword</td><td>Block</td></tr>
+          <tr><td>Right-click fire charge</td><td>Throw a fireball</td></tr>
+          <tr><td>Hold attack · right-click, Exoblade</td><td>Keep swinging · lunge</td></tr>
+          <tr><td>Hold right-click, Scarlet Devil</td><td>Keep throwing</td></tr>
+          <tr><td><kbd>Sneak</kbd> + right-click dummy</td><td>Pick it back up</td></tr>
+          <tr class="grp-row"><th colspan="2">Gipfäli Army</th></tr>
+          <tr><td><kbd>Sneak</kbd> + right-click launcher</td><td>Lock on / let go</td></tr>
+          <tr><td>Right-click the air, flag</td><td>Raise a new squad</td></tr>
+          <tr><td><kbd>Sneak</kbd> + right-click flag</td><td>Army menu</td></tr>
+          <tr><td><kbd>K</kbd></td><td>Army screen (rebind under Controls → Gipfäli Army)</td></tr>
+          <tr><td><kbd>M</kbd></td><td>Territory map</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</section>
+
 <footer>
-  <span>CombatUpdate 1.0.0 · Minecraft 26.3 · NeoForge</span>
-  <span>A fan-made mod. Not affiliated with Mojang or Microsoft.</span>
+  <span>CombatUpdate 1.0.0 · Gipfäli Army 1.0.0 · Minecraft 26.3 · NeoForge</span>
+  <span>Fan-made mods. Not affiliated with Mojang or Microsoft.</span>
   <a href="https://github.com/noname-ch/Combatupdate" target="_blank" rel="noopener">github.com/noname-ch/Combatupdate</a>
 </footer>
 </main>
@@ -1129,9 +1206,11 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
   });
 
   // ---- highlight the section in view ----
-  const links=[...document.querySelectorAll('nav.toc a')];
+  const links=[...document.querySelectorAll('nav.toc li:not(.grp) a')], mods=[...document.querySelectorAll('nav.toc a[data-mod]')];
   const io=new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){
-    links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+en.target.id)); }}),{rootMargin:'-40% 0px -55% 0px'});
+    links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+en.target.id));
+    const mod=en.target.closest('section.mod');
+    mods.forEach(a=>a.classList.toggle('on',!!mod&&a.dataset.mod===mod.id)); }}),{rootMargin:'-40% 0px -55% 0px'});
   document.querySelectorAll('section.chapter').forEach(s=>io.observe(s));
 })();
 </script>
