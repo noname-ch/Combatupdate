@@ -28,3 +28,12 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build
+
+      # Keeps the built jar on the run's page under Artifacts, so a build can be tried without
+      # compiling it yourself.
+      - name: Upload the mod jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: combatupdate-${{ github.sha }}
+          path: build/libs/*.jar
+          if-no-files-found: error
