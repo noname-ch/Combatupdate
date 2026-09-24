@@ -53,8 +53,10 @@ import ch.bbcag.combatupdate.client.ScarletSpearRenderer;
 import ch.bbcag.combatupdate.client.ZenithBladeRenderer;
 import ch.bbcag.combatupdate.client.ShortbowPullProperty;
 import ch.bbcag.combatupdate.client.ArmyClient;
+import ch.bbcag.combatupdate.client.MovementClient;
 import ch.bbcag.combatupdate.client.TerritoryClient;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.MovementInputUpdateEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
@@ -75,6 +77,8 @@ public final class CombatUpdateClient {
         TerritoryClient.wire();
         // And the army's: the roster and the order to open the army screen; see ArmyClient.
         ArmyClient.wire();
+        // And hands the dash and slide their line to the server; see MovementClient.
+        MovementClient.wire();
     }
 
     @SubscribeEvent
@@ -406,6 +410,12 @@ public final class CombatUpdateClient {
     static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         TerritoryClient.registerKeys(event);
         ArmyClient.registerKeys(event);
+        MovementClient.registerKeys(event);
+    }
+
+    @SubscribeEvent
+    static void onMovementInputUpdate(MovementInputUpdateEvent event) {
+        MovementClient.onMovementInput(event);
     }
 
     // The territory key is read once a tick rather than on the key event, the way vanilla reads
@@ -414,6 +424,7 @@ public final class CombatUpdateClient {
     static void onClientTick(ClientTickEvent.Post event) {
         TerritoryClient.tick();
         ArmyClient.tick();
+        MovementClient.tick();
         ExobladeAutoSwing.tick();
     }
 }

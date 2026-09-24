@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="CombatUpdate: a NeoForge mod for Minecraft 26.3 with sword blocking, 3D elytra flight, ten new enchantments, territory claims and the Gipfäli army.">
-<link rel="icon" href="img/mod/gipfaeli.png">
+<link rel="icon" href="img/mod/iron_shortsword.png">
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>CombatUpdate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -261,7 +261,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     <div class="stats">
       <div class="stat">10<small>new enchantments</small></div>
       <div class="stat">6<small>soldier kits</small></div>
-      <div class="stat">22<small>features, each with an off switch</small></div>
+      <div class="stat">25<small>features, each with an off switch</small></div>
     </div>
   </div>
   <div class="hero-art">
@@ -276,6 +276,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
 <nav class="toc" aria-label="Sections">
   <ul>
     <li><a href="#melee"><img class="px" src="img/mod/iron_shortsword.png" alt="">Melee</a></li>
+    <li><a href="#movement"><img class="px" src="img/mc/feather.png" alt="">Movement</a></li>
     <li><a href="#flight"><img class="px" src="img/mc/elytra.png" alt="">Flight</a></li>
     <li><a href="#enchantments"><img class="px" src="img/mod/enchanted_book_combo_perun.png" alt="">Enchantments</a></li>
     <li><a href="#gipfaeli"><img class="px" src="img/mod/gipfaeli.png" alt="">Gipfäli</a></li>
@@ -371,6 +372,36 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
   </div>
 </section>
 
+<!-- ============ MOVEMENT ============ -->
+<section class="chapter" id="movement">
+  <div class="chapter-head">
+    <img class="px" src="img/mc/feather.png" alt="">
+    <div><h2>Movement</h2><p class="thesis">Two ways to get somewhere fast on foot: a dash to close the gap or get out of trouble, and a slide that keeps your sprint and fits under what you'd otherwise have to crawl through.</p></div>
+  </div>
+  <div class="features">
+    <div class="feat">
+      <img class="px" src="img/mc/feather.png" alt="">
+      <h3>Dash</h3>
+      <p>Press <kbd>R</kbd> to burst a few blocks the way you're walking. Hold <kbd>A</kbd> or <kbd>D</kbd> to sidestep, <kbd>S</kbd> to hop back, or nothing to go where you're looking. It stays flat, so it covers the same ground in the air as on it. You get one in the air per jump, and dashing mid-fall wipes out the fall damage you'd built up so far.</p>
+      <div class="chips"><span class="chip">Distance <b>~5 blocks</b></span><span class="chip">Cooldown <b>1.5 s</b></span><span class="chip">In the air <b>1×</b></span></div>
+    </div>
+    <div class="feat">
+      <img class="px" src="img/mc/sugar.png" alt="">
+      <h3>Slide</h3>
+      <p>Press <kbd>Sneak</kbd> while sprinting and you drop flat and keep going, faster than you were running, easing off over a second. Flat means you fit under a one-block gap. Look left or right to curve it; the movement keys do nothing while you're down. Down a hill it picks up speed with every block it drops. Let go of sneak to stand up, or jump to launch out of it with the speed it still had, and keep sneak held to slide on again the moment you land. Pressed in the air, it waits for the landing.</p>
+      <div class="chips"><span class="chip">Start <b>2.5× sprint</b></span><span class="chip">Up to <b>1 s</b></span><span class="chip">Cooldown <b>0.5 s</b></span></div>
+    </div>
+  </div>
+  <div class="split">
+    <figure class="shot" data-shot="dash">
+      <div class="frame"><div class="ph"><span class="tag">screenshot · dash</span><p>Third person (F5), mid-dash sideways past a zombie or another player, the puff of cloud still hanging where you started.</p></div></div>
+    </figure>
+    <figure class="shot" data-shot="slide">
+      <div class="frame"><div class="ph"><span class="tag">screenshot · slide</span><p>Third person, lying flat and sliding under a one-block gap in a wall, dust kicking up behind.</p></div></div>
+    </figure>
+  </div>
+</section>
+
 <!-- ============ FLIGHT ============ -->
 <section class="chapter" id="flight">
   <div class="chapter-head">
@@ -445,7 +476,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
 <section class="chapter" id="enchantments">
   <div class="chapter-head">
     <img class="px" src="img/mod/enchanted_book_gamble.png" alt="">
-    <div><h2>Enchantments</h2><p class="thesis">Ten new enchantments, each with its own book cover and a tooltip line explaining what it actually does.</p></div>
+    <div><h2>Enchantments</h2><p class="thesis">Ten new enchantments, each with its own book cover and a tooltip line explaining what it actually does. They come from the enchanting table and from librarians, the same as vanilla's.</p></div>
   </div>
   <div class="books">
     <div class="book"><img class="px" src="img/mod/enchanted_book_shortbow.png" alt=""><span class="on">Bows · max I</span><h3>Shortbow</h3>
@@ -467,7 +498,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     <div class="book"><img class="px" src="img/mod/enchanted_book_gamble.png" alt=""><span class="on">Swords · max III</span><h3>Gamble</h3>
       <p>Every hit has a small chance to flip a true-damage coin. It lands on your target, or on you.</p><div class="chips"><span class="chip">Chance <b>15%</b></span></div></div>
     <div class="book"><img class="px" src="img/mod/enchanted_book_mirror.png" alt=""><span class="on">Any armour · max I</span><h3>Mirror</h3>
-      <p>Blanks out true damage aimed at you, the one thing that stops Combo: Perun and Gamble. Found in village and mineshaft chests.</p></div>
+      <p>Blanks out true damage aimed at you, the one thing that stops Combo: Perun and Gamble. Treasure, like Mending: never from the enchanting table, only from librarians (at double price) and village and mineshaft chests.</p></div>
   </div>
 
   <div class="split">
@@ -575,9 +606,14 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
       <p>A squad is a colour: paint a soldier blue and it's in the blue squad. Sixteen dye colours, plus camouflage for the reserve, each uniform with the army's red-and-white armband. Promote one soldier per squad to commander: it changes into a black dress uniform with the squad colour on lapels, cap and stripes. Click it for the whole squad's orders.</p>
     </div>
     <div class="feat">
+      <img class="px" src="img/mod/gipfaeli_command_flag.png" alt="">
+      <h3>Army screen</h3>
+      <p>Press <kbd>K</kbd> for every soldier you have in one list, with a tab per squad. With nothing picked, the panel on the right gives that squad's orders, kit and armour; pick a soldier and it gives that soldier's own buttons. It's the other half of the territory map: pick a chunk on the map, press Army, and send soldiers to march on it. Neither screen pauses the game, so you can watch them arrive.</p>
+    </div>
+    <div class="feat">
       <img class="px" src="img/mc/iron_chestplate.png" alt="">
       <h3>Kit &amp; armour</h3>
-      <p>Recruits come unarmed. Click a soldier for its own menu: kit, armour, colour, rank, posts. The gun in its hand is its role, so hand it a different one and it changes role on the spot. Armour is vanilla armour, leather to netherite, and it protects like it does on you. The commander's menu kits out the whole squad at once. Kit and armour come out of your pack. Or skip the menu and right-click a soldier with a gun, a helmet or a dye; a Gipfäli heals it.</p>
+      <p>Recruits come unarmed. Double-click a soldier near you in the army screen and its kit bag opens, like a horse's: drag a helmet or a gun from your pack onto it, or drag it back off. Its buttons do the rest: kit, armour, colour, rank, posts. The gun in its hand is its role, so hand it a different one and it changes role on the spot. Armour is vanilla armour, leather to netherite, and it protects like it does on you. The commander's menu kits out the whole squad at once. Kit and armour come out of your pack. Or skip the menu and right-click a soldier with a gun, a helmet or a dye; a Gipfäli heals it.</p>
     </div>
     <div class="feat">
       <img class="px" src="img/mod/gipfaeli_war_banner.png" alt="">
@@ -752,7 +788,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
         <li>Combat enchantments</li><li>Shortbow</li><li>Leather enchant colours</li><li>Enchanted book textures</li><li>Thrown fireballs</li>
         <li>TNT blast retuning</li><li>Weapon reach</li><li>Sword blocking</li><li>Gipfäli Launcher</li><li>Gipfäli Launch Rig</li>
         <li>Gipfäli grenade &amp; TNT</li><li>Gipfäli Army</li><li>Damage numbers</li><li>Territory</li>
-        <li>Exoblade</li><li>Scarlet Devil</li><li>Training dummy</li>
+        <li>Exoblade</li><li>Scarlet Devil</li><li>Zenith</li><li>Training dummy</li><li>Dash</li><li>Slide</li>
       </ul>
     </div>
     <figure class="shot" data-shot="config-screen">
@@ -778,6 +814,8 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
       <table class="keys">
         <thead><tr><th>Control</th><th>Does</th></tr></thead>
         <tbody>
+          <tr><td><kbd>R</kbd></td><td>Dash (rebind under Controls → CombatUpdate)</td></tr>
+          <tr><td><kbd>Sneak</kbd> while sprinting</td><td>Slide</td></tr>
           <tr><td><kbd>W</kbd> <kbd>S</kbd> · <kbd>A</kbd> <kbd>D</kbd></td><td>Pitch · roll while gliding</td></tr>
           <tr><td><kbd>Shift</kbd> gliding</td><td>Continuous rocket boost</td></tr>
           <tr><td>Right-click TNT gliding</td><td>Drop it as a bomb</td></tr>
@@ -789,6 +827,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
           <tr><td>Right-click the air, flag</td><td>Raise a new squad</td></tr>
           <tr><td><kbd>Sneak</kbd> + right-click flag</td><td>Army menu</td></tr>
           <tr><td><kbd>Sneak</kbd> + right-click dummy</td><td>Pick it back up</td></tr>
+          <tr><td><kbd>K</kbd></td><td>Army screen</td></tr>
           <tr><td><kbd>M</kbd></td><td>Territory map</td></tr>
         </tbody>
       </table>
@@ -809,6 +848,8 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
             <tr><td><code>/gipfaeliarmy status</code></td><td>How many soldiers you have and what they're doing, in chat</td></tr>
             <tr><td><code>/gipfaeliarmy raise</code></td><td>Raise a new squad: its commander appears (what the flag does)</td></tr>
             <tr><td><code>/gipfaeliarmy manual</code></td><td>Put a copy of the field manual in your pack</td></tr>
+            <tr><td><code>/gipfaeliarmy training <i>[count]</i> <i>[armed]</i></code></td><td>Stand 1–30 grey practice soldiers up in front of you (5 by default). <code>armed</code> gives them rifles and they shoot back at whoever hits them. They pack up after ten minutes</td></tr>
+            <tr><td><code>/gipfaeliarmy training clear</code></td><td>Take every practice soldier nearby down again</td></tr>
           </tbody>
         </table></div>
       </div>

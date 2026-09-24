@@ -47,6 +47,16 @@ public final class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_BOOST = BUILDER
             .comment("Whether holding shift while gliding burns firework rockets straight out of the inventory for a continuous boost")
             .define("enableBoost", true);
+    // --- Movement ---
+
+
+    public static final ModConfigSpec.BooleanValue ENABLE_DASH = BUILDER
+            .comment("Whether the dash key throws the player a few blocks along the way they are walking, on the ground or once per jump in the air")
+            .define("enableDash", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_SLIDE = BUILDER
+            .comment("Whether pressing sneak while sprinting drops the player into a slide that keeps their speed, gains more downhill and fits under one-block gaps; pressed in the air, it starts on landing")
+            .define("enableSlide", true);
     // --- Explosives ---
 
 
@@ -819,6 +829,43 @@ public final class Config {
     public static final ModConfigSpec.IntValue TERRITORY_BORDER_DISTANCE = BUILDER
             .comment("How far from a player, in blocks, claim borders are drawn. The game drops ordinary particles further than 32 blocks off, so that is as far as this goes; every block of border in reach is a particle sent to the player twice a second")
             .defineInRange("territoryBorderDistance", 24, 4, 32);
+    static {
+        BUILDER.pop();
+    }
+
+    // Its own page in the config screen: a pushed section renders as a button that
+    // opens a screen showing only what is inside it.
+    static {
+        BUILDER.comment("The dash and the slide. Switched on and off on the Features page.").push("movement");
+    }
+    // --- Dash ---
+
+
+    public static final ModConfigSpec.DoubleValue DASH_SPEED = BUILDER
+            .comment("How fast a dash carries the player, in blocks per tick. A dash holds this speed for 4 ticks, so 1.2 covers about 5 blocks; sprinting is about 0.28")
+            .defineInRange("dashSpeed", 1.2, 0.3, 3.0);
+
+    public static final ModConfigSpec.IntValue DASH_COOLDOWN_TICKS = BUILDER
+            .comment("How many ticks must pass between one dash and the next (20 ticks = 1 second)")
+            .defineInRange("dashCooldownTicks", 30, 0, 1200);
+
+    public static final ModConfigSpec.IntValue AIR_DASHES = BUILDER
+            .comment("How many dashes a player gets in the air before they have to land again. 0 keeps the dash on the ground")
+            .defineInRange("airDashes", 1, 0, 10);
+    // --- Slide ---
+
+
+    public static final ModConfigSpec.DoubleValue SLIDE_SPEED = BUILDER
+            .comment("How fast a slide starts, in blocks per tick. It slows down from there until it is back to walking pace; sprinting is about 0.28")
+            .defineInRange("slideSpeed", 0.7, 0.3, 2.0);
+
+    public static final ModConfigSpec.IntValue SLIDE_DURATION_TICKS = BUILDER
+            .comment("The longest a slide lasts, in ticks, if nothing ends it sooner (20 ticks = 1 second)")
+            .defineInRange("slideDurationTicks", 20, 5, 100);
+
+    public static final ModConfigSpec.IntValue SLIDE_COOLDOWN_TICKS = BUILDER
+            .comment("How many ticks must pass after a slide ends before the next one can start (20 ticks = 1 second)")
+            .defineInRange("slideCooldownTicks", 10, 0, 1200);
     static {
         BUILDER.pop();
     }

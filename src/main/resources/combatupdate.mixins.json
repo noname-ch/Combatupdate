@@ -9,10 +9,12 @@
     "BatteringRamWallMixin",
     "DisplayAccessor",
     "TextDisplayAccessor",
-    "ExobladeSwingMixin"
+    "ExobladeSwingMixin",
+    "SlideOffEdgeMixin"
   ],
   "client": [
     "ElytraFreeLookMixin",
-    "MinecraftAttackInvoker"
+    "MinecraftAttackInvoker",
+    "ClientInputMoveAccessor"
   ]
 }
