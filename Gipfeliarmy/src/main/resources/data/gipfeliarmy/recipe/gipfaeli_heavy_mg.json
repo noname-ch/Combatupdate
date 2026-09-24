@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "B": "minecraft:iron_block",
+    "G": "gipfeliarmy:gipfaeli",
+    "S": "minecraft:stick"
+  },
+  "pattern": [
+    "III",
+    "GBI",
+    " S "
+  ],
+  "result": {
+    "id": "gipfeliarmy:gipfaeli_heavy_mg"
+  }
+}

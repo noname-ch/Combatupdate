@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "condition": {
+            "type": "minecraft:match_block",
+            "blocks": "gipfeliarmy:gipfaeli_ultra_tnt",
+            "state": {
+              "unstable": "false"
+            }
+          },
+          "name": "gipfeliarmy:gipfaeli_ultra_tnt"
+        }
+      ],
+      "rolls": 1
+    }
+  ],
+  "random_sequence": "gipfeliarmy:blocks/gipfaeli_ultra_tnt"
+}

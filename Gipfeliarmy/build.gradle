@@ -1,0 +1,55 @@
+// The Gipfäli Army mod: territory, the Gipfäli arsenal and the army itself. Everything shared with
+// the combat mod is in the root build.gradle; only what is this mod's own is here.
+
+// The runs below reach into the combat mod's source set, so that project has to be set up first.
+evaluationDependsOn(':combatupdate')
+
+neoForge {
+    mods {
+        // The combat mod, so the runs here can put both mods into one game. This is a development
+        // convenience only: neither mod's code refers to the other's, and neither jar depends on
+        // the other (see src/main/templates/META-INF/neoforge.mods.toml).
+        combatupdate {
+            sourceSet(project(':combatupdate').sourceSets.main)
+        }
+    }
+
+    runs {
+        // Both mods in one game, in the run directory at the repository root that the single-mod
+        // build used, so the existing dev world, options and configs carry straight over.
+        client {
+            client()
+            gameDirectory = rootProject.file('run')
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+            gameDirectory = rootProject.file('run')
+        }
+
+        // This run config launches GameTestServer and runs all registered gametests, then exits.
+        // By default, the server will crash when no gametests are provided.
+        // The gametest system is also enabled by default for other run configs under the /test command.
+        gameTestServer {
+            type = "gameTestServer"
+        }
+
+        data {
+            clientData()
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
+        // This mod on its own, without the combat mod, to check it stands by itself.
+        clientArmy {
+            client()
+            loadedMods = [neoForge.mods.gipfeliarmy]
+        }
+    }
+}
+
+dependencies {
+    // Nothing beyond NeoForge itself. The combat mod is deliberately not a dependency: the two
+    // share no code, and this jar loads with or without it.
+}

@@ -1,0 +1,31 @@
+// The combat mod: sword blocking, elytra flight, the enchantments, the dash and slide, the endgame
+// weapons. Everything shared with the Gipfäli Army mod is in the root build.gradle; only what is
+// this mod's own is here.
+
+neoForge {
+    runs {
+        // Named apart from the Gipfäli Army project's runs on purpose: `gradlew runClient` at the
+        // root matches every task of that name in every project, and would start two games at once.
+        // These load this mod alone. For both mods in one game, use runClient / runServer, which
+        // live in the Gipfeliarmy project and load this one alongside.
+        clientCombat {
+            client()
+        }
+
+        serverCombat {
+            server()
+            programArgument '--nogui'
+        }
+
+        dataCombat {
+            clientData()
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+    }
+}
+
+dependencies {
+    // Nothing beyond NeoForge itself. The Gipfäli Army mod is deliberately not a dependency in
+    // either direction: the two share no code.
+}

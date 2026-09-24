@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "gipfeliarmy:item/gipfaeli_war_banner"
+  }
+}

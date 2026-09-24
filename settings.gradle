@@ -7,3 +7,10 @@ pluginManagement {
 plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
+
+rootProject.name = 'Combatupdate'
+
+// One repository, two mods. Each subproject builds one jar under its own mod id; what they share
+// (the toolchain, the NeoForge version, how mod metadata is generated) sits in the root build.gradle.
+include 'combatupdate', 'gipfeliarmy'
+project(':gipfeliarmy').projectDir = file('Gipfeliarmy')

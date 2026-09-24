@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "gipfeliarmy:gipfaeli",
+    "minecraft:gunpowder",
+    "minecraft:iron_nugget"
+  ],
+  "result": {
+    "id": "gipfeliarmy:gipfaeli_grenade",
+    "count": 2
+  }
+}

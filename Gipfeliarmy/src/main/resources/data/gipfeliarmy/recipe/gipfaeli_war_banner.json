@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "R": "minecraft:red_wool",
+    "G": "gipfeliarmy:gipfaeli",
+    "S": "minecraft:stick"
+  },
+  "pattern": [
+    "RGR",
+    "RRR",
+    "S  "
+  ],
+  "result": {
+    "id": "gipfeliarmy:gipfaeli_war_banner"
+  }
+}

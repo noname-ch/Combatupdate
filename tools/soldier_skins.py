@@ -17,7 +17,7 @@ import random
 
 from PIL import Image
 
-OUT = "src/main/resources/assets/combatupdate/textures/entity/gipfaeli_soldier"
+OUT = "Gipfeliarmy/src/main/resources/assets/gipfeliarmy/textures/entity/gipfaeli_soldier"
 
 # Minecraft's own dye colours, muted a little towards grey: a uniform is cloth, not paint.
 DYES = {

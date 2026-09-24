@@ -1,0 +1,7 @@
+{
+  "_comment": "The combat mod's training dummy refuses every attacker but the ones in this tag. Soldiers go for it when ordered to, so the guns can be tried on something. Harmless if the combat mod is not installed: nothing reads it then.",
+  "replace": false,
+  "values": [
+    "gipfeliarmy:gipfaeli_soldier"
+  ]
+}

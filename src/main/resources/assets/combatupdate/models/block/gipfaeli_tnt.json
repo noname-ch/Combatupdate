@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "bottom": "combatupdate:block/gipfaeli_tnt_bottom",
-    "side": "combatupdate:block/gipfaeli_tnt_side",
-    "top": "combatupdate:block/gipfaeli_tnt_top"
-  }
-}

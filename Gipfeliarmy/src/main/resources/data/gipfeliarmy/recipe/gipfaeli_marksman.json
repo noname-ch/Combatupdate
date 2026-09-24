@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "P": "minecraft:glass_pane",
+    "G": "gipfeliarmy:gipfaeli",
+    "S": "minecraft:stick"
+  },
+  "pattern": [
+    "IIP",
+    "GSI"
+  ],
+  "result": {
+    "id": "gipfeliarmy:gipfaeli_marksman"
+  }
+}

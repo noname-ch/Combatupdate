@@ -1,0 +1,6 @@
+{
+  "parent": "gipfeliarmy:item/gun",
+  "textures": {
+    "layer0": "gipfeliarmy:item/gipfaeli_heavy_mg"
+  }
+}

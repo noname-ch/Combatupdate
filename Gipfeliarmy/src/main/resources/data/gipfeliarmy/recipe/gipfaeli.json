@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:wheat",
+    "minecraft:wheat",
+    "minecraft:egg",
+    "minecraft:sugar"
+  ],
+  "result": {
+    "id": "gipfeliarmy:gipfaeli",
+    "count": 2
+  }
+}

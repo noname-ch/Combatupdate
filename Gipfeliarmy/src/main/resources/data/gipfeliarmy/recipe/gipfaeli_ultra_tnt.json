@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "T": "gipfeliarmy:gipfaeli_tnt",
+    "H": "gipfeliarmy:gipfaeli_grenade",
+    "B": "minecraft:blaze_powder"
+  },
+  "pattern": [
+    "THT",
+    "HBH",
+    "THT"
+  ],
+  "result": {
+    "id": "gipfeliarmy:gipfaeli_ultra_tnt"
+  }
+}

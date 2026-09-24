@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "G": "minecraft:gunpowder",
+    "P": "gipfeliarmy:gipfaeli"
+  },
+  "pattern": [
+    "GPG",
+    "PGP",
+    "GPG"
+  ],
+  "result": {
+    "id": "gipfeliarmy:gipfaeli_tnt"
+  }
+}
