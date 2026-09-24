@@ -224,7 +224,13 @@ section.mod{scroll-margin-top:48px}
 nav.toc li.grp{display:flex}
 nav.toc li.grp a{font-family:var(--pixel);font-weight:400;font-size:1.25rem;letter-spacing:.02em;text-transform:none;color:var(--gold)}
 nav.toc li.grp a.on{background:var(--gold);color:var(--on-gold)}
-nav.toc li.grp:not(:first-child),nav.toc li.end{margin-left:6px;padding-left:6px;border-left:2px solid var(--ink)}
+nav.toc li.grp+li:not(.grp),nav.toc li.end{margin-left:6px;padding-left:6px;border-left:2px solid var(--ink)}
+/* Tabs: once the script has picked a mod, only that mod and its chapters show. Without the
+   script both stay on the page one after the other, as before. */
+body[data-mod="combatupdate"] #gipfeliarmy,body[data-mod="gipfeliarmy"] #combatupdate,
+body[data-mod="combatupdate"] nav.toc li[data-for="gipfeliarmy"],body[data-mod="gipfeliarmy"] nav.toc li[data-for="combatupdate"]{display:none}
+body[data-mod] section.mod>.mod-head{margin-top:0}
+nav.toc li.grp a{border:2px solid var(--gold);margin-block:4px;padding-block:6px}
 
 /* ---------- controls ---------- */
 .keys td:first-child{white-space:nowrap}
@@ -237,9 +243,17 @@ kbd{font-family:var(--pixel);font-size:1.1rem;line-height:1;padding:0 .35em;bord
 .dummy{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(24px,4vw,48px);align-items:center;margin-top:56px;padding:clamp(20px,3vw,36px);background:var(--surface);border:2px solid var(--straw)}
 .dummy .dmg{height:300px;border:2px solid var(--straw);padding-bottom:24px}
 .dummy .dmg img{width:176px;height:176px;transform-origin:50% 100%}
-.dummy .dmg img.hit{animation:wobble .6s ease-out}
+.dummy .dmg img.hit,.dummy3d.hit .wob{animation:wobble .6s ease-out}
 @keyframes wobble{0%{transform:rotate(0)}20%{transform:rotate(-9deg)}45%{transform:rotate(6deg)}70%{transform:rotate(-3deg)}100%{transform:rotate(0)}}
-@media (prefers-reduced-motion:reduce){.dummy .dmg img.hit{animation:none}}
+@media (prefers-reduced-motion:reduce){.dummy .dmg img.hit,.dummy3d.hit .wob{animation:none}}
+/* The 3D dummy: the in-game model, box by box, skinned with the entity texture. */
+.dummy .dmg.turn{perspective:1000px;touch-action:pan-y;cursor:grab}
+.dummy .dmg.turn:active{cursor:grabbing}
+.dummy3d{position:relative;width:0;height:0;transform-style:preserve-3d;margin-bottom:10px}
+.dummy3d .wob{transform-style:preserve-3d;transform-origin:0 0}
+.dummy3d .part,.dummy3d .spin{position:absolute;left:0;top:0;transform-style:preserve-3d}
+.dummy3d .face{position:absolute;left:0;top:0;transform-origin:0 0;background-image:url("img/entity/training_dummy.png");background-repeat:no-repeat;image-rendering:pixelated;image-rendering:crisp-edges}
+.dummy3d .shadow{position:absolute;left:0;top:0;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:radial-gradient(rgba(0,0,0,.28),transparent 65%);transform:rotateX(90deg)}
 .rules{display:grid;gap:12px;margin:0}
 .rules>div{border-left:4px solid var(--straw);padding:2px 0 2px 14px}
 .rules dt{font-family:var(--display);font-weight:700;font-size:1.35rem;text-transform:uppercase;letter-spacing:.02em;line-height:1.2}
@@ -316,16 +330,16 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
 <nav class="toc" aria-label="Sections">
   <ul>
     <li class="grp"><a href="#combatupdate" data-mod="combatupdate">CombatUpdate</a></li>
-    <li><a href="#melee"><img class="px" src="img/mod/iron_shortsword.png" alt="">Melee</a></li>
-    <li><a href="#blocking"><img class="px" src="img/mc/diamond_sword.png" alt="">Blocking</a></li>
-    <li><a href="#movement"><img class="px" src="img/mc/feather.png" alt="">Movement</a></li>
-    <li><a href="#flight"><img class="px" src="img/mc/elytra.png" alt="">Flight</a></li>
-    <li><a href="#enchantments"><img class="px" src="img/mod/enchanted_book_combo_perun.png" alt="">Enchantments</a></li>
-    <li><a href="#extras"><img class="iso" src="img/block/meat_obelisk.png" alt="">Extras</a></li>
     <li class="grp"><a href="#gipfeliarmy" data-mod="gipfeliarmy">Gipfäli Army</a></li>
-    <li><a href="#gipfaeli"><img class="px" src="img/mod/gipfaeli.png" alt="">Gipfäli</a></li>
-    <li><a href="#army"><img class="px" src="img/mod/gipfaeli_command_flag.png" alt="">Army</a></li>
-    <li><a href="#territory"><img class="px" src="img/mod/gipfaeli_war_banner.png" alt="">Territory</a></li>
+    <li data-for="combatupdate"><a href="#melee"><img class="px" src="img/mod/iron_shortsword.png" alt="">Melee</a></li>
+    <li data-for="combatupdate"><a href="#blocking"><img class="px" src="img/mc/diamond_sword.png" alt="">Blocking</a></li>
+    <li data-for="combatupdate"><a href="#movement"><img class="px" src="img/mc/feather.png" alt="">Movement</a></li>
+    <li data-for="combatupdate"><a href="#flight"><img class="px" src="img/mc/elytra.png" alt="">Flight</a></li>
+    <li data-for="combatupdate"><a href="#enchantments"><img class="px" src="img/mod/enchanted_book_combo_perun.png" alt="">Enchantments</a></li>
+    <li data-for="combatupdate"><a href="#extras"><img class="iso" src="img/block/meat_obelisk.png" alt="">Extras</a></li>
+    <li data-for="gipfeliarmy"><a href="#gipfaeli"><img class="px" src="img/mod/gipfaeli.png" alt="">Gipfäli</a></li>
+    <li data-for="gipfeliarmy"><a href="#army"><img class="px" src="img/mod/gipfaeli_command_flag.png" alt="">Army</a></li>
+    <li data-for="gipfeliarmy"><a href="#territory"><img class="px" src="img/mod/gipfaeli_war_banner.png" alt="">Territory</a></li>
     <li class="end"><a href="#install"><img class="px" src="img/mc/iron_ingot.png" alt="">Install</a></li>
   </ul>
 </nav>
@@ -1193,24 +1207,102 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
   });
   audio.addEventListener('ended',()=>{play.setAttribute('aria-pressed','false');play.textContent='▶ Hear it placed';});
 
-  // ---- damage number demo ----
+  // ---- 3D training dummy ----
+  // The same boxes as the in-game model (vanilla's humanoid, arms out 1.35 rad), laid out in model
+  // units with y down and the front facing the viewer, and skinned with the entity texture. The
+  // legs are the post; the left limbs reuse the right limbs' texture mirrored, as in the game.
   const dmg=document.getElementById('dmg');
-  dmg.addEventListener('click',e=>{
+  const K=6.5, TEX=64*K, ARMS_OUT=1.35;
+  const PARTS=[
+    {uv:[0,0],  size:[8,8,8],  from:[-4,-8,-4]},                                     // head
+    {uv:[16,16],size:[8,12,4], from:[-4,0,-2]},                                      // body
+    {uv:[40,16],size:[4,12,4], from:[-3,-2,-2], pivot:[-5,2], rot:ARMS_OUT},          // right arm
+    {uv:[40,16],size:[4,12,4], from:[-1,-2,-2], pivot:[5,2],  rot:-ARMS_OUT, mirror:true},
+    {uv:[0,16], size:[4,12,4], from:[-2,0,-2],  pivot:[-1.9,12]},                     // post
+    {uv:[0,16], size:[4,12,4], from:[-2,0,-2],  pivot:[1.9,12], mirror:true},
+  ];
+  const face=(parent,w,h,u,v,transform,shade,mirror)=>{
+    const f=document.createElement('div');f.className='face';
+    f.style.cssText=`width:${w*K}px;height:${h*K}px;background-size:${TEX}px ${TEX}px;background-position:${-u*K}px ${-v*K}px;filter:brightness(${shade})`;
+    f.style.transform=transform+(mirror?` translateX(${w*K}px) scaleX(-1)`:'');
+    parent.appendChild(f);
+  };
+  const buildDummy=()=>{
+    const root=document.createElement('div');root.className='dummy3d';root.setAttribute('aria-hidden','true');
+    const spin=document.createElement('div');spin.className='spin';
+    const wob=document.createElement('div');wob.className='wob';
+    const shadow=document.createElement('div');shadow.className='shadow';
+    spin.append(shadow,wob);root.appendChild(spin);
+    PARTS.forEach(p=>{
+      const part=document.createElement('div');part.className='part';
+      const [px,py]=(p.pivot||[0,0]).map(n=>n*K);
+      // Feet at the origin: the model's feet are 24 units below its pivot origin.
+      part.style.transform=`translate3d(${px}px,${py-24*K}px,0) rotateZ(${p.rot||0}rad)`;
+      const [w,h,d]=p.size, [u,v]=p.uv, [x0,y0]=p.from.map(n=>n*K), z0=-(p.from[2]+d)*K;
+      const W=w*K,H=h*K,D=d*K, m=!!p.mirror;
+      // [-x side, +x side] texture columns; a mirrored limb swaps them.
+      const side=m?[u+d+w,u]:[u,u+d+w];
+      face(part,w,h,u+d,v+d,`translate3d(${x0}px,${y0}px,${z0+D}px)`,.9,m);                        // front
+      face(part,w,h,u+2*d+w,v+d,`translate3d(${x0+W}px,${y0}px,${z0}px) rotateY(180deg)`,.75,m);  // back
+      face(part,d,h,side[0],v+d,`translate3d(${x0}px,${y0}px,${z0}px) rotateY(-90deg)`,.65,m);    // -x
+      face(part,d,h,side[1],v+d,`translate3d(${x0+W}px,${y0}px,${z0+D}px) rotateY(90deg)`,.65,m); // +x
+      face(part,w,d,u+d,v,`translate3d(${x0}px,${y0}px,${z0}px) rotateX(90deg)`,1,m);             // top
+      face(part,w,d,u+d+w,v,`translate3d(${x0}px,${y0+H}px,${z0+D}px) rotateX(-90deg)`,.5,m);     // bottom
+      wob.appendChild(part);
+    });
+    return {root,spin};
+  };
+  const flat=dmg.querySelector('img');
+  const {root:dummy3d,spin}=buildDummy();
+  flat.replaceWith(dummy3d);
+  dmg.classList.add('turn');
+  dmg.querySelector('.hint').textContent='drag to turn · click to hit';
+
+  // Turning: it idles round slowly until someone drags it, then stays where it was left.
+  // A drag of more than a few pixels is a turn, not a hit.
+  const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let yaw=-30, idle=!still, drag=null, dragged=false;
+  const pose=()=>{spin.style.transform=`rotateX(-12deg) rotateY(${yaw}deg)`;};
+  pose();
+  let last=performance.now();
+  const tick=t=>{ if(idle){yaw+=(t-last)*.012;pose();} last=t; requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+  dmg.addEventListener('pointerdown',e=>{drag={x:e.clientX,yaw};dragged=false;});
+  addEventListener('pointermove',e=>{ if(!drag) return;
+    const dx=e.clientX-drag.x; if(Math.abs(dx)>4){dragged=true;idle=false;}
+    if(dragged){yaw=drag.yaw+dx*.6;pose();} });
+  addEventListener('pointerup',()=>{drag=null;});
+  dmg.addEventListener('keydown',e=>{ if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();idle=false;yaw+=e.key==='ArrowLeft'?-15:15;pose();} });
+
+  // ---- damage number demo ----
+  dmg.addEventListener('click',()=>{
+    if(dragged){dragged=false;return;}
     const n=document.createElement('span');n.className='num';
     n.textContent=(Math.round((3+Math.random()*5)*10)/10).toFixed(1);
-    const r=dmg.getBoundingClientRect();
-    const head=dmg.querySelector('img').offsetTop;
-    n.style.left=(r.width/2-20+(Math.random()-.5)*90)+'px';n.style.top=(head+(Math.random()-.5)*24)+'px';
+    const r=dmg.getBoundingClientRect(), feet=dummy3d.getBoundingClientRect().top-r.top;
+    n.style.left=(r.width/2-20+(Math.random()-.5)*90)+'px';n.style.top=(feet-30*K+(Math.random()-.5)*24)+'px';
     dmg.appendChild(n);setTimeout(()=>n.remove(),1100);
-    const d=dmg.querySelector('img');d.classList.remove('hit');void d.offsetWidth;d.classList.add('hit');
+    dummy3d.classList.remove('hit');void dummy3d.offsetWidth;dummy3d.classList.add('hit');
   });
 
+  // ---- tabs: one mod at a time ----
+  // The mod shown follows the address: a link to a mod or to any chapter inside it switches to
+  // that mod's tab. Install sits outside both and shows under either.
+  const tabs=[...document.querySelectorAll('nav.toc a[data-mod]')];
+  const setMod=id=>{
+    document.body.dataset.mod=id;
+    tabs.forEach(a=>{const on=a.dataset.mod===id;a.classList.toggle('on',on);if(on)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current');});
+  };
+  const target=()=>{ try{return location.hash&&document.getElementById(decodeURIComponent(location.hash.slice(1)));}catch(e){return null;} };
+  const route=()=>{ const t=target(), m=t&&t.closest('section.mod');
+    if(m&&m.id!==document.body.dataset.mod){setMod(m.id);t.scrollIntoView();} };
+  setMod('combatupdate'); route();
+  addEventListener('hashchange',route);
+
   // ---- highlight the section in view ----
-  const links=[...document.querySelectorAll('nav.toc li:not(.grp) a')], mods=[...document.querySelectorAll('nav.toc a[data-mod]')];
-  const io=new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){
-    links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+en.target.id));
-    const mod=en.target.closest('section.mod');
-    mods.forEach(a=>a.classList.toggle('on',!!mod&&a.dataset.mod===mod.id)); }}),{rootMargin:'-40% 0px -55% 0px'});
+  const links=[...document.querySelectorAll('nav.toc li:not(.grp) a')];
+  const io=new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting)
+    links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+en.target.id)); }),{rootMargin:'-40% 0px -55% 0px'});
   document.querySelectorAll('section.chapter').forEach(s=>io.observe(s));
 })();
 </script>
