@@ -15,6 +15,12 @@ neoForge {
     }
 
     runs {
+        // The runs load the combat mod straight from its build folders, which nothing else here
+        // compiles; without this the game refuses to start once those folders are missing.
+        configureEach {
+            taskBefore rootProject.project(':combatupdate').tasks.named('classes')
+        }
+
         // Both mods in one game, in the run directory at the repository root that the single-mod
         // build used, so the existing dev world, options and configs carry straight over.
         client {

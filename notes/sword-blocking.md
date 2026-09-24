@@ -12,12 +12,12 @@ Tuned to sit below a shield:
 |                      | Shield               | Sword  |
 |----------------------|----------------------|--------|
 | Damage blocked       | 100%                 | 50%    |
-| Wind-up              | 0.25 s               | 0.5 s  |
+| Wind-up              | 0.25 s               | none   |
 | Axe-disable duration | ×1.0                 | ×1.5   |
 | Blocking arc         | 90°                  | 90°    |
 | Durability cost      | threshold 3, 1+1×dmg | same   |
 
-A raised sword halves a frontal hit instead of erasing it, is slower to bring up, and stays knocked
+A raised sword halves a frontal hit instead of erasing it, comes up instantly, and stays knocked
 aside longer once an axe breaks the guard. The durability formula is the shield's, which bites harder
 on a sword because swords have far less durability to spend. Damage types in
 `#minecraft:bypasses_shield` go through a raised sword too, and it reuses the shield block/break sounds.

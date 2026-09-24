@@ -16,7 +16,7 @@ import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 // an incoming hit, so a sword alone is not defenceless the moment the off hand is busy.
 //
 // It is deliberately the poor relation of a shield. A shield stops a frontal hit outright; a sword
-// only halves it, takes longer to bring up, and stays knocked aside for longer once an axe has
+// only halves it, comes up instantly, and stays knocked aside for longer once an axe has
 // broken the guard. Blocking with a sword is what you do when you have nothing better, not a reason
 // to leave the shield at home.
 //
@@ -24,8 +24,9 @@ import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 // needed, because the item use handling, the block animation, the durability cost and the axe
 // disable all key off that one component.
 public final class SwordBlocking {
-    // Seconds of holding right-click before the guard is actually up (a shield takes 0.25).
-    private static final float BLOCK_DELAY_SECONDS = 0.5F;
+    // Seconds of holding right-click before the guard is actually up (a shield takes 0.25). Zero,
+    // so the guard is up the moment right-click goes down.
+    private static final float BLOCK_DELAY_SECONDS = 0.0F;
 
     // Multiplies how long an axe hit keeps the guard down. Above 1.0, so breaking a sword's guard
     // punishes more than breaking a shield's.
