@@ -1,6 +1,9 @@
 package ch.bbcag.combatupdate;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -9,6 +12,7 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -31,7 +35,9 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.BlockHitResult;
 
+import ch.bbcag.combatupdate.GipfaeliArmy.Scope;
 import ch.bbcag.combatupdate.entity.GipfaeliSoldier;
+import ch.bbcag.combatupdate.territory.TerritoryClaim;
 
 // The guard post: a block set down wherever there is something to defend, that soldiers can be
 // stationed at and told how to behave there. Right-click it for the menu.
@@ -130,6 +136,9 @@ public final class GipfaeliGuardPost {
         private String ownerName = "";
         private Mode mode = Mode.DEFEND;
         private int radius = DEFAULT_RADIUS;
+        // The squad this is the post of - "red1", "blue" - or empty for none. Told to guard, a
+        // squad marches to its own post (see guard()).
+        private String squad = "";
 
         public Post(BlockPos pos, BlockState state) {
             super(CombatUpdate.GIPFAELI_GUARD_POST_ENTITY.get(), pos, state);
@@ -163,6 +172,15 @@ public final class GipfaeliGuardPost {
             this.setChanged();
         }
 
+        public String squad() {
+            return this.squad;
+        }
+
+        void setSquad(String squad) {
+            this.squad = squad;
+            this.setChanged();
+        }
+
         @Override
         protected void saveAdditional(ValueOutput output) {
             super.saveAdditional(output);
@@ -173,6 +191,7 @@ public final class GipfaeliGuardPost {
             output.putString("OwnerName", this.ownerName);
             output.putInt("Mode", this.mode.ordinal());
             output.putInt("Radius", this.radius);
+            output.putString("Squad", this.squad);
         }
 
         @Override
@@ -182,6 +201,7 @@ public final class GipfaeliGuardPost {
             this.ownerName = input.getStringOr("OwnerName", "");
             this.mode = Mode.byOrdinal(input.getIntOr("Mode", 0));
             this.radius = input.getIntOr("Radius", DEFAULT_RADIUS);
+            this.squad = input.getStringOr("Squad", "");
         }
     }
 
@@ -229,6 +249,118 @@ public final class GipfaeliGuardPost {
                     radius == post.radius() ? ChatFormatting.WHITE : ChatFormatting.AQUA));
         }
         commander.sendSystemMessage(radii);
+
+        // Whose post it is: every squad the army has, and none. Picking one sends that squad
+        // here at once, and "guard" sends it back here whenever it is given.
+        Set<String> squads = new LinkedHashSet<>();
+        for (GipfaeliSoldier soldier : GipfaeliArmy.squad(commander)) {
+            Scope squad = Scope.squadOf(soldier);
+            squads.add(Scope.of(squad.colour()).token());
+            squads.add(squad.token());
+        }
+        MutableComponent owners = heading("combatupdate.army.post.squad");
+        owners.append(button(Component.translatable("combatupdate.army.post.squad.none"), at + "squad none", null,
+                post.squad().isEmpty() ? ChatFormatting.WHITE : ChatFormatting.GRAY));
+        for (String token : squads) {
+            Scope squad = Scope.parse(token);
+            if (squad != null) {
+                owners.append(button(squad.name(), at + "squad " + token,
+                        Component.translatable("combatupdate.army.post.squad.hover", squad.name()),
+                        token.equals(post.squad()) ? ChatFormatting.WHITE : ChatFormatting.AQUA));
+            }
+        }
+        commander.sendSystemMessage(owners);
+    }
+
+    // Makes this the post of a squad, and sends the squad to it.
+    public static void assign(ServerPlayer commander, BlockPos pos, String token) {
+        Post post = postAt(commander, pos);
+        if (post == null) {
+            return;
+        }
+
+        if (token.equalsIgnoreCase("none")) {
+            post.setSquad("");
+            GipfaeliArmy.readout(commander, Component.translatable("combatupdate.army.post.squad.cleared"));
+            return;
+        }
+
+        Scope scope = Scope.parse(token);
+        if (scope == null || scope.all()) {
+            refuse(commander, Component.translatable("combatupdate.army.no_such_colour", token));
+            return;
+        }
+
+        post.setSquad(scope.token());
+        List<GipfaeliSoldier> squad = GipfaeliArmy.squad(commander, scope);
+        for (GipfaeliSoldier soldier : squad) {
+            GipfaeliArmy.post(commander, soldier, pos, post.radius());
+        }
+
+        GipfaeliArmy.readout(commander, Component.translatable("combatupdate.army.post.squad.set", scope.name(), squad.size()));
+    }
+
+    // "Guard": everyone in scope to its squad's post - red 1 to the post of red 1, falling back to
+    // the post of red for a squad that has none of its own. Soldiers whose squad has no post stay
+    // where they are, and the player is told.
+    public static void guard(ServerPlayer commander, Scope scope) {
+        List<GipfaeliSoldier> squad = GipfaeliArmy.squad(commander, scope);
+        if (squad.isEmpty()) {
+            GipfaeliArmy.readout(commander, Component.translatable("combatupdate.army.none"));
+            return;
+        }
+
+        List<Post> posts = loadedPosts(commander);
+        int sent = 0;
+        for (GipfaeliSoldier soldier : squad) {
+            Post post = postFor(posts, Scope.squadOf(soldier));
+            if (post != null) {
+                GipfaeliArmy.post(commander, soldier, post.getBlockPos(), post.radius());
+                sent++;
+            }
+        }
+
+        if (sent == 0) {
+            refuse(commander, Component.translatable("combatupdate.army.post.squad.no_post", scope.name()));
+            return;
+        }
+
+        GipfaeliArmy.readout(commander, Component.translatable("combatupdate.army.post.stationed", sent));
+    }
+
+    private static @Nullable Post postFor(List<Post> posts, Scope squad) {
+        String exact = squad.token();
+        String colour = Scope.of(squad.colour()).token();
+        Post fallback = null;
+        for (Post post : posts) {
+            if (post.squad().equals(exact)) {
+                return post;
+            }
+            if (fallback == null && post.squad().equals(colour)) {
+                fallback = post;
+            }
+        }
+
+        return fallback;
+    }
+
+    // Every post of this player's that stands in a loaded chunk of the world they are in.
+    private static List<Post> loadedPosts(ServerPlayer commander) {
+        List<Post> posts = new ArrayList<>();
+        MinecraftServer server = commander.level().getServer();
+        if (server == null) {
+            return posts;
+        }
+
+        ServerLevel level = commander.level();
+        String here = TerritoryClaim.Key.dimensionOf(level);
+        for (GipfaeliArmyData.PostRef ref : GipfaeliArmyData.get(server).posts(server, commander.getUUID())) {
+            if (ref.dimension().equals(here) && level.isLoaded(ref.pos()) && level.getBlockEntity(ref.pos()) instanceof Post post) {
+                posts.add(post);
+            }
+        }
+
+        return posts;
     }
 
     public static void station(ServerPlayer commander, BlockPos pos, int count) {

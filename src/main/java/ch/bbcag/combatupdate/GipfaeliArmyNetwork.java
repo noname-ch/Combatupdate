@@ -142,7 +142,7 @@ public final class GipfaeliArmyNetwork {
 
     // What a squad - or the whole army - can be told from its screen.
     public enum SquadAction {
-        ATTACK, STAND, HOLD, FOLLOW, KIT, DISARM, ARMOUR, STRIP, FILL, FORM, DISMISS, RAISE, COLOUR, CAMO, ASSAULT;
+        ATTACK, STAND, HOLD, FOLLOW, KIT, DISARM, ARMOUR, STRIP, FILL, FORM, DISMISS, RAISE, COLOUR, CAMO, ASSAULT, MARCH, GUARD;
 
         private static final SquadAction[] ALL = values();
     }
@@ -190,7 +190,8 @@ public final class GipfaeliArmyNetwork {
         // The entity id is what the client looks the soldier up by when it is near enough to be
         // loaded there; a soldier off in another chunk has one too, it just finds nothing.
         public record Entry(UUID id, int entityId, String name, int weapon, int armour, int uniform, boolean commander,
-                            float health, float maxHealth, Activity activity, boolean here, int chunkX, int chunkZ, int camo) {
+                            float health, float maxHealth, Activity activity, boolean here, int chunkX, int chunkZ, int camo,
+                            int squad) {
             private void write(FriendlyByteBuf buffer) {
                 buffer.writeUUID(this.id);
                 buffer.writeVarInt(this.entityId);
@@ -206,13 +207,14 @@ public final class GipfaeliArmyNetwork {
                 buffer.writeVarInt(this.chunkX);
                 buffer.writeVarInt(this.chunkZ);
                 buffer.writeVarInt(this.camo);
+                buffer.writeVarInt(this.squad);
             }
 
             private static Entry read(FriendlyByteBuf buffer) {
                 return new Entry(buffer.readUUID(), buffer.readVarInt(), buffer.readUtf(), buffer.readVarInt(), buffer.readVarInt(),
                         buffer.readVarInt(), buffer.readBoolean(), buffer.readFloat(), buffer.readFloat(),
                         Activity.byOrdinal(buffer.readVarInt()), buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt(),
-                        buffer.readVarInt());
+                        buffer.readVarInt(), buffer.readVarInt());
             }
         }
 

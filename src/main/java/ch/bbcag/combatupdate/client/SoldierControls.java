@@ -62,6 +62,7 @@ final class SoldierControls {
     private final List<AbstractWidget> more = new ArrayList<>();
     private final Button promote;
     private final Button camoButton;
+    private final Button squadButton;
     private final Button dismiss;
     private final int swatchY;
     private final int bottom;
@@ -69,6 +70,9 @@ final class SoldierControls {
     private Tab tab = Tab.KIT;
     private boolean commander;
     private GipfaeliCamo camo = GipfaeliCamo.PLAIN;
+    private int squad = 1;
+    // The colour it wears, as last drawn: what the squad button keeps while changing the number.
+    private @Nullable DyeColor current;
     private int confirmTicks;
 
     SoldierControls(Consumer<AbstractWidget> add, int x, int y, UUID soldier, boolean commander, int posts, Tab initial) {
@@ -134,6 +138,17 @@ final class SoldierControls {
         this.camo(this.camo);
         cursor += ROW;
 
+        // Which numbered squad of its colour it is in - red 1, red 2 - each press the next.
+        this.squadButton = Button.builder(Component.empty(), b -> this.send(SoldierAction.COLOUR,
+                        (this.current == null ? "camo" : this.current.getName()) + (this.squad % ch.bbcag.combatupdate.entity.GipfaeliSoldier.SQUADS_PER_COLOUR + 1)))
+                .bounds(x, cursor, WIDTH, HEIGHT)
+                .tooltip(Tooltip.create(Component.translatable("combatupdate.army.soldier.squad.hover")))
+                .build();
+        this.more.add(this.squadButton);
+        add.accept(this.squadButton);
+        this.squad(this.squad);
+        cursor += ROW;
+
         this.promote = Button.builder(Component.empty(), b -> this.send(commanderNow() ? SoldierAction.DEMOTE : SoldierAction.PROMOTE, ""))
                 .bounds(x, cursor, WIDTH, HEIGHT)
                 .tooltip(Tooltip.create(Component.translatable("combatupdate.army.soldier.promote.hover")))
@@ -192,6 +207,11 @@ final class SoldierControls {
         this.camoButton.setMessage(Component.translatable("combatupdate.army.screen.camo", camo.displayName()));
     }
 
+    void squad(int squad) {
+        this.squad = squad;
+        this.squadButton.setMessage(Component.translatable("combatupdate.army.screen.number", squad));
+    }
+
     // Where the next thing under these should go.
     int bottom() {
         return this.bottom;
@@ -239,6 +259,7 @@ final class SoldierControls {
 
     // The colour swatches: camouflage first, then the sixteen dyes, the one it wears framed white.
     void draw(GuiGraphicsExtractor graphics, net.minecraft.client.gui.Font font, int mouseX, int mouseY, @Nullable DyeColor current) {
+        this.current = current;
         if (this.tab != Tab.MORE) {
             return;
         }

@@ -74,7 +74,7 @@ public final class GipfaeliSoldierScreen extends AbstractContainerScreen<Gipfael
 
         // The way to the rest of the army: closes the bag properly first, or the server would
         // keep its side of it open.
-        String scope = GipfaeliArmy.Scope.of(soldier.uniform()).token();
+        String scope = GipfaeliArmy.Scope.squadOf(soldier).token();
         this.addRenderableWidget(Button.builder(Component.translatable("combatupdate.army.screen.button.squad"), button -> {
             this.minecraft.player.closeContainer();
             this.minecraft.gui.setScreen(new ArmyScreen(scope, null));
@@ -88,6 +88,7 @@ public final class GipfaeliSoldierScreen extends AbstractContainerScreen<Gipfael
             this.controls.tick();
             this.controls.update(soldier.commander());
             this.controls.camo(soldier.camo());
+            this.controls.squad(soldier.squadNumber());
         }
     }
 

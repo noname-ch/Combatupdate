@@ -689,6 +689,10 @@ public final class Config {
             .comment("Whether signing a soldier on spends the gun it is handed and the Gipfaeli it eats. Off raises an army out of nothing, and also stops a dismissed or fallen soldier handing its gun back, since there was never one to pay for")
             .define("armyConsumesSupplies", true);
 
+    public static final ModConfigSpec.BooleanValue ARMY_DROPS_ON_DEATH = BUILDER
+            .comment("Whether a fallen soldier leaves its gun and armour on the ground. Off by default: a war game between two squads should not bury the field in kit")
+            .define("armyDropsOnDeath", false);
+
     public static final ModConfigSpec.IntValue ARMY_RECRUIT_RATIONS = BUILDER
             .comment("How many Gipfaeli a recruit eats on the way in, on top of the gun it is handed")
             .defineInRange("armyRecruitRations", 2, 0, 64);

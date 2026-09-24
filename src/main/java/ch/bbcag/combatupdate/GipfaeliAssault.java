@@ -43,9 +43,10 @@ import ch.bbcag.combatupdate.entity.GipfaeliSoldier;
 public final class GipfaeliAssault {
     // Who is being attacked: every soldier in one uniform, the reserve in camouflage, or the
     // training dummies.
-    public record Foe(@Nullable DyeColor colour, boolean reserve, boolean training) {
-        public static final Foe TRAINING = new Foe(null, false, true);
-        public static final Foe RESERVE = new Foe(null, true, false);
+    // With a number, one numbered squad of the colour ("red2"); with 0, every squad of it.
+    public record Foe(@Nullable DyeColor colour, boolean reserve, boolean training, int number) {
+        public static final Foe TRAINING = new Foe(null, false, true, 0);
+        public static final Foe RESERVE = new Foe(null, true, false, 0);
 
         // A dye's name, "camo" or "training" - and, since orders get typed in a hurry, the
         // German for them too.
@@ -62,8 +63,18 @@ public final class GipfaeliAssault {
                 }
             }
 
-            DyeColor colour = DyeColor.byName(GERMAN.getOrDefault(word, word), null);
-            return colour == null ? null : new Foe(colour, false, false);
+            int split = word.length();
+            while (split > 0 && Character.isDigit(word.charAt(split - 1))) {
+                split--;
+            }
+            String base = word.substring(0, split);
+            String digits = word.substring(split);
+            Scope scope = Scope.parse(GERMAN.getOrDefault(base, base) + digits);
+            if (scope == null || scope.all()) {
+                return null;
+            }
+
+            return scope.colour() == null ? new Foe(null, true, false, scope.number()) : new Foe(scope.colour(), false, false, scope.number());
         }
 
         public boolean matches(GipfaeliSoldier soldier) {
@@ -75,13 +86,14 @@ public final class GipfaeliAssault {
                 return soldier.training();
             }
 
-            return !soldier.training() && (this.reserve ? soldier.uniform() == null : this.colour != null && this.colour == soldier.uniform());
+            return !soldier.training() && (this.reserve ? soldier.uniform() == null : this.colour != null && this.colour == soldier.uniform())
+                    && (this.number == 0 || this.number == soldier.squadNumber());
         }
 
         public Component name() {
             return this.training
                     ? Component.translatable("combatupdate.army.assault.training")
-                    : GipfaeliArmy.colourName(this.colour);
+                    : Scope.of(this.colour, this.number).name();
         }
     }
 
@@ -124,14 +136,11 @@ public final class GipfaeliAssault {
         Assault assault = new Assault(scope, foe);
         List<GipfaeliSoldier> squad = attackers(commander, assault);
         if (squad.isEmpty()) {
-            GipfaeliArmy.readout(commander, scope.all()
-                    ? Component.translatable("combatupdate.army.none")
+            // Everyone in scope is the foe itself: red told to attack red.
+            boolean own = !GipfaeliArmy.squad(commander, scope).isEmpty();
+            GipfaeliArmy.readout(commander, own ? Component.translatable("combatupdate.army.own_side")
+                    : scope.all() ? Component.translatable("combatupdate.army.none")
                     : Component.translatable("combatupdate.army.squad.none", scope.name()));
-            return;
-        }
-
-        if (!foe.training && !scope.all() && foe.reserve == (scope.colour() == null) && foe.colour == scope.colour()) {
-            GipfaeliArmy.readout(commander, Component.translatable("combatupdate.army.own_side"));
             return;
         }
 
@@ -173,7 +182,7 @@ public final class GipfaeliAssault {
             return;
         }
 
-        list.removeIf(assault -> scope.all() || assault.attackers().all() || assault.attackers().equals(scope));
+        list.removeIf(assault -> assault.attackers().overlaps(scope));
         if (list.isEmpty()) {
             ASSAULTS.remove(commander.getUUID());
         }
