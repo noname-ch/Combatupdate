@@ -17,6 +17,7 @@ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import ch.bbcag.combatupdate.GipfaeliArmour;
 import ch.bbcag.combatupdate.GipfaeliArmy;
+import ch.bbcag.combatupdate.GipfaeliCamo;
 import ch.bbcag.combatupdate.GipfaeliArmyNetwork.SoldierAction;
 import ch.bbcag.combatupdate.GipfaeliArmyNetwork.SoldierOrder;
 import ch.bbcag.combatupdate.GipfaeliWeapon;
@@ -60,12 +61,14 @@ final class SoldierControls {
     private final List<AbstractWidget> armour = new ArrayList<>();
     private final List<AbstractWidget> more = new ArrayList<>();
     private final Button promote;
+    private final Button camoButton;
     private final Button dismiss;
     private final int swatchY;
     private final int bottom;
 
     private Tab tab = Tab.KIT;
     private boolean commander;
+    private GipfaeliCamo camo = GipfaeliCamo.PLAIN;
     private int confirmTicks;
 
     SoldierControls(Consumer<AbstractWidget> add, int x, int y, UUID soldier, boolean commander, int posts, Tab initial) {
@@ -120,6 +123,17 @@ final class SoldierControls {
         // and the door.
         this.swatchY = top;
         int cursor = top + 2 * (SWATCH + 1) + 3;
+
+        // The pattern over the colour: each press puts the next one on.
+        this.camoButton = Button.builder(Component.empty(), b -> this.send(SoldierAction.CAMO, this.camo.next().token()))
+                .bounds(x, cursor, WIDTH, HEIGHT)
+                .tooltip(Tooltip.create(Component.translatable("combatupdate.army.soldier.camo.hover")))
+                .build();
+        this.more.add(this.camoButton);
+        add.accept(this.camoButton);
+        this.camo(this.camo);
+        cursor += ROW;
+
         this.promote = Button.builder(Component.empty(), b -> this.send(commanderNow() ? SoldierAction.DEMOTE : SoldierAction.PROMOTE, ""))
                 .bounds(x, cursor, WIDTH, HEIGHT)
                 .tooltip(Tooltip.create(Component.translatable("combatupdate.army.soldier.promote.hover")))
@@ -170,6 +184,12 @@ final class SoldierControls {
     void update(boolean commander) {
         this.commander = commander;
         this.promote.setMessage(Component.translatable(commander ? "combatupdate.army.soldier.demote" : "combatupdate.army.screen.promote"));
+    }
+
+    // The camouflage button names the pattern it is wearing now.
+    void camo(GipfaeliCamo camo) {
+        this.camo = camo;
+        this.camoButton.setMessage(Component.translatable("combatupdate.army.screen.camo", camo.displayName()));
     }
 
     // Where the next thing under these should go.

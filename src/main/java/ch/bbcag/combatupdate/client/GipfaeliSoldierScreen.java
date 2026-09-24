@@ -87,6 +87,7 @@ public final class GipfaeliSoldierScreen extends AbstractContainerScreen<Gipfael
         if (soldier != null && this.controls != null) {
             this.controls.tick();
             this.controls.update(soldier.commander());
+            this.controls.camo(soldier.camo());
         }
     }
 

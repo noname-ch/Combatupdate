@@ -35,6 +35,8 @@ import ch.bbcag.combatupdate.GipfaeliArmyNetwork.SoldierAction;
 import ch.bbcag.combatupdate.GipfaeliArmyNetwork.SoldierOrder;
 import ch.bbcag.combatupdate.GipfaeliArmyNetwork.SquadAction;
 import ch.bbcag.combatupdate.GipfaeliArmyNetwork.SquadOrder;
+import ch.bbcag.combatupdate.GipfaeliAssault;
+import ch.bbcag.combatupdate.GipfaeliCamo;
 import ch.bbcag.combatupdate.GipfaeliFormation;
 import ch.bbcag.combatupdate.GipfaeliWeapon;
 
@@ -109,6 +111,13 @@ public final class ArmyScreen extends Screen {
     private int squadTab;
     private SoldierControls.Tab controlsTab = SoldierControls.Tab.KIT;
     private boolean requested;
+
+    // What the assault row would send the squad at, and the pattern the camouflage row would put
+    // it in: picked with the arrows, sent with the middle button. Kept across rebuilds.
+    private int assaultIndex;
+    private int camoIndex = GipfaeliCamo.SNOW.ordinal();
+    private @Nullable Button assaultButton;
+    private @Nullable Button camoButton;
 
     // The scope tabs and the word each stands for, for the swatch drawn on each.
     private final Map<Button, String> tabs = new LinkedHashMap<>();
@@ -201,6 +210,11 @@ public final class ArmyScreen extends Screen {
         if (!before.equals(this.signature())) {
             this.rebuildWidgets();
             return;
+        }
+
+        Roster.Entry picked = this.selectedEntry();
+        if (this.controls != null && picked != null) {
+            this.controls.camo(GipfaeliCamo.byOrdinal(picked.camo()));
         }
 
         Map<String, Integer> counts = this.counts();
@@ -423,6 +437,19 @@ public final class ArmyScreen extends Screen {
                 .tooltip(Tooltip.create(Component.translatable("combatupdate.army.screen.squad.dismiss.hover")))
                 .build();
         this.orderWidgets.add(this.addRenderableWidget(this.dismissButton));
+        cursor += STEP;
+
+        // The assault: a side picked with the arrows - the training dummies, the reserve or a
+        // colour - and fought until nobody of it is left.
+        this.orderWidgets.add(this.addRenderableWidget(Button.builder(Component.literal("<"), b -> this.cycleAssault(-1))
+                .bounds(x, cursor, 14, BUTTON).build()));
+        this.assaultButton = Button.builder(this.assaultLabel(), b -> this.send(SquadAction.ASSAULT, this.assaultToken()))
+                .bounds(x + 16, cursor, PANE_WIDTH - 32, BUTTON)
+                .tooltip(Tooltip.create(Component.translatable("combatupdate.army.screen.assault.hover")))
+                .build();
+        this.orderWidgets.add(this.addRenderableWidget(this.assaultButton));
+        this.orderWidgets.add(this.addRenderableWidget(Button.builder(Component.literal(">"), b -> this.cycleAssault(1))
+                .bounds(x + PANE_WIDTH - 14, cursor, 14, BUTTON).build()));
 
         // Kit for all, and armour for all: the same buttons a soldier has, for everyone in scope
         // but the commander.
@@ -461,7 +488,47 @@ public final class ArmyScreen extends Screen {
                     Component.translatable("combatupdate.army.screen.colour.hover", GipfaeliArmy.colourName(colour))));
         }
 
+        // And the pattern over the colour: woodland, snow, desert and the rest, picked with the
+        // arrows and put on with the middle button.
+        int camoTop = swatchTop + ((DyeColor.VALUES.size() + perRow) / perRow) * STEP + 2;
+        this.armourWidgets.add(this.addRenderableWidget(Button.builder(Component.literal("<"), b -> this.cycleCamo(-1))
+                .bounds(x, camoTop, 14, BUTTON).build()));
+        this.camoButton = Button.builder(this.camoLabel(), b -> this.send(SquadAction.CAMO, GipfaeliCamo.byOrdinal(this.camoIndex).token()))
+                .bounds(x + 16, camoTop, PANE_WIDTH - 32, BUTTON)
+                .tooltip(Tooltip.create(Component.translatable("combatupdate.army.screen.camo.hover")))
+                .build();
+        this.armourWidgets.add(this.addRenderableWidget(this.camoButton));
+        this.armourWidgets.add(this.addRenderableWidget(Button.builder(Component.literal(">"), b -> this.cycleCamo(1))
+                .bounds(x + PANE_WIDTH - 14, camoTop, 14, BUTTON).build()));
+
         this.selectSquadTab(this.squadTab);
+    }
+
+    private String assaultToken() {
+        return GipfaeliAssault.SUGGESTIONS.get(Math.floorMod(this.assaultIndex, GipfaeliAssault.SUGGESTIONS.size()));
+    }
+
+    private Component assaultLabel() {
+        GipfaeliAssault.Foe foe = GipfaeliAssault.Foe.parse(this.assaultToken());
+        return Component.translatable("combatupdate.army.screen.assault", foe == null ? Component.literal("?") : foe.name());
+    }
+
+    private void cycleAssault(int by) {
+        this.assaultIndex = Math.floorMod(this.assaultIndex + by, GipfaeliAssault.SUGGESTIONS.size());
+        if (this.assaultButton != null) {
+            this.assaultButton.setMessage(this.assaultLabel());
+        }
+    }
+
+    private Component camoLabel() {
+        return Component.translatable("combatupdate.army.screen.camo", GipfaeliCamo.byOrdinal(this.camoIndex).displayName());
+    }
+
+    private void cycleCamo(int by) {
+        this.camoIndex = Math.floorMod(this.camoIndex + by, GipfaeliCamo.values().length);
+        if (this.camoButton != null) {
+            this.camoButton.setMessage(this.camoLabel());
+        }
     }
 
     // The controls are built afresh with the pane; which tab they were on is kept here across it.
@@ -583,6 +650,7 @@ public final class ArmyScreen extends Screen {
         y += STEP + 2;
 
         this.controls = new SoldierControls(this::addRenderableWidget, x, y, entry.id(), entry.commander(), this.roster.posts().size(), this.controlsTab);
+        this.controls.camo(GipfaeliCamo.byOrdinal(entry.camo()));
         y = this.controls.bottom() + 2;
 
         this.addRenderableWidget(Button.builder(Component.translatable("combatupdate.army.screen.button.back"), b -> {

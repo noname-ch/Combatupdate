@@ -15,6 +15,7 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.DyeColor;
 
 import ch.bbcag.combatupdate.CombatUpdate;
+import ch.bbcag.combatupdate.GipfaeliCamo;
 import ch.bbcag.combatupdate.entity.GipfaeliSoldier;
 
 // Draws a soldier of the Gipfaeli army: a humanoid in the squad's uniform, in whatever armour it
@@ -35,10 +36,27 @@ public final class GipfaeliSoldierRenderer extends HumanoidMobRenderer<GipfaeliS
     // A commander wears black whatever the squad wears, with the squad's colour as a stripe.
     private static final Identifier[] COMMANDERS = new Identifier[DyeColor.values().length];
 
+    // The field patterns (see GipfaeliCamo), by pattern and then by squad colour, the reserve's
+    // uniform last: [pattern][dye id, or 16 for none].
+    private static final Identifier[][] FIELD = new Identifier[GipfaeliCamo.values().length][DyeColor.values().length + 1];
+    private static final Identifier[][] FIELD_COMMANDERS = new Identifier[GipfaeliCamo.values().length][DyeColor.values().length + 1];
+
     static {
         for (DyeColor color : DyeColor.values()) {
             UNIFORMS[color.getId()] = uniform(color.getName());
             COMMANDERS[color.getId()] = uniform("commander_" + color.getName());
+        }
+
+        for (GipfaeliCamo camo : GipfaeliCamo.values()) {
+            if (camo == GipfaeliCamo.PLAIN) {
+                continue;
+            }
+
+            for (int index = 0; index <= DyeColor.values().length; index++) {
+                String name = index < DyeColor.values().length ? DyeColor.byId(index).getName() : "plain";
+                FIELD[camo.ordinal()][index] = uniform("camo/" + camo.token() + "/" + name);
+                FIELD_COMMANDERS[camo.ordinal()][index] = uniform("camo/" + camo.token() + "/commander_" + name);
+            }
         }
     }
 
@@ -62,6 +80,7 @@ public final class GipfaeliSoldierRenderer extends HumanoidMobRenderer<GipfaeliS
         super.extractRenderState(soldier, state, partialTicks);
         state.uniform = soldier.uniform();
         state.commander = soldier.commander();
+        state.camo = soldier.camo();
         state.atAttention = soldier.stance() == GipfaeliSoldier.Stance.STAND;
         state.armed = !soldier.getMainHandItem().isEmpty();
     }
@@ -76,6 +95,11 @@ public final class GipfaeliSoldierRenderer extends HumanoidMobRenderer<GipfaeliS
 
     @Override
     public Identifier getTextureLocation(State state) {
+        if (state.camo != GipfaeliCamo.PLAIN) {
+            int index = state.uniform == null ? DyeColor.values().length : state.uniform.getId();
+            return (state.commander ? FIELD_COMMANDERS : FIELD)[state.camo.ordinal()][index];
+        }
+
         if (state.commander) {
             return state.uniform == null ? CAMO_COMMANDER : COMMANDERS[state.uniform.getId()];
         }
@@ -83,10 +107,11 @@ public final class GipfaeliSoldierRenderer extends HumanoidMobRenderer<GipfaeliS
         return state.uniform == null ? CAMO : UNIFORMS[state.uniform.getId()];
     }
 
-    // The humanoid snapshot plus the three things of ours the renderer needs: which uniform to
+    // The humanoid snapshot plus the things of ours the renderer needs: which uniform to
     // draw, whether the soldier is on parade, and whether it has something in its hands.
     public static final class State extends HumanoidRenderState {
         @Nullable DyeColor uniform;
+        GipfaeliCamo camo = GipfaeliCamo.PLAIN;
         boolean commander;
         boolean atAttention;
         boolean armed;

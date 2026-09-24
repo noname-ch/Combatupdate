@@ -90,6 +90,11 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     // A commander is built a little sturdier than the soldiers it leads.
     private static final double COMMANDER_TOUGHNESS = 1.5;
 
+    // The pattern the uniform is printed in (see GipfaeliCamo), by ordinal. On the client for the
+    // renderer.
+    private static final EntityDataAccessor<Byte> DATA_CAMO =
+            SynchedEntityData.defineId(GipfaeliSoldier.class, EntityDataSerializers.BYTE);
+
     // A training dummy: nobody's soldier, stood up to be shot at. On the client for its name.
     private static final EntityDataAccessor<Boolean> DATA_TRAINING =
             SynchedEntityData.defineId(GipfaeliSoldier.class, EntityDataSerializers.BOOLEAN);
@@ -220,6 +225,7 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         entityData.define(DATA_STANCE, (byte) Stance.ATTACK.ordinal());
         entityData.define(DATA_COMMANDER, false);
         entityData.define(DATA_TRAINING, false);
+        entityData.define(DATA_CAMO, (byte) 0);
     }
 
     @Override
@@ -341,6 +347,16 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         }
     }
 
+    public ch.bbcag.combatupdate.GipfaeliCamo camo() {
+        return ch.bbcag.combatupdate.GipfaeliCamo.byOrdinal(this.entityData.get(DATA_CAMO));
+    }
+
+    // A new pattern re-dyes leather to the new ground, the way a new colour does.
+    public void setCamo(ch.bbcag.combatupdate.GipfaeliCamo camo) {
+        this.entityData.set(DATA_CAMO, (byte) camo.ordinal());
+        this.setUniform(this.uniform());
+    }
+
     // Puts the squad's colour on a piece of armour: dye, on anything that takes it; a trim in the
     // nearest material otherwise, so an iron squad in red and one in blue can be told apart at a
     // glance across a field. Camouflage takes the trim off and dyes leather field-green.
@@ -349,8 +365,10 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         // Leather is the one vanilla armour that takes a dye; what takes a dye is a data tag now,
         // and the suit is the plainer thing to ask.
         if (ch.bbcag.combatupdate.GipfaeliArmour.of(piece.getItem()) == ch.bbcag.combatupdate.GipfaeliArmour.LEATHER) {
+            ch.bbcag.combatupdate.GipfaeliCamo camo = this.camo();
             piece.set(DataComponents.DYED_COLOR, new net.minecraft.world.item.component.DyedItemColor(
-                    colour == null ? CAMO_LEATHER : colour.getTextureDiffuseColor()));
+                    camo != ch.bbcag.combatupdate.GipfaeliCamo.PLAIN ? camo.leather()
+                            : colour == null ? CAMO_LEATHER : colour.getTextureDiffuseColor()));
             return piece;
         }
 
@@ -838,6 +856,7 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
 
         DyeColor uniform = this.uniform();
         output.putString("Uniform", uniform == null ? "camo" : uniform.getName());
+        output.putString("Camo", this.camo().token());
         output.putInt("Stance", this.stance().ordinal());
         if (this.paradeAnchor != null) {
             output.store("ParadeAnchor", Vec3.CODEC, this.paradeAnchor);
@@ -861,6 +880,8 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         this.orderedTargetId = input.read("OrderedTarget", UUIDUtil.CODEC).orElse(null);
         this.station = input.read("Station", Vec3.CODEC).orElse(null);
         this.post = input.read("Post", BlockPos.CODEC).orElse(null);
+        ch.bbcag.combatupdate.GipfaeliCamo camo = ch.bbcag.combatupdate.GipfaeliCamo.byName(input.getStringOr("Camo", "plain"));
+        this.entityData.set(DATA_CAMO, (byte) (camo == null ? 0 : camo.ordinal()));
         this.setUniform(DyeColor.byName(input.getStringOr("Uniform", "camo"), null));
         this.setStance(Stance.byOrdinal(input.getIntOr("Stance", 0)));
         this.paradeAnchor = input.read("ParadeAnchor", Vec3.CODEC).orElse(null);

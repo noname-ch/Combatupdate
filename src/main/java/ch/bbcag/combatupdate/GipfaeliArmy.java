@@ -226,6 +226,11 @@ public final class GipfaeliArmy {
             return true;
         }
 
+        // Two squads of one army sent at each other (see GipfaeliAssault) are, for now, not.
+        if (GipfaeliAssault.feud(one, other)) {
+            return false;
+        }
+
         UUID oneFlag = flag(one);
         return oneFlag != null && oneFlag.equals(flag(other));
     }
@@ -904,6 +909,7 @@ public final class GipfaeliArmy {
             return;
         }
 
+        GipfaeliAssault.end(commander, scope);
         field(commander, squad, GipfaeliFormation.LOOSE, false);
         for (GipfaeliSoldier soldier : squad) {
             soldier.holdPosition(false);
@@ -941,6 +947,7 @@ public final class GipfaeliArmy {
         }
 
         if (stance == Stance.STAND) {
+            GipfaeliAssault.end(commander, scope);
             Vec3 anchor = follow ? null : commander.position();
             for (GipfaeliSoldier soldier : squad) {
                 if (soldier.post() != null) {
@@ -970,6 +977,7 @@ public final class GipfaeliArmy {
 
     // Break off and fall back in.
     public static void follow(ServerPlayer commander, Scope scope) {
+        GipfaeliAssault.end(commander, scope);
         List<GipfaeliSoldier> squad = squad(commander, scope);
         for (GipfaeliSoldier soldier : squad) {
             soldier.guard(null);
@@ -1000,6 +1008,7 @@ public final class GipfaeliArmy {
 
     // Stop shooting, stay where you were put.
     public static void standDown(ServerPlayer commander, Scope scope) {
+        GipfaeliAssault.end(commander, scope);
         List<GipfaeliSoldier> squad = squad(commander, scope);
         for (GipfaeliSoldier soldier : squad) {
             soldier.order(null);
@@ -1013,6 +1022,7 @@ public final class GipfaeliArmy {
     // out of the world with their carriers - dismissing an army should cost nothing but the
     // rations it ate.
     public static void dismiss(ServerPlayer commander, Scope scope) {
+        GipfaeliAssault.end(commander, scope);
         List<GipfaeliSoldier> squad = squad(commander, scope);
         for (GipfaeliSoldier soldier : squad) {
             handBack(commander, soldier.getMainHandItem().copy());
@@ -1520,7 +1530,7 @@ public final class GipfaeliArmy {
                     armour == null ? -1 : armour.ordinal(),
                     uniform == null ? -1 : uniform.getId(),
                     soldier.commander(), soldier.getHealth(), soldier.getMaxHealth(),
-                    activity(soldier), soldier.level() == commander.level(), chunk.x(), chunk.z()));
+                    activity(soldier), soldier.level() == commander.level(), chunk.x(), chunk.z(), soldier.camo().ordinal()));
         }
 
         boolean free = commander.getAbilities().instabuild || !Config.ARMY_CONSUMES_SUPPLIES.get();
@@ -1596,6 +1606,12 @@ public final class GipfaeliArmy {
             case DEMOTE -> demote(commander, soldier);
             case POST -> sendToPost(commander, soldier, number(argument));
             case DISMISS -> dismissSoldier(commander, soldier);
+            case CAMO -> {
+                GipfaeliCamo camo = GipfaeliCamo.byName(argument);
+                if (camo != null) {
+                    GipfaeliCamo.dressSoldier(commander, soldier, camo);
+                }
+            }
         }
 
         sendRoster(commander);
@@ -1639,6 +1655,19 @@ public final class GipfaeliArmy {
             case COLOUR -> {
                 if (argument.equalsIgnoreCase("camo") || DyeColor.byName(argument, null) != null) {
                     paint(commander, scope, DyeColor.byName(argument, null));
+                }
+            }
+            case CAMO -> {
+                GipfaeliCamo camo = GipfaeliCamo.byName(argument);
+                if (camo != null) {
+                    GipfaeliCamo.dressSquad(commander, scope, camo);
+                }
+            }
+            // The argument is a dye's name, "camo" or "training": the side to wipe out.
+            case ASSAULT -> {
+                GipfaeliAssault.Foe foe = GipfaeliAssault.Foe.parse(argument);
+                if (foe != null) {
+                    GipfaeliAssault.start(commander, scope, foe);
                 }
             }
         }
@@ -1872,6 +1901,7 @@ public final class GipfaeliArmy {
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         SIEGES.remove(event.getEntity().getUUID());
+        GipfaeliAssault.forget(event.getEntity().getUUID());
     }
 
     // --- Telling the player about it ---

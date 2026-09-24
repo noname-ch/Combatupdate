@@ -538,6 +538,7 @@ public final class CombatUpdate {
     public void onServerTick(ServerTickEvent.Post event) {
         DamageNumbers.tick();
         GipfaeliArmy.tick(event.getServer());
+        GipfaeliAssault.tick(event.getServer());
         Exoblade.tickSlashes();
     }
 }
