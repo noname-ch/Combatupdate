@@ -40,3 +40,7 @@ server/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
+
+### Python ###
+__pycache__/
+*.pyc

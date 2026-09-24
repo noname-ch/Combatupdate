@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "combatupdate:true_damage",
+    "combatupdate:regularity_strike"
+  ]
+}

@@ -245,7 +245,8 @@ public class CombatEnchantmentHandler {
             return;
         }
 
-        float percent = LIFESTEAL_PERCENT_BY_LEVEL[level - 1];
+        // Clamped: a level past the table's max still comes in through /give or another mod.
+        float percent = LIFESTEAL_PERCENT_BY_LEVEL[Math.min(level, LIFESTEAL_PERCENT_BY_LEVEL.length) - 1];
         float maxHeal = (float) (Config.LIFESTEAL_MAX_HEAL_HEARTS.getAsDouble() * 2.0);
         float heal = Math.min(healthDamage * percent, maxHeal);
         if (heal > 0) {
@@ -265,7 +266,7 @@ public class CombatEnchantmentHandler {
         }
 
         LivingEntity victim = random.nextBoolean() ? attacker : target;
-        float damage = GAMBLE_HEARTS_BY_LEVEL[level - 1] * 2.0F;
+        float damage = GAMBLE_HEARTS_BY_LEVEL[Math.min(level, GAMBLE_HEARTS_BY_LEVEL.length) - 1] * 2.0F;
         victim.hurtServer(serverLevel, CombatDamageTypes.trueDamage(serverLevel, attacker), damage);
     }
 }

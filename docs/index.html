@@ -180,6 +180,11 @@ td.n.hl{color:var(--gold)}
 .blockcard h3{font-size:1.5rem;margin-top:6px}
 .blockcard p{font-size:.93rem;color:var(--muted);max-width:30ch;margin:6px auto 0}
 
+/* ---------- blocking ---------- */
+.swords{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:40px;padding:16px 20px;background:var(--sunk)}
+.swords img{width:40px;height:40px}
+.swords p{flex:1 1 220px;margin-left:10px;font-size:.93rem;color:var(--muted)}
+
 /* ---------- army ---------- */
 .kits{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr));gap:24px}
 .kit{border-top:2px solid var(--ink);padding-top:14px}
@@ -276,6 +281,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
 <nav class="toc" aria-label="Sections">
   <ul>
     <li><a href="#melee"><img class="px" src="img/mod/iron_shortsword.png" alt="">Melee</a></li>
+    <li><a href="#blocking"><img class="px" src="img/mc/diamond_sword.png" alt="">Blocking</a></li>
     <li><a href="#movement"><img class="px" src="img/mc/feather.png" alt="">Movement</a></li>
     <li><a href="#flight"><img class="px" src="img/mc/elytra.png" alt="">Flight</a></li>
     <li><a href="#enchantments"><img class="px" src="img/mod/enchanted_book_combo_perun.png" alt="">Enchantments</a></li>
@@ -297,9 +303,9 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
   </div>
   <div class="features">
     <div class="feat">
-      <img class="px" src="img/mod/iron_shortsword.png" alt="">
+      <img class="px" src="img/mc/iron_sword.png" alt="">
       <h3>Sword blocking</h3>
-      <p>Hold right-click with any sword to raise it, like 1.8. It halves a frontal hit, never erases it. Blocking with a sword is for when the shield is at home.</p>
+      <p>Hold right-click with a sword to raise it, like 1.8. It halves a frontal hit, never erases it. <a href="#blocking">Everything about blocking ↓</a></p>
     </div>
     <div class="feat">
       <img class="px" src="img/mod/diamond_shortsword.png" alt="">
@@ -344,6 +350,60 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     </div>
   </div>
 
+  <div class="recipes">
+    <h3>Crafting</h3>
+    <div class="recipe-wrap"><span class="recipe" data-recipe="iron_shortsword"></span></div>
+    <div class="recipe-wrap"><span class="recipe" data-recipe="diamond_shortsword"></span></div>
+    <div class="recipe-wrap"><span class="recipe" data-recipe="exoblade"></span></div>
+    <div class="recipe-wrap"><span class="recipe" data-recipe="scarlet_devil"></span></div>
+    <div class="recipe-wrap"><span class="recipe" data-recipe="zenith"></span></div>
+  </div>
+</section>
+
+<!-- ============ BLOCKING ============ -->
+<section class="chapter" id="blocking">
+  <div class="chapter-head">
+    <img class="px" src="img/mc/diamond_sword.png" alt="">
+    <div><h2>Blocking</h2><p class="thesis">Swords block again, like 1.8. Hold right-click and the blade comes up to take half of a frontal hit. It's the poor relation of a shield: the move for when the shield is at home.</p></div>
+  </div>
+  <div class="features">
+    <div class="feat">
+      <img class="px" src="img/mc/iron_sword.png" alt="">
+      <h3>Raise the guard</h3>
+      <p>Hold right-click with a sword. The guard is up after half a second, twice a shield's wind-up, and stays up for as long as you hold. It covers the 90° in front of you. A hit from the side or behind lands in full.</p>
+      <div class="chips"><span class="chip">Wind-up <b>0.5 s</b></span><span class="chip">Arc <b>90°</b></span></div>
+    </div>
+    <div class="feat">
+      <img class="px" src="img/mc/diamond_sword.png" alt="">
+      <h3>Half, never all</h3>
+      <p>A raised sword halves a hit where a shield would erase it. Anything that goes straight through a shield goes straight through a sword too.</p>
+      <div class="chips"><span class="chip">Blocked <b>50%</b></span><span class="chip">Shield <b>100%</b></span></div>
+    </div>
+    <div class="feat">
+      <img class="px" src="img/mc/netherite_sword.png" alt="">
+      <h3>Axes break it</h3>
+      <p>An axe hit knocks the guard aside like it does a shield's, and a sword stays down half as long again before you can raise it.</p>
+      <div class="chips"><span class="chip">Disabled <b>×1.5</b></span></div>
+    </div>
+    <div class="feat">
+      <img class="px" src="img/mc/iron_ingot.png" alt="">
+      <h3>It costs the blade</h3>
+      <p>Hits under 3 damage are free. Anything harder costs 1 durability plus the damage, the same bill a shield pays, but a sword has far less durability to pay it with.</p>
+      <div class="chips"><span class="chip">Free under <b>3</b></span><span class="chip">Cost <b>1 + dmg</b></span></div>
+    </div>
+  </div>
+
+  <div class="swords" aria-label="Swords that block">
+    <img class="px" src="img/mc/wooden_sword.png" alt="Wooden sword" title="Wooden sword">
+    <img class="px" src="img/mc/stone_sword.png" alt="Stone sword" title="Stone sword">
+    <img class="px" src="img/mc/copper_sword.png" alt="Copper sword" title="Copper sword">
+    <img class="px" src="img/mc/iron_sword.png" alt="Iron sword" title="Iron sword">
+    <img class="px" src="img/mc/golden_sword.png" alt="Golden sword" title="Golden sword">
+    <img class="px" src="img/mc/diamond_sword.png" alt="Diamond sword" title="Diamond sword">
+    <img class="px" src="img/mc/netherite_sword.png" alt="Netherite sword" title="Netherite sword">
+    <p>Every vanilla sword, wood to netherite. The shortswords and the endgame weapons don't block.</p>
+  </div>
+
   <div class="split">
     <div class="tbl">
       <table>
@@ -360,15 +420,6 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     <figure class="shot" data-shot="sword-block">
       <div class="frame"><div class="ph"><span class="tag">screenshot · sword-block</span><p>Third person (F5): a player holding a diamond sword up in the block pose while a zombie or another player swings at them.</p></div></div>
     </figure>
-  </div>
-
-  <div class="recipes">
-    <h3>Crafting</h3>
-    <div class="recipe-wrap"><span class="recipe" data-recipe="iron_shortsword"></span></div>
-    <div class="recipe-wrap"><span class="recipe" data-recipe="diamond_shortsword"></span></div>
-    <div class="recipe-wrap"><span class="recipe" data-recipe="exoblade"></span></div>
-    <div class="recipe-wrap"><span class="recipe" data-recipe="scarlet_devil"></span></div>
-    <div class="recipe-wrap"><span class="recipe" data-recipe="zenith"></span></div>
   </div>
 </section>
 
@@ -488,7 +539,7 @@ footer{margin-top:96px;padding-block:28px 40px;border-top:2px solid var(--ink);d
     <div class="book"><img class="px" src="img/mod/enchanted_book_singularity.png" alt=""><span class="on">Leather leggings · max I</span><h3>Singularity</h3>
       <p>Caps how much health any single hit can take off you, however hard it lands.</p><div class="chips"><span class="chip">Cap <b>4 ♥</b></span></div></div>
     <div class="book"><img class="px" src="img/mod/enchanted_book_armageddon.png" alt=""><span class="on">Leather boots · max I</span><h3>Armageddon</h3>
-      <p>Land enough hits in a row and the next one comes down harder.</p><div class="chips"><span class="chip">Streak <b>3</b></span><span class="chip">Bonus <b>+50%</b></span></div></div>
+      <p>Take enough hits without landing one and your next one comes down harder.</p><div class="chips"><span class="chip">Streak <b>3</b></span><span class="chip">Bonus <b>+50%</b></span></div></div>
     <div class="book"><img class="px" src="img/mod/enchanted_book_gotta_go_fast.png" alt=""><span class="on">Boots · max III</span><h3>Gotta Go Fast</h3>
       <p>You simply move faster.</p></div>
     <div class="book"><img class="px" src="img/mod/enchanted_book_lifesteal.png" alt=""><span class="on">Swords · max III</span><h3>Lifesteal</h3>

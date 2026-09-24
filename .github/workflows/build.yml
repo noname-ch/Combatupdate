@@ -29,13 +29,15 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
-      # Both jars and the zip that holds them, downloadable from this run's page on GitHub, so
-      # nobody has to build the mods to play. A tag starting with v also publishes them as a release.
+      # Keeps both jars, and the zip that holds them, on the run's page under Artifacts, so a
+      # build can be tried without compiling it yourself. A tag starting with v also publishes
+      # them as a release (see release.yml).
       - name: Upload the mod jars and the zip
         uses: actions/upload-artifact@v4
         with:
-          name: Combatupdate-mods
+          name: Combatupdate-mods-${{ github.sha }}
           path: |
             build/distributions/*.zip
             combatupdate/build/libs/*.jar
             Gipfeliarmy/build/libs/*.jar
+          if-no-files-found: error
