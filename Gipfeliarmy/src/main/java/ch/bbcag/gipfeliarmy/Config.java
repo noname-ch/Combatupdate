@@ -53,6 +53,16 @@ public final class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_TERRITORY = BUILDER
             .comment("Whether chunks can be claimed as territory, kept from other players, and captured off their owner. Off leaves every chunk open to everyone; claims already made stay on disk and come back when it is turned on again")
             .define("enableTerritory", true);
+    // --- Terraria ---
+
+
+    public static final ModConfigSpec.BooleanValue ENABLE_LAST_PRISM = BUILDER
+            .comment("Whether the Last Prism (both the rainbow one and the Random one) fires its beams. Off also takes both out of the creative tab; the items stay registered, so a world already holding one still loads")
+            .define("enableLastPrism", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_TERRARIA_BOSSES = BUILDER
+            .comment("Whether the Eye of Cthulhu, the Wall of Flesh and Plantera have lairs in the overworld, wake when a player walks in, and show up as waypoints on the HUD. Off stops lairs being built and bosses waking; lairs already built stay standing")
+            .define("enableTerrariaBosses", true);
     static {
         BUILDER.pop();
     }
@@ -373,6 +383,34 @@ public final class Config {
     public static final ModConfigSpec.IntValue TERRITORY_BORDER_DISTANCE = BUILDER
             .comment("How far from a player, in blocks, claim borders are drawn. The game drops ordinary particles further than 32 blocks off, so that is as far as this goes; every block of border in reach is a particle sent to the player twice a second")
             .defineInRange("territoryBorderDistance", 24, 4, 32);
+    static {
+        BUILDER.pop();
+    }
+
+    // Its own page in the config screen: the Last Prism and the Terraria bosses.
+    static {
+        BUILDER.comment("The Last Prism and the Terraria bosses: how hard the prism hits, where the bosses' lairs may be put, how long a beaten boss sleeps, and whether their waypoints are drawn. Switched on and off on the Features page.").push("terraria");
+    }
+
+    public static final ModConfigSpec.DoubleValue LAST_PRISM_DAMAGE = BUILDER
+            .comment("How much damage the Last Prism's merged beam does per pulse (two pulses a second). The six beams before they merge each do between a tenth and a quarter of this")
+            .defineInRange("lastPrismDamage", 14.0, 0.0, 200.0);
+
+    public static final ModConfigSpec.BooleanValue LAST_PRISM_HUNGER = BUILDER
+            .comment("Whether holding the Last Prism's beam makes the player hungry, standing in for the mana it costs in Terraria")
+            .define("lastPrismHunger", true);
+
+    public static final ModConfigSpec.IntValue TERRARIA_MAX_DISTANCE = BUILDER
+            .comment("How far from world spawn, in blocks, a boss's lair may be put. Every block of every lair is inside this distance. Only read when lairs are placed: the first time the server runs with bosses on, or after /terraria relocate")
+            .defineInRange("terrariaMaxDistance", 2000, 500, 2000);
+
+    public static final ModConfigSpec.IntValue TERRARIA_RESPAWN_MINUTES = BUILDER
+            .comment("How many real minutes a beaten boss sleeps before walking into its lair wakes it again")
+            .defineInRange("terrariaRespawnMinutes", 20, 0, 10080);
+
+    public static final ModConfigSpec.BooleanValue TERRARIA_SHOW_WAYPOINTS = BUILDER
+            .comment("Whether each boss's lair is marked on the HUD with a waypoint, its name and how far off it is. Read on the client")
+            .define("terrariaShowWaypoints", true);
     static {
         BUILDER.pop();
     }

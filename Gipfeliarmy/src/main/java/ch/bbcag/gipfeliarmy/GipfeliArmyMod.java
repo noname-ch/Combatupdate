@@ -43,6 +43,7 @@ import ch.bbcag.gipfeliarmy.entity.GipfaeliGrenade;
 import ch.bbcag.gipfeliarmy.entity.GipfaeliRocket;
 import ch.bbcag.gipfeliarmy.entity.GipfaeliSoldier;
 import ch.bbcag.gipfeliarmy.entity.GipfaeliTnt;
+import ch.bbcag.gipfeliarmy.terraria.TerrariaContent;
 import ch.bbcag.gipfeliarmy.territory.TerritoryBorders;
 import ch.bbcag.gipfeliarmy.territory.TerritoryCommands;
 import ch.bbcag.gipfeliarmy.territory.TerritoryManager;
@@ -210,6 +211,8 @@ public final class GipfeliArmyMod {
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
         GipfaeliSoldierMenu.MENUS.register(modEventBus);
+        // The Last Prism and the Terraria bosses, which register themselves; see TerrariaContent.
+        TerrariaContent.register(modEventBus);
 
         // Register ourselves for the game events the @SubscribeEvent methods below handle.
         NeoForge.EVENT_BUS.register(this);

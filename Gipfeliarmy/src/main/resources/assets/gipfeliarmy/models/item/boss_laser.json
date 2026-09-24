@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "gipfeliarmy:item/boss_laser"
+  }
+}

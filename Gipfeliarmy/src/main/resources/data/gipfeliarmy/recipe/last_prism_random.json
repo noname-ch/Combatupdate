@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "gipfeliarmy:last_prism",
+    "minecraft:red_dye",
+    "minecraft:lime_dye",
+    "minecraft:blue_dye"
+  ],
+  "result": {
+    "id": "gipfeliarmy:last_prism_random",
+    "count": 1
+  }
+}
