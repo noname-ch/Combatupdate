@@ -20,12 +20,16 @@ neoForge {
         client {
             client()
             gameDirectory = rootProject.file('run')
+            // The IDE names are the ones the single-mod project had, so the run configurations
+            // in IntelliJ come back as "Client", "Server" and so on rather than "gipfeliarmy - Client".
+            ideName = 'Client'
         }
 
         server {
             server()
             programArgument '--nogui'
             gameDirectory = rootProject.file('run')
+            ideName = 'Server'
         }
 
         // This run config launches GameTestServer and runs all registered gametests, then exits.
@@ -33,18 +37,21 @@ neoForge {
         // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
             type = "gameTestServer"
+            ideName = 'GameTestServer'
         }
 
         data {
             clientData()
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
             programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            ideName = 'Data (gipfeliarmy)'
         }
 
         // This mod on its own, without the combat mod, to check it stands by itself.
         clientArmy {
             client()
             loadedMods = [neoForge.mods.gipfeliarmy]
+            ideName = 'Client (gipfeliarmy only)'
         }
     }
 }

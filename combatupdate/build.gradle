@@ -10,17 +10,21 @@ neoForge {
         // live in the Gipfeliarmy project and load this one alongside.
         clientCombat {
             client()
+            // How the run configuration is named in IntelliJ; "Client" itself is the one with both mods.
+            ideName = 'Client (combatupdate only)'
         }
 
         serverCombat {
             server()
             programArgument '--nogui'
+            ideName = 'Server (combatupdate only)'
         }
 
         dataCombat {
             clientData()
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
             programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            ideName = 'Data (combatupdate)'
         }
     }
 }
