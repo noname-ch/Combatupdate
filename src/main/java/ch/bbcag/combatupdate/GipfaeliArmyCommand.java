@@ -64,17 +64,24 @@ public final class GipfaeliArmyCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         // Short forms for typing: /soldats attack Steve for the whole army, /soldats-red hold for
         // one squad, /soldats-camo follow for the reserve. Every order the long form takes.
-        dispatcher.register(orders(Commands.literal("soldats"), context -> Scope.ALL)
-                .requires(CommandSourceStack::isPlayer)
-                .executes(context -> run(context, GipfaeliArmy::menu)));
-        dispatcher.register(orders(Commands.literal("soldats-camo"), context -> Scope.RESERVE)
-                .requires(CommandSourceStack::isPlayer)
-                .executes(context -> scoped(context, c -> Scope.RESERVE, GipfaeliArmy::squadMenu)));
-        for (DyeColor colour : DyeColor.values()) {
-            Scope scope = Scope.of(colour);
-            dispatcher.register(orders(Commands.literal("soldats-" + colour.getName()), context -> scope)
+        // /soldaten is the same again, for whoever thinks of them in German.
+        for (String root : new String[] {"soldats", "soldaten"}) {
+            dispatcher.register(orders(Commands.literal(root), context -> Scope.ALL)
                     .requires(CommandSourceStack::isPlayer)
-                    .executes(context -> scoped(context, c -> scope, GipfaeliArmy::squadMenu)));
+                    .executes(context -> run(context, GipfaeliArmy::menu)));
+            dispatcher.register(orders(Commands.literal(root + "-camo"), context -> Scope.RESERVE)
+                    .requires(CommandSourceStack::isPlayer)
+                    .executes(context -> scoped(context, c -> Scope.RESERVE, GipfaeliArmy::squadMenu)));
+            // "/soldaten-red hold" is every red squad; "/soldaten-red 2 hold" only red 2.
+            for (DyeColor colour : DyeColor.values()) {
+                Scope scope = Scope.of(colour);
+                ScopeSource numbered = context -> Scope.of(colour, IntegerArgumentType.getInteger(context, "number"));
+                dispatcher.register(orders(Commands.literal(root + "-" + colour.getName()), context -> scope)
+                        .requires(CommandSourceStack::isPlayer)
+                        .executes(context -> scoped(context, c -> scope, GipfaeliArmy::squadMenu))
+                        .then(orders(Commands.argument("number", IntegerArgumentType.integer(1, GipfaeliSoldier.SQUADS_PER_COLOUR)), numbered)
+                                .executes(context -> scoped(context, numbered, GipfaeliArmy::squadMenu))));
+            }
         }
 
         dispatcher.register(orders(Commands.literal("gipfaeliarmy"), context -> Scope.ALL)
@@ -148,17 +155,28 @@ public final class GipfaeliArmyCommand {
 
                                                     GipfaeliArmy.dressSoldier(commander, soldier, armour);
                                                 }))))
+                                .then(Commands.literal("camo")
+                                        .then(Commands.argument("pattern", StringArgumentType.word())
+                                                .suggests(GipfaeliArmyCommand::patterns)
+                                                .executes(context -> soldier(context, (commander, soldier) -> {
+                                                    GipfaeliCamo camo = pattern(context);
+                                                    if (camo != null) {
+                                                        GipfaeliCamo.dressSoldier(commander, soldier, camo);
+                                                    }
+                                                }))))
                                 .then(Commands.literal("colour")
                                         .then(Commands.argument("colour", StringArgumentType.word())
                                                 .suggests(GipfaeliArmyCommand::colours)
                                                 .executes(context -> soldier(context, (commander, soldier) -> {
                                                     String wanted = StringArgumentType.getString(context, "colour");
-                                                    if (!wanted.equalsIgnoreCase("camo") && DyeColor.byName(wanted, null) == null) {
+                                                    Scope target = Scope.parse(wanted);
+                                                    if (target == null || target.all()) {
                                                         context.getSource().sendFailure(Component.translatable("combatupdate.army.no_such_colour", wanted));
                                                         return;
                                                     }
 
-                                                    GipfaeliArmy.paintSoldier(commander, soldier, DyeColor.byName(wanted, null));
+                                                    GipfaeliArmy.paintSoldier(commander, soldier, target.colour(),
+                                                            target.number() == 0 ? soldier.squadNumber() : target.number());
                                                 }))))))
                 // A guard post's menu and its settings; what the buttons on that menu run.
                 .then(Commands.literal("post")
@@ -168,6 +186,11 @@ public final class GipfaeliArmyCommand {
                                                 .executes(context -> post(context, (commander, pos) -> GipfaeliGuardPost.menu(commander, pos)))
                                                 .then(Commands.literal("recall")
                                                         .executes(context -> post(context, GipfaeliGuardPost::recall)))
+                                                .then(Commands.literal("squad")
+                                                        .then(Commands.argument("squad", StringArgumentType.word())
+                                                                .suggests(GipfaeliArmyCommand::scopes)
+                                                                .executes(context -> post(context, (commander, pos) -> GipfaeliGuardPost.assign(
+                                                                        commander, pos, StringArgumentType.getString(context, "squad"))))))
                                                 .then(Commands.literal("station")
                                                         .then(Commands.argument("count", IntegerArgumentType.integer(1, 64))
                                                                 .executes(context -> post(context, (commander, pos) -> GipfaeliGuardPost.station(
@@ -231,6 +254,12 @@ public final class GipfaeliArmyCommand {
                         .executes(context -> scoped(context, scope, GipfaeliArmy::standDown)))
                 .then(Commands.literal("dismiss")
                         .executes(context -> scoped(context, scope, GipfaeliArmy::dismiss)))
+                // Off in the ranks they stand in, with the player; "stance stand" halts them.
+                .then(Commands.literal("standmarch")
+                        .executes(context -> scoped(context, scope, GipfaeliArmy::standMarch)))
+                // Each squad to its own guard post (see GipfaeliGuardPost.guard).
+                .then(Commands.literal("guard")
+                        .executes(context -> scoped(context, scope, GipfaeliGuardPost::guard)))
                 .then(Commands.literal("attacksighted")
                         .executes(context -> scoped(context, scope, GipfaeliArmy::attackSighted)))
                 .then(Commands.literal("stance")
@@ -240,12 +269,21 @@ public final class GipfaeliArmyCommand {
                                 .executes(context -> scoped(context, scope, (commander, s) -> GipfaeliArmy.stance(commander, s, Stance.STAND, false))))
                         .then(Commands.literal("standfollow")
                                 .executes(context -> scoped(context, scope, (commander, s) -> GipfaeliArmy.stance(commander, s, Stance.STAND, true)))))
+                // A player by name, or a whole side - a squad's colour, the reserve, the training
+                // dummies - to be fought until nobody of it is left (see GipfaeliAssault).
                 .then(Commands.literal("attack")
                         .then(Commands.argument("target", StringArgumentType.word())
-                                .suggests((context, builder) -> SharedSuggestionProvider.suggest(
-                                        context.getSource().getServer().getPlayerNames(), builder))
+                                .suggests((context, builder) -> SharedSuggestionProvider.suggest(Stream.concat(
+                                        GipfaeliAssault.SUGGESTIONS.stream(),
+                                        Arrays.stream(context.getSource().getServer().getPlayerNames())), builder))
                                 .executes(context -> scoped(context, scope, (commander, s) -> {
                                     String token = StringArgumentType.getString(context, "target");
+                                    GipfaeliAssault.Foe foe = GipfaeliAssault.Foe.parse(token);
+                                    if (foe != null) {
+                                        GipfaeliAssault.start(commander, s, foe);
+                                        return;
+                                    }
+
                                     LivingEntity target = resolve(context.getSource().getServer(), token);
                                     if (target == null) {
                                         context.getSource().sendFailure(Component.translatable("combatupdate.army.gone"));
@@ -268,17 +306,27 @@ public final class GipfaeliArmyCommand {
 
                                     GipfaeliArmy.form(commander, s, formation);
                                 }))))
+                .then(Commands.literal("camo")
+                        .then(Commands.argument("pattern", StringArgumentType.word())
+                                .suggests(GipfaeliArmyCommand::patterns)
+                                .executes(context -> scoped(context, scope, (commander, s) -> {
+                                    GipfaeliCamo camo = pattern(context);
+                                    if (camo != null) {
+                                        GipfaeliCamo.dressSquad(commander, s, camo);
+                                    }
+                                }))))
                 .then(Commands.literal("colour")
                         .then(Commands.argument("colour", StringArgumentType.word())
                                 .suggests(GipfaeliArmyCommand::colours)
                                 .executes(context -> scoped(context, scope, (commander, s) -> {
                                     String wanted = StringArgumentType.getString(context, "colour");
-                                    if (!wanted.equalsIgnoreCase("camo") && DyeColor.byName(wanted, null) == null) {
+                                    Scope target = Scope.parse(wanted);
+                                    if (target == null || target.all()) {
                                         context.getSource().sendFailure(Component.translatable("combatupdate.army.no_such_colour", wanted));
                                         return;
                                     }
 
-                                    GipfaeliArmy.paint(commander, s, DyeColor.byName(wanted, null));
+                                    GipfaeliArmy.paint(commander, s, target.colour(), target.number());
                                 }))))
                 // The whole squad's kit and armour, from its commander's menu.
                 .then(Commands.literal("kit")
@@ -341,6 +389,20 @@ public final class GipfaeliArmyCommand {
     private static CompletableFuture<Suggestions> colours(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         return SharedSuggestionProvider.suggest(
                 Stream.concat(Arrays.stream(DyeColor.values()).map(DyeColor::getName), Stream.of("camo")), builder);
+    }
+
+    private static CompletableFuture<Suggestions> patterns(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return SharedSuggestionProvider.suggest(Arrays.stream(GipfaeliCamo.values()).map(GipfaeliCamo::token), builder);
+    }
+
+    private static @Nullable GipfaeliCamo pattern(CommandContext<CommandSourceStack> context) {
+        String wanted = StringArgumentType.getString(context, "pattern");
+        GipfaeliCamo camo = GipfaeliCamo.byName(wanted);
+        if (camo == null) {
+            context.getSource().sendFailure(Component.translatable("combatupdate.army.no_such_camo", wanted));
+        }
+
+        return camo;
     }
 
     private static CompletableFuture<Suggestions> roles(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {

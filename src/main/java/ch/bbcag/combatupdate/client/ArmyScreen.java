@@ -35,6 +35,8 @@ import ch.bbcag.combatupdate.GipfaeliArmyNetwork.SoldierAction;
 import ch.bbcag.combatupdate.GipfaeliArmyNetwork.SoldierOrder;
 import ch.bbcag.combatupdate.GipfaeliArmyNetwork.SquadAction;
 import ch.bbcag.combatupdate.GipfaeliArmyNetwork.SquadOrder;
+import ch.bbcag.combatupdate.GipfaeliAssault;
+import ch.bbcag.combatupdate.GipfaeliCamo;
 import ch.bbcag.combatupdate.GipfaeliFormation;
 import ch.bbcag.combatupdate.GipfaeliWeapon;
 
@@ -109,6 +111,15 @@ public final class ArmyScreen extends Screen {
     private int squadTab;
     private SoldierControls.Tab controlsTab = SoldierControls.Tab.KIT;
     private boolean requested;
+
+    // What the assault row would send the squad at, and the pattern the camouflage row would put
+    // it in: picked with the arrows, sent with the middle button. Kept across rebuilds.
+    private int assaultIndex;
+    private int camoIndex = GipfaeliCamo.SNOW.ordinal();
+    private @Nullable Button assaultButton;
+    private @Nullable Button camoButton;
+    private @Nullable Button numberButton;
+    private int paintNumber;
 
     // The scope tabs and the word each stands for, for the swatch drawn on each.
     private final Map<Button, String> tabs = new LinkedHashMap<>();
@@ -203,6 +214,12 @@ public final class ArmyScreen extends Screen {
             return;
         }
 
+        Roster.Entry picked = this.selectedEntry();
+        if (this.controls != null && picked != null) {
+            this.controls.camo(GipfaeliCamo.byOrdinal(picked.camo()));
+            this.controls.squad(picked.squad());
+        }
+
         Map<String, Integer> counts = this.counts();
         for (Map.Entry<Button, String> tab : this.tabs.entrySet()) {
             tab.getKey().setMessage(tabLabel(tab.getValue(), counts.getOrDefault(tab.getValue(), 0)));
@@ -227,10 +244,16 @@ public final class ArmyScreen extends Screen {
 
         Scope parsed = Scope.parse(this.scope);
         for (Roster.Entry entry : this.roster.soldiers()) {
-            if (parsed == null || parsed.all() || entry.uniform() == (parsed.colour() == null ? -1 : parsed.colour().getId())) {
+            if (parsed == null || in(parsed, entry)) {
                 this.shown.add(entry);
             }
         }
+    }
+
+    // Scope.includes, for a roster row rather than a soldier.
+    private static boolean in(Scope scope, Roster.Entry entry) {
+        return scope.all() || entry.uniform() == (scope.colour() == null ? -1 : scope.colour().getId())
+                && (scope.number() == 0 || scope.number() == entry.squad());
     }
 
     private Roster.@Nullable Entry entry(UUID id) {
@@ -300,26 +323,27 @@ public final class ArmyScreen extends Screen {
             return counts;
         }
 
-        for (DyeColor colour : DyeColor.VALUES) {
-            int count = 0;
+        // Each colour, then - when it has more than the one squad 1 - each numbered squad of it.
+        List<DyeColor> colours = new ArrayList<>(DyeColor.VALUES);
+        colours.add(null);
+        for (DyeColor colour : colours) {
+            Scope group = Scope.of(colour);
+            Map<Integer, Integer> numbers = new java.util.TreeMap<>();
             for (Roster.Entry entry : this.roster.soldiers()) {
-                if (entry.uniform() == colour.getId()) {
-                    count++;
+                if (in(group, entry)) {
+                    numbers.merge(entry.squad(), 1, Integer::sum);
                 }
             }
-            if (count > 0) {
-                counts.put(colour.getName(), count);
+            if (numbers.isEmpty()) {
+                continue;
             }
-        }
 
-        int camo = 0;
-        for (Roster.Entry entry : this.roster.soldiers()) {
-            if (entry.uniform() < 0) {
-                camo++;
+            counts.put(group.token(), numbers.values().stream().mapToInt(Integer::intValue).sum());
+            if (numbers.size() > 1 || !numbers.containsKey(1)) {
+                for (Map.Entry<Integer, Integer> number : numbers.entrySet()) {
+                    counts.put(Scope.of(colour, number.getKey()).token(), number.getValue());
+                }
             }
-        }
-        if (camo > 0) {
-            counts.put(Scope.RESERVE.token(), camo);
         }
 
         return counts;
@@ -423,6 +447,25 @@ public final class ArmyScreen extends Screen {
                 .tooltip(Tooltip.create(Component.translatable("combatupdate.army.screen.squad.dismiss.hover")))
                 .build();
         this.orderWidgets.add(this.addRenderableWidget(this.dismissButton));
+        cursor += STEP;
+
+        this.order(x, cursor, HALF, Component.translatable("combatupdate.army.screen.stand_march"), SquadAction.MARCH, "",
+                Component.translatable("combatupdate.army.screen.stand_march.hover"));
+        this.order(x + HALF + 4, cursor, HALF, Component.translatable("combatupdate.army.screen.guard"), SquadAction.GUARD, "",
+                Component.translatable("combatupdate.army.screen.guard.hover"));
+        cursor += STEP;
+
+        // The assault: a side picked with the arrows - the training dummies, the reserve or a
+        // colour - and fought until nobody of it is left.
+        this.orderWidgets.add(this.addRenderableWidget(Button.builder(Component.literal("<"), b -> this.cycleAssault(-1))
+                .bounds(x, cursor, 14, BUTTON).build()));
+        this.assaultButton = Button.builder(this.assaultLabel(), b -> this.send(SquadAction.ASSAULT, this.assaultToken()))
+                .bounds(x + 16, cursor, PANE_WIDTH - 32, BUTTON)
+                .tooltip(Tooltip.create(Component.translatable("combatupdate.army.screen.assault.hover")))
+                .build();
+        this.orderWidgets.add(this.addRenderableWidget(this.assaultButton));
+        this.orderWidgets.add(this.addRenderableWidget(Button.builder(Component.literal(">"), b -> this.cycleAssault(1))
+                .bounds(x + PANE_WIDTH - 14, cursor, 14, BUTTON).build()));
 
         // Kit for all, and armour for all: the same buttons a soldier has, for everyone in scope
         // but the commander.
@@ -457,11 +500,89 @@ public final class ArmyScreen extends Screen {
             DyeColor colour = index == 0 ? null : DyeColor.VALUES.get(index - 1);
             Component label = Component.literal("■").withStyle(style -> style.withColor(SoldierControls.swatchColour(colour) & 0xFFFFFF));
             this.armourWidgets.add(this.button(x + (index % perRow) * (swatchWidth + 2), swatchTop + (index / perRow) * STEP, swatchWidth, label,
-                    SquadAction.COLOUR, colour == null ? "camo" : colour.getName(),
+                    SquadAction.COLOUR, (colour == null ? "camo" : colour.getName()) + (this.paintNumber == 0 ? "" : Integer.toString(this.paintNumber)),
                     Component.translatable("combatupdate.army.screen.colour.hover", GipfaeliArmy.colourName(colour))));
         }
 
+        // And the pattern over the colour: woodland, snow, desert and the rest, picked with the
+        // arrows and put on with the middle button.
+        // Which numbered squad of the colour a swatch paints into: "keep" leaves every soldier its
+        // number, 1 to 9 puts them all in that one - red 2 rather than red.
+        int numberTop = swatchTop + ((DyeColor.VALUES.size() + perRow) / perRow) * STEP + 2;
+        this.armourWidgets.add(this.addRenderableWidget(Button.builder(Component.literal("<"), b -> this.cycleNumber(-1))
+                .bounds(x, numberTop, 14, BUTTON).build()));
+        this.numberButton = Button.builder(this.numberLabel(), b -> this.cycleNumber(1))
+                .bounds(x + 16, numberTop, PANE_WIDTH - 32, BUTTON)
+                .tooltip(Tooltip.create(Component.translatable("combatupdate.army.screen.number.hover")))
+                .build();
+        this.armourWidgets.add(this.addRenderableWidget(this.numberButton));
+        this.armourWidgets.add(this.addRenderableWidget(Button.builder(Component.literal(">"), b -> this.cycleNumber(1))
+                .bounds(x + PANE_WIDTH - 14, numberTop, 14, BUTTON).build()));
+
+        int camoTop = numberTop + STEP;
+        this.armourWidgets.add(this.addRenderableWidget(Button.builder(Component.literal("<"), b -> this.cycleCamo(-1))
+                .bounds(x, camoTop, 14, BUTTON).build()));
+        this.camoButton = Button.builder(this.camoLabel(), b -> this.send(SquadAction.CAMO, GipfaeliCamo.byOrdinal(this.camoIndex).token()))
+                .bounds(x + 16, camoTop, PANE_WIDTH - 32, BUTTON)
+                .tooltip(Tooltip.create(Component.translatable("combatupdate.army.screen.camo.hover")))
+                .build();
+        this.armourWidgets.add(this.addRenderableWidget(this.camoButton));
+        this.armourWidgets.add(this.addRenderableWidget(Button.builder(Component.literal(">"), b -> this.cycleCamo(1))
+                .bounds(x + PANE_WIDTH - 14, camoTop, 14, BUTTON).build()));
+
         this.selectSquadTab(this.squadTab);
+    }
+
+    // The sides the assault row offers: the dummies, the reserve, every colour, and every numbered
+    // squad the army has, so red 1 can be sent at red 2.
+    private List<String> assaultTargets() {
+        List<String> targets = new ArrayList<>(GipfaeliAssault.SUGGESTIONS);
+        for (String token : this.counts().keySet()) {
+            if (!targets.contains(token) && !token.equals(Scope.ALL.token())) {
+                targets.add(token);
+            }
+        }
+        return targets;
+    }
+
+    private String assaultToken() {
+        List<String> targets = this.assaultTargets();
+        return targets.get(Math.floorMod(this.assaultIndex, targets.size()));
+    }
+
+    private Component assaultLabel() {
+        GipfaeliAssault.Foe foe = GipfaeliAssault.Foe.parse(this.assaultToken());
+        return Component.translatable("combatupdate.army.screen.assault", foe == null ? Component.literal("?") : foe.name());
+    }
+
+    private void cycleAssault(int by) {
+        this.assaultIndex = Math.floorMod(this.assaultIndex + by, this.assaultTargets().size());
+        if (this.assaultButton != null) {
+            this.assaultButton.setMessage(this.assaultLabel());
+        }
+    }
+
+    private Component numberLabel() {
+        return this.paintNumber == 0
+                ? Component.translatable("combatupdate.army.screen.number.keep")
+                : Component.translatable("combatupdate.army.screen.number", this.paintNumber);
+    }
+
+    // The swatches carry the number in what they send, so they are built again with it.
+    private void cycleNumber(int by) {
+        this.paintNumber = Math.floorMod(this.paintNumber + by, ch.bbcag.combatupdate.entity.GipfaeliSoldier.SQUADS_PER_COLOUR + 1);
+        this.rebuildWidgets();
+    }
+
+    private Component camoLabel() {
+        return Component.translatable("combatupdate.army.screen.camo", GipfaeliCamo.byOrdinal(this.camoIndex).displayName());
+    }
+
+    private void cycleCamo(int by) {
+        this.camoIndex = Math.floorMod(this.camoIndex + by, GipfaeliCamo.values().length);
+        if (this.camoButton != null) {
+            this.camoButton.setMessage(this.camoLabel());
+        }
     }
 
     // The controls are built afresh with the pane; which tab they were on is kept here across it.
@@ -583,6 +704,8 @@ public final class ArmyScreen extends Screen {
         y += STEP + 2;
 
         this.controls = new SoldierControls(this::addRenderableWidget, x, y, entry.id(), entry.commander(), this.roster.posts().size(), this.controlsTab);
+        this.controls.camo(GipfaeliCamo.byOrdinal(entry.camo()));
+        this.controls.squad(entry.squad());
         y = this.controls.bottom() + 2;
 
         this.addRenderableWidget(Button.builder(Component.translatable("combatupdate.army.screen.button.back"), b -> {
@@ -823,7 +946,7 @@ public final class ArmyScreen extends Screen {
                 : GipfaeliArmour.values()[entry.armour()].displayName();
         this.clipped(graphics, Component.translatable("combatupdate.army.screen.armour", armour)
                 .append(Component.literal(" · "))
-                .append(GipfaeliArmy.colourName(entry.uniform() < 0 ? null : DyeColor.byId(entry.uniform()))), x, y, PANE_WIDTH, COLOUR_MUTED);
+                .append(Scope.of(entry.uniform() < 0 ? null : DyeColor.byId(entry.uniform()), entry.squad()).name()), x, y, PANE_WIDTH, COLOUR_MUTED);
         y += LINE;
 
         Component where = entry.here()

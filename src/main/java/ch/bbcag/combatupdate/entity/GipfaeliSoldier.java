@@ -90,6 +90,17 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     // A commander is built a little sturdier than the soldiers it leads.
     private static final double COMMANDER_TOUGHNESS = 1.5;
 
+    // The pattern the uniform is printed in (see GipfaeliCamo), by ordinal. On the client for the
+    // renderer.
+    private static final EntityDataAccessor<Byte> DATA_CAMO =
+            SynchedEntityData.defineId(GipfaeliSoldier.class, EntityDataSerializers.BYTE);
+
+    // Which squad of its colour it is in: red 1, red 2 and so on. Every order for "red" reaches all
+    // of them; one for "red2" only the second. On the client for the army screens.
+    private static final EntityDataAccessor<Byte> DATA_SQUAD =
+            SynchedEntityData.defineId(GipfaeliSoldier.class, EntityDataSerializers.BYTE);
+    public static final int SQUADS_PER_COLOUR = 9;
+
     // A training dummy: nobody's soldier, stood up to be shot at. On the client for its name.
     private static final EntityDataAccessor<Boolean> DATA_TRAINING =
             SynchedEntityData.defineId(GipfaeliSoldier.class, EntityDataSerializers.BOOLEAN);
@@ -173,6 +184,11 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     private @Nullable Vec3 paradeAnchor;
     private float paradeYaw;
 
+    // On a stand march: the parade drawn up behind the commander as it stood, facing the way the
+    // commander is walking rather than the way they happen to be looking.
+    private boolean paradeMarching;
+    private @Nullable Vec3 marchFrom;
+
     // Somewhere it has been sent to stand - a chunk off the territory map, as a rule - and is
     // still on its way to. Cleared on arrival, where holding position takes over.
     private @Nullable Vec3 station;
@@ -220,6 +236,8 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         entityData.define(DATA_STANCE, (byte) Stance.ATTACK.ordinal());
         entityData.define(DATA_COMMANDER, false);
         entityData.define(DATA_TRAINING, false);
+        entityData.define(DATA_CAMO, (byte) 0);
+        entityData.define(DATA_SQUAD, (byte) 1);
     }
 
     @Override
@@ -341,6 +359,16 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         }
     }
 
+    public ch.bbcag.combatupdate.GipfaeliCamo camo() {
+        return ch.bbcag.combatupdate.GipfaeliCamo.byOrdinal(this.entityData.get(DATA_CAMO));
+    }
+
+    // A new pattern re-dyes leather to the new ground, the way a new colour does.
+    public void setCamo(ch.bbcag.combatupdate.GipfaeliCamo camo) {
+        this.entityData.set(DATA_CAMO, (byte) camo.ordinal());
+        this.setUniform(this.uniform());
+    }
+
     // Puts the squad's colour on a piece of armour: dye, on anything that takes it; a trim in the
     // nearest material otherwise, so an iron squad in red and one in blue can be told apart at a
     // glance across a field. Camouflage takes the trim off and dyes leather field-green.
@@ -349,8 +377,10 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         // Leather is the one vanilla armour that takes a dye; what takes a dye is a data tag now,
         // and the suit is the plainer thing to ask.
         if (ch.bbcag.combatupdate.GipfaeliArmour.of(piece.getItem()) == ch.bbcag.combatupdate.GipfaeliArmour.LEATHER) {
+            ch.bbcag.combatupdate.GipfaeliCamo camo = this.camo();
             piece.set(DataComponents.DYED_COLOR, new net.minecraft.world.item.component.DyedItemColor(
-                    colour == null ? CAMO_LEATHER : colour.getTextureDiffuseColor()));
+                    camo != ch.bbcag.combatupdate.GipfaeliCamo.PLAIN ? camo.leather()
+                            : colour == null ? CAMO_LEATHER : colour.getTextureDiffuseColor()));
             return piece;
         }
 
@@ -429,6 +459,28 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     public void standAt(@Nullable Vec3 anchor, float yaw) {
         this.paradeAnchor = anchor;
         this.paradeYaw = yaw;
+        this.paradeMarching = false;
+    }
+
+    // Marches off with the commander in the ranks it is standing in: same block, same place in
+    // it, starting out facing the way the parade faced.
+    public void marchInRanks(float yaw) {
+        this.paradeAnchor = null;
+        this.paradeYaw = yaw;
+        this.paradeMarching = true;
+        this.marchFrom = null;
+    }
+
+    public int squadNumber() {
+        return this.entityData.get(DATA_SQUAD);
+    }
+
+    public void setSquadNumber(int number) {
+        this.entityData.set(DATA_SQUAD, (byte) Math.clamp(number, 1, SQUADS_PER_COLOUR));
+    }
+
+    public float paradeYaw() {
+        return this.paradeYaw;
     }
 
     // Whether the parade is drawn up somewhere in particular rather than around the commander.
@@ -587,7 +639,9 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
             }
 
             anchor = owner.position();
-            yaw = owner.getYRot();
+            if (!this.paradeMarching) {
+                yaw = owner.getYRot();
+            }
         }
 
         return this.formation == GipfaeliFormation.PARADE
@@ -597,7 +651,7 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
 
     // Which way the shape faces: the anchor's facing on a fixed parade, the commander's otherwise.
     private @Nullable Vec3 formationFront() {
-        if (this.paradeAnchor != null) {
+        if (this.paradeAnchor != null || this.paradeMarching) {
             return Vec3.directionFromRotation(0.0F, this.paradeYaw);
         }
 
@@ -626,6 +680,10 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
             this.rally(level);
         }
 
+        if (this.paradeMarching) {
+            this.steerMarch();
+        }
+
         if (this.training() && ++this.trainingTicks > TRAINING_LIFETIME_TICKS) {
             this.discard();
             return;
@@ -637,6 +695,32 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
             this.holdPosition(true);
         }
     }
+
+    // Turns the marching parade the way the commander is walking, once they have gone a pace or
+    // two in it; looking round, or shuffling on the spot, turns nobody.
+    private void steerMarch() {
+        LivingEntity owner = this.getOwner();
+        if (owner == null) {
+            return;
+        }
+
+        Vec3 now = owner.position();
+        if (this.marchFrom == null) {
+            this.marchFrom = now;
+            return;
+        }
+
+        double dx = now.x - this.marchFrom.x;
+        double dz = now.z - this.marchFrom.z;
+        if (dx * dx + dz * dz < MARCH_TURN_DISTANCE * MARCH_TURN_DISTANCE) {
+            return;
+        }
+
+        this.paradeYaw = (float) (net.minecraft.util.Mth.atan2(-dx, dz) * (180.0 / Math.PI));
+        this.marchFrom = now;
+    }
+
+    private static final double MARCH_TURN_DISTANCE = 1.5;
 
     // The banner's whole job. Everyone under the same flag within reach of it - the squad and the
     // commander alike - moves quicker, hits harder and takes less, for as long as the marcher is
@@ -760,6 +844,15 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
     // back properly (see GipfaeliArmy), so this is only ever the death case.
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean killedByPlayer) {
+        // Off by default: a fallen soldier takes its kit with it.
+        if (!Config.ARMY_DROPS_ON_DEATH.get()) {
+            this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+            for (EquipmentSlot slot : ch.bbcag.combatupdate.GipfaeliArmour.SLOTS) {
+                this.setItemSlot(slot, ItemStack.EMPTY);
+            }
+            return;
+        }
+
         super.dropCustomDeathLoot(level, source, killedByPlayer);
         ItemStack weapon = this.getMainHandItem();
         if (!weapon.isEmpty() && Config.ARMY_CONSUMES_SUPPLIES.get()) {
@@ -838,6 +931,9 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
 
         DyeColor uniform = this.uniform();
         output.putString("Uniform", uniform == null ? "camo" : uniform.getName());
+        output.putString("Camo", this.camo().token());
+        output.putInt("Squad", this.squadNumber());
+        output.putBoolean("ParadeMarching", this.paradeMarching);
         output.putInt("Stance", this.stance().ordinal());
         if (this.paradeAnchor != null) {
             output.store("ParadeAnchor", Vec3.CODEC, this.paradeAnchor);
@@ -861,10 +957,14 @@ public final class GipfaeliSoldier extends TamableAnimal implements RangedAttack
         this.orderedTargetId = input.read("OrderedTarget", UUIDUtil.CODEC).orElse(null);
         this.station = input.read("Station", Vec3.CODEC).orElse(null);
         this.post = input.read("Post", BlockPos.CODEC).orElse(null);
+        ch.bbcag.combatupdate.GipfaeliCamo camo = ch.bbcag.combatupdate.GipfaeliCamo.byName(input.getStringOr("Camo", "plain"));
+        this.entityData.set(DATA_CAMO, (byte) (camo == null ? 0 : camo.ordinal()));
         this.setUniform(DyeColor.byName(input.getStringOr("Uniform", "camo"), null));
         this.setStance(Stance.byOrdinal(input.getIntOr("Stance", 0)));
         this.paradeAnchor = input.read("ParadeAnchor", Vec3.CODEC).orElse(null);
         this.paradeYaw = input.getFloatOr("ParadeYaw", 0.0F);
+        this.paradeMarching = input.getBooleanOr("ParadeMarching", false);
+        this.setSquadNumber(input.getIntOr("Squad", 1));
         this.holding = input.getBooleanOr("Holding", false);
         this.entityData.set(DATA_COMMANDER, input.getBooleanOr("Commander", false));
         this.entityData.set(DATA_TRAINING, input.getBooleanOr("Training", false));

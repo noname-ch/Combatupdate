@@ -2,7 +2,9 @@
 """Draws the Gipfaeli soldier's uniforms.
 
 Seventeen squad uniforms (one per dye, and the camouflage a recruit starts in) and the commander's
-black dress uniform with the squad colour on it, for each. Run from the repository root; it writes
+black dress uniform with the squad colour on it, for each. Then the same again in every field
+pattern a squad can be put in (woodland, snow, desert, jungle, urban, night): the whole uniform in
+the pattern, the squad's colour only on the cap band, the shoulders and a chest patch. Run from the repository root; it writes
 straight into the mod's entity textures. Deterministic, so re-running it changes nothing unless the
 drawing below does.
 
@@ -109,10 +111,23 @@ class Cloth:
         return self.darker(f)
 
 
-def camo_pattern(seed=7):
+WOODLAND = [(0x5B, 0x6B, 0x3A), (0x6B, 0x4F, 0x2E), (0x2F, 0x3F, 0x22), (0x9A, 0x8B, 0x5C)]
+
+# The field patterns a squad can be put in, as the game names them (see GipfaeliCamo): the ground
+# tone first, then the blotches over it.
+PATTERNS = {
+    "woodland": (WOODLAND, 7),
+    "snow": ([(0xE8, 0xEC, 0xEE), (0xC4, 0xCB, 0xD0), (0xA3, 0xAC, 0xB3), (0xFA, 0xFB, 0xFC)], 11),
+    "desert": ([(0xC9, 0xAE, 0x7C), (0xA8, 0x85, 0x55), (0xDD, 0xC9, 0x9E), (0x8A, 0x6B, 0x44)], 13),
+    "jungle": ([(0x3F, 0x5E, 0x2A), (0x24, 0x3B, 0x1A), (0x6B, 0x8A, 0x35), (0x4A, 0x36, 0x22)], 17),
+    "urban": ([(0x80, 0x82, 0x84), (0x5A, 0x5C, 0x60), (0xA8, 0xAA, 0xAC), (0x3A, 0x3C, 0x40)], 19),
+    "night": ([(0x2A, 0x2F, 0x3A), (0x1A, 0x1E, 0x26), (0x3E, 0x46, 0x55), (0x12, 0x14, 0x1A)], 23),
+}
+
+
+def camo_pattern(seed=7, tones=WOODLAND):
     """Blotches of four field tones over a 64x64 sheet, the same blotches every run."""
     rnd = random.Random(seed)
-    tones = [(0x5B, 0x6B, 0x3A), (0x6B, 0x4F, 0x2E), (0x2F, 0x3F, 0x22), (0x9A, 0x8B, 0x5C)]
     sheet = [[tones[0]] * 64 for _ in range(64)]
     for _ in range(140):
         tone = rnd.choice(tones[1:])
@@ -275,6 +290,26 @@ def uniform(cloth, accent, commander):
     return skin
 
 
+def field_uniform(cloth, accent, commander):
+    """A uniform in a field pattern: the pattern everywhere, the squad colour in a few places."""
+    skin = Skin()
+    trousers = cloth.darker(0.9)
+    draw_head(skin, cloth, accent, commander)
+    draw_body(skin, cloth, trousers, accent, commander)
+    draw_arm(skin, "rarm", cloth, accent, commander, armband=True)
+    draw_arm(skin, "larm", cloth, accent, commander, armband=False)
+    draw_leg(skin, "rleg", trousers, accent, commander)
+    draw_leg(skin, "lleg", trousers, accent, commander)
+    if not commander:
+        # The squad's colour: across the shoulders and a patch on the chest pocket.
+        for part in ("rarm", "larm"):
+            skin.fill(part, "top", accent)
+            for face in ("front", "back", "left", "right"):
+                skin.fill(part, face, accent, rows=[0])
+        skin.fill("body", "front", accent, rows=range(2, 4), cols=range(5, 7))
+    return skin
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     cloths = {name: Cloth(mix(rgb(value), (0x80, 0x80, 0x80), 0.18)) for name, value in DYES.items()}
@@ -286,7 +321,22 @@ def main():
             accent = Cloth(mix(cloth.solid, (0xFF, 0xFF, 0xFF), 0.35))
         uniform(cloth, accent, False).save(os.path.join(OUT, name + ".png"))
         uniform(cloth, accent, True).save(os.path.join(OUT, "commander_" + name + ".png"))
-    print("wrote", 2 * len(cloths), "uniforms to", OUT)
+    written = 2 * len(cloths)
+
+    for pattern, (tones, seed) in PATTERNS.items():
+        folder = os.path.join(OUT, "camo", pattern)
+        os.makedirs(folder, exist_ok=True)
+        cloth = Cloth(pattern=camo_pattern(seed, tones))
+        # The reserve has no squad colour yet; its band is the pattern's own darkest tone.
+        accents = {"plain": Cloth(scale(tones[2], 0.8))}
+        for name, dyed in cloths.items():
+            if name != "camo":
+                accents[name] = dyed
+        for name, accent in accents.items():
+            field_uniform(cloth, accent, False).save(os.path.join(folder, name + ".png"))
+            field_uniform(cloth, accent, True).save(os.path.join(folder, "commander_" + name + ".png"))
+            written += 2
+    print("wrote", written, "uniforms to", OUT)
 
 
 if __name__ == "__main__":

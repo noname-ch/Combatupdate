@@ -73,39 +73,81 @@ import ch.bbcag.combatupdate.territory.TerritoryManager;
 // the player sees of it goes out as chat and action-bar messages rather than through any state
 // the client keeps of its own.
 public final class GipfaeliArmy {
-    // Who an order is for: everyone, one squad by its colour, or the reserve still in camouflage.
-    public record Scope(boolean all, @Nullable DyeColor colour) {
-        public static final Scope ALL = new Scope(true, null);
-        public static final Scope RESERVE = new Scope(false, null);
+    // Who an order is for: everyone, every squad of one colour, one numbered squad of it (red 1,
+    // red 2), or the reserve still in camouflage. Number 0 is every squad of the colour.
+    public record Scope(boolean all, @Nullable DyeColor colour, int number) {
+        public static final Scope ALL = new Scope(true, null, 0);
+        public static final Scope RESERVE = new Scope(false, null, 0);
 
         public static Scope of(@Nullable DyeColor colour) {
-            return new Scope(false, colour);
+            return new Scope(false, colour, 0);
         }
 
-        // The word the commands use: "all", "camo", or a dye's name.
+        public static Scope of(@Nullable DyeColor colour, int number) {
+            return new Scope(false, colour, Math.clamp(number, 0, GipfaeliSoldier.SQUADS_PER_COLOUR));
+        }
+
+        // The one squad a soldier is in.
+        public static Scope squadOf(GipfaeliSoldier soldier) {
+            return of(soldier.uniform(), soldier.squadNumber());
+        }
+
+        // The word the commands use: "all", "camo", a dye's name, or either with a squad number
+        // after it - "red2", "camo1".
         public static @Nullable Scope parse(String token) {
             if (token.equalsIgnoreCase("all")) {
                 return ALL;
             }
 
-            if (token.equalsIgnoreCase("camo")) {
-                return RESERVE;
+            int split = token.length();
+            while (split > 0 && Character.isDigit(token.charAt(split - 1))) {
+                split--;
             }
 
-            DyeColor colour = DyeColor.byName(token, null);
-            return colour == null ? null : of(colour);
+            int number = 0;
+            if (split < token.length()) {
+                number = Integer.parseInt(token.substring(split));
+                if (number < 1 || number > GipfaeliSoldier.SQUADS_PER_COLOUR) {
+                    return null;
+                }
+            }
+
+            String word = token.substring(0, split);
+            if (word.equalsIgnoreCase("camo")) {
+                return of(null, number);
+            }
+
+            DyeColor colour = DyeColor.byName(word, null);
+            return colour == null ? null : of(colour, number);
         }
 
         public boolean includes(GipfaeliSoldier soldier) {
-            return this.all || Objects.equals(this.colour, soldier.uniform());
+            return this.all || Objects.equals(this.colour, soldier.uniform())
+                    && (this.number == 0 || this.number == soldier.squadNumber());
+        }
+
+        // Whether an order for one of these could reach a soldier the other one names.
+        public boolean overlaps(Scope other) {
+            return this.all || other.all || Objects.equals(this.colour, other.colour)
+                    && (this.number == 0 || other.number == 0 || this.number == other.number);
+        }
+
+        // The one squad this names for recruiting and for its commander: the first of its colour
+        // when it names them all.
+        public Scope squad() {
+            return this.all ? of(null, 1) : this.number == 0 ? of(this.colour, 1) : this;
         }
 
         public String token() {
-            return this.all ? "all" : this.colour == null ? "camo" : this.colour.getName();
+            return this.all ? "all" : (this.colour == null ? "camo" : this.colour.getName()) + (this.number == 0 ? "" : Integer.toString(this.number));
         }
 
         public Component name() {
-            return this.all ? Component.translatable("combatupdate.army.scope.all") : colourName(this.colour);
+            if (this.all) {
+                return Component.translatable("combatupdate.army.scope.all");
+            }
+
+            return this.number == 0 ? colourName(this.colour) : colourName(this.colour).copy().append(" " + this.number);
         }
     }
 
@@ -226,6 +268,11 @@ public final class GipfaeliArmy {
             return true;
         }
 
+        // Two squads of one army sent at each other (see GipfaeliAssault) are, for now, not.
+        if (GipfaeliAssault.feud(one, other)) {
+            return false;
+        }
+
         UUID oneFlag = flag(one);
         return oneFlag != null && oneFlag.equals(flag(other));
     }
@@ -254,8 +301,9 @@ public final class GipfaeliArmy {
             return true;
         }
 
-        DyeColor colour = scope.all ? null : scope.colour;
-        if (!squadHasRoom(commander, colour)) {
+        Scope target = scope.squad();
+        DyeColor colour = target.colour;
+        if (!squadHasRoom(commander, target)) {
             return true;
         }
 
@@ -279,6 +327,7 @@ public final class GipfaeliArmy {
         }
 
         GipfaeliSoldier soldier = enlist(commander, weapon, colour);
+        soldier.setSquadNumber(target.number);
 
         if (!free) {
             if (weaponSlot != NO_SLOT) {
@@ -389,12 +438,13 @@ public final class GipfaeliArmy {
     // around the player, for a squad with none. Stops at the squad's size, at the army's limit,
     // and at what the player can pay for, and says how many actually came.
     public static void fill(ServerPlayer commander, Scope scope, int count) {
-        DyeColor colour = scope.all ? null : scope.colour;
-        List<GipfaeliSoldier> squad = squad(commander, Scope.of(colour));
+        Scope target = scope.squad();
+        DyeColor colour = target.colour;
+        List<GipfaeliSoldier> squad = squad(commander, target);
         int room = Math.min(Config.ARMY_SQUAD_SIZE.getAsInt() - ranks(squad),
                 Config.ARMY_MAX_SQUAD.getAsInt() - squad(commander).size());
         if (room <= 0) {
-            refuse(commander, Component.translatable("combatupdate.army.squad.full", colourName(colour), Config.ARMY_SQUAD_SIZE.getAsInt()));
+            refuse(commander, Component.translatable("combatupdate.army.squad.full", target.name(), Config.ARMY_SQUAD_SIZE.getAsInt()));
             return;
         }
 
@@ -419,6 +469,7 @@ public final class GipfaeliArmy {
             soldier.setOwner(commander);
             soldier.setTame(true, false);
             soldier.setUniform(colour);
+            soldier.setSquadNumber(target.number);
             soldier.arm(ItemStack.EMPTY);
             soldier.setHealth(soldier.getMaxHealth());
             level.addFreshEntity(soldier);
@@ -430,7 +481,7 @@ public final class GipfaeliArmy {
 
         level.playSound(null, around.getX(), around.getY(), around.getZ(),
                 SoundEvents.ARMOR_EQUIP_IRON.value(), SoundSource.PLAYERS, 1.0F, 0.9F);
-        readout(commander, Component.translatable("combatupdate.army.squad.filled", mustered, colourName(colour),
+        readout(commander, Component.translatable("combatupdate.army.squad.filled", mustered, target.name(),
                 ranks(squad) + mustered, Config.ARMY_SQUAD_SIZE.getAsInt()));
         reform(commander);
     }
@@ -479,10 +530,10 @@ public final class GipfaeliArmy {
     }
 
     // Whether a squad can take one more, and a word to the player if it cannot.
-    private static boolean squadHasRoom(ServerPlayer commander, @Nullable DyeColor colour) {
+    private static boolean squadHasRoom(ServerPlayer commander, Scope target) {
         int size = Config.ARMY_SQUAD_SIZE.getAsInt();
-        if (ranks(squad(commander, Scope.of(colour))) >= size) {
-            refuse(commander, Component.translatable("combatupdate.army.squad.full", colourName(colour), size));
+        if (ranks(squad(commander, target)) >= size) {
+            refuse(commander, Component.translatable("combatupdate.army.squad.full", target.name(), size));
             return false;
         }
 
@@ -803,27 +854,34 @@ public final class GipfaeliArmy {
     // Moves one soldier to another squad, which is what a colour is. A commander who moves into a
     // squad that already has one goes back into the ranks: a squad has one commander.
     public static void paintSoldier(ServerPlayer commander, GipfaeliSoldier soldier, @Nullable DyeColor colour) {
-        if (Objects.equals(soldier.uniform(), colour)) {
+        paintSoldier(commander, soldier, colour, soldier.squadNumber());
+    }
+
+    // The same into one numbered squad of the colour: "red2" rather than "red".
+    public static void paintSoldier(ServerPlayer commander, GipfaeliSoldier soldier, @Nullable DyeColor colour, int number) {
+        Scope target = Scope.of(colour, Math.max(1, number));
+        if (target.includes(soldier)) {
             return;
         }
 
-        if (!soldier.commander() && !squadHasRoom(commander, colour)) {
+        if (!soldier.commander() && !squadHasRoom(commander, target)) {
             return;
         }
 
-        if (soldier.commander() && leaderOf(squad(commander, Scope.of(colour))) != null) {
+        if (soldier.commander() && leaderOf(squad(commander, target)) != null) {
             soldier.setCommander(false);
         }
 
         soldier.setUniform(colour);
+        soldier.setSquadNumber(target.number);
         soldier.playSound(SoundEvents.DYE_USE, 1.0F, 1.0F);
         reformParade(commander);
-        readout(commander, Component.translatable("combatupdate.army.painted", 1, colourName(colour)));
+        readout(commander, Component.translatable("combatupdate.army.painted", 1, target.name()));
     }
 
     // Makes a soldier its squad's commander, standing down whoever held that before.
     public static void promote(ServerPlayer commander, GipfaeliSoldier soldier) {
-        GipfaeliSoldier previous = leaderOf(squad(commander, Scope.of(soldier.uniform())));
+        GipfaeliSoldier previous = leaderOf(squad(commander, Scope.squadOf(soldier)));
         if (previous != null && previous != soldier) {
             previous.setCommander(false);
         }
@@ -831,7 +889,7 @@ public final class GipfaeliArmy {
         soldier.setCommander(true);
         soldier.playSound(SoundEvents.ARMOR_EQUIP_IRON.value(), 1.0F, 0.8F);
         reformParade(commander);
-        readout(commander, Component.translatable("combatupdate.army.soldier.promoted", soldier.getName(), colourName(soldier.uniform())));
+        readout(commander, Component.translatable("combatupdate.army.soldier.promoted", soldier.getName(), Scope.squadOf(soldier).name()));
     }
 
     public static void demote(ServerPlayer commander, GipfaeliSoldier soldier) {
@@ -904,6 +962,7 @@ public final class GipfaeliArmy {
             return;
         }
 
+        GipfaeliAssault.end(commander, scope);
         field(commander, squad, GipfaeliFormation.LOOSE, false);
         for (GipfaeliSoldier soldier : squad) {
             soldier.holdPosition(false);
@@ -941,6 +1000,7 @@ public final class GipfaeliArmy {
         }
 
         if (stance == Stance.STAND) {
+            GipfaeliAssault.end(commander, scope);
             Vec3 anchor = follow ? null : commander.position();
             for (GipfaeliSoldier soldier : squad) {
                 if (soldier.post() != null) {
@@ -968,8 +1028,42 @@ public final class GipfaeliArmy {
         readout(commander, Component.translatable("combatupdate.army.stance_attack", squad.size()));
     }
 
+    // Stand march: whoever is on parade in scope marches off with the player in the ranks it is
+    // standing in - same block, same place in it - and turns the way the player walks. Anyone in
+    // scope not on parade yet is drawn up first, so the order works from the field too. Stand
+    // halts it where it is.
+    public static void standMarch(ServerPlayer commander, Scope scope) {
+        List<GipfaeliSoldier> squad = squad(commander, scope);
+        squad.removeIf(soldier -> soldier.post() != null);
+        if (squad.isEmpty()) {
+            refuse(commander, nobody(scope));
+            return;
+        }
+
+        GipfaeliAssault.end(commander, scope);
+        boolean drawnUp = squad.stream().allMatch(soldier -> soldier.stance() == Stance.STAND);
+        if (!drawnUp) {
+            for (GipfaeliSoldier soldier : squad) {
+                soldier.setStance(Stance.STAND);
+                soldier.order(null);
+                soldier.setTarget(null);
+                soldier.station(null);
+                soldier.holdPosition(false);
+                soldier.standAt(null, commander.getYRot());
+            }
+            reformParade(commander);
+        }
+
+        for (GipfaeliSoldier soldier : squad) {
+            soldier.marchInRanks(drawnUp ? soldier.paradeYaw() : commander.getYRot());
+        }
+
+        readout(commander, Component.translatable("combatupdate.army.stand_march", squad.size()));
+    }
+
     // Break off and fall back in.
     public static void follow(ServerPlayer commander, Scope scope) {
+        GipfaeliAssault.end(commander, scope);
         List<GipfaeliSoldier> squad = squad(commander, scope);
         for (GipfaeliSoldier soldier : squad) {
             soldier.guard(null);
@@ -1000,6 +1094,7 @@ public final class GipfaeliArmy {
 
     // Stop shooting, stay where you were put.
     public static void standDown(ServerPlayer commander, Scope scope) {
+        GipfaeliAssault.end(commander, scope);
         List<GipfaeliSoldier> squad = squad(commander, scope);
         for (GipfaeliSoldier soldier : squad) {
             soldier.order(null);
@@ -1013,6 +1108,7 @@ public final class GipfaeliArmy {
     // out of the world with their carriers - dismissing an army should cost nothing but the
     // rations it ate.
     public static void dismiss(ServerPlayer commander, Scope scope) {
+        GipfaeliAssault.end(commander, scope);
         List<GipfaeliSoldier> squad = squad(commander, scope);
         for (GipfaeliSoldier soldier : squad) {
             handBack(commander, soldier.getMainHandItem().copy());
@@ -1105,10 +1201,11 @@ public final class GipfaeliArmy {
         Map<String, List<GipfaeliSoldier>> standing = new LinkedHashMap<>();
         List<GipfaeliSoldier> army = squad(commander);
         army.sort(Comparator.<GipfaeliSoldier>comparingInt(soldier -> soldier.uniform() == null ? Integer.MAX_VALUE : soldier.uniform().getId())
+                .thenComparingInt(GipfaeliSoldier::squadNumber)
                 .thenComparingInt(Entity::getId));
         for (GipfaeliSoldier soldier : army) {
             if (soldier.stance() == Stance.STAND && soldier.post() == null) {
-                standing.computeIfAbsent(Scope.of(soldier.uniform()).token(), colour -> new ArrayList<>()).add(soldier);
+                standing.computeIfAbsent(Scope.squadOf(soldier).token(), colour -> new ArrayList<>()).add(soldier);
             }
         }
 
@@ -1129,19 +1226,27 @@ public final class GipfaeliArmy {
     // only ever cosmetic, but a red army and a blue army on the same server is the whole reason
     // to have the colours.
     public static void paint(ServerPlayer commander, Scope scope, @Nullable DyeColor colour) {
+        paint(commander, scope, colour, 0);
+    }
+
+    // With a number, into that numbered squad of the colour; with 0, each keeps the number it had,
+    // so red 1 and red 2 painted blue are blue 1 and blue 2.
+    public static void paint(ServerPlayer commander, Scope scope, @Nullable DyeColor colour, int number) {
         List<GipfaeliSoldier> squad = squad(commander, scope);
         if (squad.isEmpty()) {
             refuse(commander, nobody(scope));
             return;
         }
 
-        GipfaeliSoldier resident = leaderOf(squad(commander, Scope.of(colour)));
         for (GipfaeliSoldier soldier : squad) {
+            Scope target = Scope.of(colour, number == 0 ? soldier.squadNumber() : number);
+            GipfaeliSoldier resident = leaderOf(squad(commander, target));
             if (soldier.commander() && resident != null && resident != soldier) {
                 soldier.setCommander(false);
             }
 
             soldier.setUniform(colour);
+            soldier.setSquadNumber(target.number);
         }
 
         commander.level().playSound(null, commander.getX(), commander.getY(), commander.getZ(),
@@ -1149,7 +1254,8 @@ public final class GipfaeliArmy {
         reformParade(commander);
         readout(commander, scope.all
                 ? Component.translatable("combatupdate.army.painted", squad.size(), colourName(colour))
-                : Component.translatable("combatupdate.army.squad.painted", scope.name(), colourName(colour)));
+                : Component.translatable("combatupdate.army.squad.painted", scope.name(),
+                        number == 0 ? colourName(colour) : Scope.of(colour, number).name()));
     }
 
     public static Component colourName(@Nullable DyeColor colour) {
@@ -1181,7 +1287,7 @@ public final class GipfaeliArmy {
     // kit bag. The chat menus below stay behind the commands, for whoever prefers them.
     public static void click(ServerPlayer commander, GipfaeliSoldier soldier) {
         if (soldier.commander()) {
-            openArmy(commander, Scope.of(soldier.uniform()));
+            openArmy(commander, Scope.squadOf(soldier));
         } else {
             openSoldier(commander, soldier);
         }
@@ -1304,7 +1410,7 @@ public final class GipfaeliArmy {
         commander.sendSystemMessage(Component.translatable("combatupdate.army.soldier.status",
                 soldier.getName(), (int) Math.ceil(soldier.getHealth()), (int) Math.ceil(soldier.getMaxHealth()),
                 worn == null ? Component.translatable("combatupdate.army.soldier.none") : worn.displayName(),
-                colourName(soldier.uniform())).withStyle(ChatFormatting.GRAY));
+                Scope.squadOf(soldier).name()).withStyle(ChatFormatting.GRAY));
 
         MutableComponent kits = heading("combatupdate.army.soldier.kit");
         for (GipfaeliWeapon role : GipfaeliWeapon.values()) {
@@ -1348,8 +1454,8 @@ public final class GipfaeliArmy {
         MutableComponent rank = heading("combatupdate.army.soldier.rank");
         if (soldier.commander()) {
             rank.append(button(Component.translatable("combatupdate.army.soldier.demote"), at + "demote", null, ChatFormatting.GRAY))
-                    .append(button(Component.translatable("combatupdate.army.squad.name", colourName(soldier.uniform())),
-                            "squad " + Scope.of(soldier.uniform()).token() + " menu",
+                    .append(button(Component.translatable("combatupdate.army.squad.name", Scope.squadOf(soldier).name()),
+                            "squad " + Scope.squadOf(soldier).token() + " menu",
                             Component.translatable("combatupdate.army.menu.squad.hover"), ChatFormatting.AQUA));
         } else {
             rank.append(button(Component.translatable("combatupdate.army.soldier.promote"), at + "promote",
@@ -1363,9 +1469,10 @@ public final class GipfaeliArmy {
     private static Component squads(ServerPlayer commander, List<GipfaeliSoldier> army) {
         Map<String, List<GipfaeliSoldier>> byColour = new LinkedHashMap<>();
         List<GipfaeliSoldier> sorted = new ArrayList<>(army);
-        sorted.sort(Comparator.comparingInt(soldier -> soldier.uniform() == null ? Integer.MAX_VALUE : soldier.uniform().getId()));
+        sorted.sort(Comparator.<GipfaeliSoldier>comparingInt(soldier -> soldier.uniform() == null ? Integer.MAX_VALUE : soldier.uniform().getId())
+                .thenComparingInt(GipfaeliSoldier::squadNumber));
         for (GipfaeliSoldier soldier : sorted) {
-            byColour.computeIfAbsent(Scope.of(soldier.uniform()).token(), colour -> new ArrayList<>()).add(soldier);
+            byColour.computeIfAbsent(Scope.squadOf(soldier).token(), colour -> new ArrayList<>()).add(soldier);
         }
 
         MutableComponent row = heading("combatupdate.army.menu.squads");
@@ -1520,7 +1627,8 @@ public final class GipfaeliArmy {
                     armour == null ? -1 : armour.ordinal(),
                     uniform == null ? -1 : uniform.getId(),
                     soldier.commander(), soldier.getHealth(), soldier.getMaxHealth(),
-                    activity(soldier), soldier.level() == commander.level(), chunk.x(), chunk.z()));
+                    activity(soldier), soldier.level() == commander.level(), chunk.x(), chunk.z(), soldier.camo().ordinal(),
+                    soldier.squadNumber()));
         }
 
         boolean free = commander.getAbilities().instabuild || !Config.ARMY_CONSUMES_SUPPLIES.get();
@@ -1591,11 +1699,24 @@ public final class GipfaeliArmy {
                 }
             }
             case STRIP -> stripSoldier(commander, soldier);
-            case COLOUR -> paintSoldier(commander, soldier, DyeColor.byName(argument, null));
+            // A dye's name or "camo", with a squad number after it or without: "red2" moves it
+            // into red 2, "red" into red keeping its number.
+            case COLOUR -> {
+                Scope target = Scope.parse(argument);
+                if (target != null && !target.all()) {
+                    paintSoldier(commander, soldier, target.colour(), target.number() == 0 ? soldier.squadNumber() : target.number());
+                }
+            }
             case PROMOTE -> promote(commander, soldier);
             case DEMOTE -> demote(commander, soldier);
             case POST -> sendToPost(commander, soldier, number(argument));
             case DISMISS -> dismissSoldier(commander, soldier);
+            case CAMO -> {
+                GipfaeliCamo camo = GipfaeliCamo.byName(argument);
+                if (camo != null) {
+                    GipfaeliCamo.dressSoldier(commander, soldier, camo);
+                }
+            }
         }
 
         sendRoster(commander);
@@ -1637,8 +1758,24 @@ public final class GipfaeliArmy {
             case RAISE -> raiseSquad(commander);
             // The argument is a dye's name or "camo"; anything else is left alone.
             case COLOUR -> {
-                if (argument.equalsIgnoreCase("camo") || DyeColor.byName(argument, null) != null) {
-                    paint(commander, scope, DyeColor.byName(argument, null));
+                Scope target = Scope.parse(argument);
+                if (target != null && !target.all()) {
+                    paint(commander, scope, target.colour(), target.number());
+                }
+            }
+            case MARCH -> standMarch(commander, scope);
+            case GUARD -> GipfaeliGuardPost.guard(commander, scope);
+            case CAMO -> {
+                GipfaeliCamo camo = GipfaeliCamo.byName(argument);
+                if (camo != null) {
+                    GipfaeliCamo.dressSquad(commander, scope, camo);
+                }
+            }
+            // The argument is a dye's name, "camo" or "training": the side to wipe out.
+            case ASSAULT -> {
+                GipfaeliAssault.Foe foe = GipfaeliAssault.Foe.parse(argument);
+                if (foe != null) {
+                    GipfaeliAssault.start(commander, scope, foe);
                 }
             }
         }
@@ -1872,6 +2009,7 @@ public final class GipfaeliArmy {
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         SIEGES.remove(event.getEntity().getUUID());
+        GipfaeliAssault.forget(event.getEntity().getUUID());
     }
 
     // --- Telling the player about it ---
